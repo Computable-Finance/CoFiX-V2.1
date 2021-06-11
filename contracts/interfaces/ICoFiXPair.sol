@@ -19,7 +19,11 @@ interface ICoFiXPair {
 
     function burn(uint liquidity, address to, address paybackAddress) external payable returns (uint amountTokenOut, uint amountEthOut);
     
-    function swapForToken(uint amountIn, address to, address rewardTo, address paybackAddress) external payable returns (uint amountTokenOut, uint Z);
+    function swapForToken(uint amountIn, address to, address paybackAddress) external payable returns (uint amountTokenOut, uint Z);
     
-    function swapForETH(uint amountIn, address to, address rewardTo, address paybackAddress) external payable returns (uint amountEthOut, uint Z);
+    function swapForETH(uint amountIn, address to, address paybackAddress) external payable returns (uint amountEthOut, uint Z);
+
+    function impactCostForBuyInETH(uint vol) external view returns (uint impactCost);
+
+    function impactCostForSellOutETH(uint vol) external view returns (uint impactCost);
 }

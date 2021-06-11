@@ -6,22 +6,39 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./libs/TransferHelper.sol";
 
-import "./interfaces/ICoFiXVaultForLP.sol";
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPair.sol";
+import "./interfaces/ICoFiXVaultForLP.sol";
 import "./CoFiToken.sol";
+
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
 contract CoFiXRouter is ICoFiXRouter {
 
+    constructor (address cofiToken, address cnodeToken) {
+        COFI_TOKEN_ADDRESS = cofiToken;
+        CNODE_TOKEN_ADDRESS = cnodeToken;
+    }
+
+    address immutable COFI_TOKEN_ADDRESS;
+    address immutable CNODE_TOKEN_ADDRESS;
+
+    Config _config;
     address _cofixVaultForLP;
-    address _cofiToken;
     mapping(address=>address) _pairs;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'CRouter: EXPIRED');
         _;
+    }
+
+    function getConfig() external view override returns (Config memory) {
+        return _config;
+    }
+
+    function setConfig(Config memory config) external override {
+        _config = config;
     }
 
     function getCoFiXVaultForLP() external view returns (address) {
@@ -30,14 +47,6 @@ contract CoFiXRouter is ICoFiXRouter {
 
     function setCoFiXVaultForLP(address cofixVaultForLP) external {
         _cofixVaultForLP = cofixVaultForLP;
-    }
-
-    function getCoFiToken() external view returns (address) {
-        return _cofiToken;
-    }
-
-    function setCoFiToken(address cofiToken) external {
-        _cofiToken = cofiToken;
     }
 
     function addPair(address tokenAddress, address pairAddress) external {
@@ -119,8 +128,9 @@ contract CoFiXRouter is ICoFiXRouter {
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CRouter: less liquidity than expected");
 
-        IERC20(pair).approve(_cofixVaultForLP, liquidity);
-        ICoFiXVaultForLP(_cofixVaultForLP).stake(pair, to, liquidity);
+        address cofixVaultForLP = _cofixVaultForLP;
+        IERC20(pair).approve(cofixVaultForLP, liquidity);
+        ICoFiXVaultForLP(cofixVaultForLP).stake(pair, to, liquidity);
     }
 
     // 移除流动性
@@ -169,10 +179,12 @@ contract CoFiXRouter is ICoFiXRouter {
         address pair = pairFor(token);
 
         // 1. 转入eth
-        (uint amountTokenOut, uint Z) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, rewardTo, msg.sender);
+        (uint amountTokenOut, uint Z) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
         require(amountTokenOut >= amountOutMin);
-        CoFiToken(_cofiToken).mint(rewardTo, Z * 90 / 100);
-        _CNodeReward += Z * 10 / 100;
+
+        uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
+        _CNodeReward += cnodeReward;
     }
 
     // msg.value = oracle fee
@@ -189,17 +201,18 @@ contract CoFiXRouter is ICoFiXRouter {
         address pair = pairFor(token);
 
         // 1. 转入eth
-        (uint amountEthOut, uint Z) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, rewardTo, msg.sender);
+        (uint amountEthOut, uint Z) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
         require(amountEthOut >= amountOutMin);
-        CoFiToken(_cofiToken).mint(rewardTo, Z * 90 / 100);
-        _CNodeReward += Z * 10 / 100;
+        uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
+        _CNodeReward += cnodeReward;
     }
 
-    function getCNodeReward() external view override returns (uint) {
-        return _CNodeReward;
+    function getTradeReward(address pair) external view override returns (uint) {
+        // 只有CNode有交易出矿分成，做市份额没有        
+        if (pair == CNODE_TOKEN_ADDRESS) {
+            return _CNodeReward;
+        }
+        return 0;
     }
-
-    // function getCNodeRewardAndReset() external returns (uint) {
-    //     _CNodeReward = 0;
-    // }
 }

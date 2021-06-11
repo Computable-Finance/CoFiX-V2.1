@@ -18,6 +18,19 @@ interface ICoFiXController is INestPriceFacade{
     // We use expected value of K based on statistical calculations here to save gas
     // In the near future, NEST could provide the variance of price directly. We will adopt it then.
     // We can make use of `data` bytes in the future
+    function queryPrice(
+        address tokenAddress,
+        address paybackAddress
+    ) external payable returns (
+        uint256 ethAmount, 
+        uint256 erc20Amount, 
+        uint256 blockNum
+    );
+
+    // Calc variance of price and K in CoFiX is very expensive
+    // We use expected value of K based on statistical calculations here to save gas
+    // In the near future, NEST could provide the variance of price directly. We will adopt it then.
+    // We can make use of `data` bytes in the future
     function queryOracle(
         address tokenAddress,
         address paybackAddress
@@ -28,4 +41,12 @@ interface ICoFiXController is INestPriceFacade{
         uint256 blockNum, 
         uint256 theta
     );
+
+    /**
+     * @notice Calc K value
+     * @param sigmaSQ The square of the volatility (18 decimal places).
+     * @param bn The block number when (ETH, TOKEN) price takes into effective
+     * @return k The K value
+     */
+    function calcK(uint256 sigmaSQ, uint256 bn) external view returns (uint k);
 }

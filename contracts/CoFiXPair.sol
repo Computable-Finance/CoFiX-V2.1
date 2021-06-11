@@ -8,6 +8,7 @@ import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXPair.sol";
 import "./interfaces/ICoFiXController.sol";
+import "./interfaces/ICoFiXDAO.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 import "hardhat/console.sol";
@@ -27,7 +28,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     string public symbol;
 
     address immutable public TOKEN_ADDRESS; // WETH token
-    address immutable public COFI_TOKEN_ADDRESS;
+    address _cofixDAO;
 
     uint immutable INIT_ETH_AMOUNT;
     uint immutable INIT_TOKEN_AMOUNT;
@@ -58,14 +59,12 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         string memory name_, 
         string memory symbol_, 
         address tokenAddress, 
-        address cofiToken,
         uint initEthAmount, 
         uint initTokenAmount
     ) {
         name = name_;
         symbol = symbol_;
         TOKEN_ADDRESS = tokenAddress;
-        COFI_TOKEN_ADDRESS = cofiToken;
         INIT_ETH_AMOUNT = initEthAmount;
         INIT_TOKEN_AMOUNT = initTokenAmount;
     }
@@ -81,6 +80,14 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
 
     function setCoFiXController(address cofixController) external {
         _cofixController = cofixController;
+    }
+
+    function setCoFiXDAO(address cofixDAO) external {
+        _cofixDAO = cofixDAO;
+    }
+
+    function getCoFiXDAO() external view returns (address) {
+        return _cofixDAO;
     }
 
     // 做市出矿
@@ -104,37 +111,13 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         require(amountETH * INIT_TOKEN_AMOUNT == amountToken * INIT_ETH_AMOUNT, "CPair: invalid asset ratio");
 
         // // 2. 调用预言机
-        // /// @dev Returns the results of latestPrice() and triggeredPriceInfo()
-        // /// @param tokenAddress Destination token address
-        // /// @param paybackAddress As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
-        // /// @return latestPriceBlockNumber The block number of latest price
-        // /// @return latestPriceValue The token latest price. (1eth equivalent to (price) token)
-        // /// @return triggeredPriceBlockNumber The block number of triggered price
-        // /// @return triggeredPriceValue The token triggered price. (1eth equivalent to (price) token)
-        // /// @return triggeredAvgPrice Average price
-        // /// @return triggeredSigmaSQ The square of the volatility (18 decimal places). The current implementation assumes that 
-        // ///         the volatility cannot exceed 1. Correspondingly, when the return value is equal to 999999999999996447,
-        // ///         it means that the volatility has exceeded the range that can be expressed
-        // (
-        //     uint latestPriceBlockNumber, 
-        //     uint latestPriceValue,
-        //     uint triggeredPriceBlockNumber,
-        //     uint triggeredPriceValue,
-        //     uint triggeredAvgPrice,
-        //     uint triggeredSigmaSQ
-        // ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo{ 
-        //     value: msg.value - amountETH 
-        // } (TOKEN_ADDRESS, paybackAddress);
-
         // 计算K值
         // 计算θ
         (
-            uint256 k, 
             uint256 ethAmount, 
             uint256 erc20Amount, 
-            uint256 blockNum, 
-            uint256 theta
-        ) = ICoFiXController(_cofixController).queryOracle { 
+            //uint256 blockNum, 
+        ) = ICoFiXController(_cofixController).queryPrice { 
             value: msg.value - amountETH 
         } (
             TOKEN_ADDRESS,
@@ -190,12 +173,10 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         
         // 2. 计算净值
         (
-            uint256 k, 
             uint256 ethAmount, 
             uint256 erc20Amount, 
-            uint256 blockNum, 
-            uint256 theta
-        ) = ICoFiXController(_cofixController).queryOracle { 
+            //uint256 blockNum, 
+        ) = ICoFiXController(_cofixController).queryPrice { 
             value: msg.value 
         } (
             TOKEN_ADDRESS,
@@ -229,7 +210,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         TransferHelper.safeTransfer(address(this), to, amountTokenOut);
     }
 
-    function swapForToken(uint amountIn, address to, address rewardTo, address paybackAddress) external payable override lock returns (uint amountTokenOut, uint Z) {
+    function swapForToken(uint amountIn, address to, address paybackAddress) external payable override lock returns (uint amountTokenOut, uint Z) {
         
         // 2. 调用预言机获取价格
         (
@@ -250,23 +231,28 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         // 3.2. 冲击成本计算
         uint C = impactCostForSellOutETH(amountIn);
 
-        amountTokenOut = amountIn * erc20Amount * 1 ether/ ethAmount / (1 ether + k + C) * (1 ether - theta); 
+        amountTokenOut = amountIn * erc20Amount * (1 ether - theta)/ ethAmount / (1 ether + k + C);
+        uint fee = amountIn * theta / 1 ether;
+        //payable(_cofixDAO).transfer(fee);
+        // TODO: 改为批量存入
+        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
 
-        // 5. 挖矿逻辑
+        console.log('fee=', fee);
+
+        // 4. 挖矿逻辑
         uint ethBalance1 = address(this).balance;
+        console.log('amountTokenOut', amountTokenOut);
         uint tokenBalance1 = IERC20(TOKEN_ADDRESS).balanceOf(address(this)) - amountTokenOut;
+        console.log('tokenBalance1', tokenBalance1);
 
         // 【注意】Pt此处没有引入K值，后续需要引入
         uint D1 = (ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
                   / (INIT_TOKEN_AMOUNT + erc20Amount * INIT_ETH_AMOUNT / ethAmount);
-        
-        _mint(D1, rewardTo);
+        console.log('D1', D1);
+        _mint(D1);
 
-        // 4. 转token给用户
+        // 5. 转token给用户
         TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
-
-        // 5. 挖矿逻辑
-        // 6. 退回多余的eth
     }
 
     uint _Y;
@@ -276,7 +262,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     // BASE: 10000
     uint constant nt = 1000;
 
-    function swapForETH(uint amountIn, address to, address rewardTo, address paybackAddress) external payable override lock returns (uint amountEthOut, uint Z) {
+    function swapForETH(uint amountIn, address to, address paybackAddress) external payable override lock returns (uint amountEthOut, uint Z) {
 
         // 1. 记录初始资产数量，用于计算出矿量
         //uint ethBalance0 = address(this).balance - msg.value;
@@ -301,9 +287,13 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         // 3.2. 冲击成本计算
         uint C = impactCostForBuyInETH(amountIn);
 
-        amountEthOut = amountIn * ethAmount * 1 ether/ erc20Amount / (1 ether + k + C) * (1 ether - theta); 
+        amountEthOut = amountIn * ethAmount * (1 ether - theta)/ erc20Amount / (1 ether + k + C); 
+        uint fee = amountEthOut * theta / (1 ether - theta);
+        //payable(_cofixDAO).transfer(fee);
+        // TODO: 改为批量存入
+        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
 
-        // 5. 挖矿逻辑
+        // 4. 挖矿逻辑
         uint ethBalance1 = address(this).balance - amountEthOut;
         uint tokenBalance1 = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
 
@@ -311,15 +301,13 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         uint D1 = (ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
                   / (INIT_TOKEN_AMOUNT + erc20Amount * INIT_ETH_AMOUNT / ethAmount);
         
-        Z = _mint(D1, rewardTo);
+        Z = _mint(D1);
 
-        // 4. 转token给用户
+        // 5. 转token给用户
         payable(to).transfer(amountEthOut);
-
-        // 6. 退回多余的eth
     }
 
-    function _mint(uint D1, address rewardTo) private returns (uint Z) {
+    function _mint(uint D1) private returns (uint Z) {
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = _D;
@@ -327,7 +315,6 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         uint Y = _Y + D0 * nt * (block.number + 1 - _LASTBLOCK) / 10000;
         if (D0 > D1) {
             Z = 1 ether * Y * (D0 - D1) / D0;
-            //CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z * 90 / 100);
             //_CNodeReward += Z * 10 / 100;
             Y = Y - Z;
         }
@@ -343,7 +330,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     uint256 constant internal C_SELLOUT_BETA = 2000000000000; // β=2e-06*1e18
 
     // α=0，β=2e-06
-    function impactCostForBuyInETH(uint vol) public view returns (uint impactCost) {
+    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
         uint gamma = 1; //CGammaMap[token];
         if (vol * gamma < 500 ether) {
             return 0;
@@ -353,7 +340,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     }
 
     // α=0，β=2e-06
-    function impactCostForSellOutETH(uint vol) public view returns (uint impactCost) {
+    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
         uint gamma = 1; //CGammaMap[token];
         if (vol * gamma < 500 ether) {
             return 0;
@@ -361,31 +348,6 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
         return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1e18 / 1e10) * gamma; // combine mul div
     }
-
-    // // 执行兑换交易
-    // // this low-level function should be called from a contract which performs important safety checks
-    // function swapWithExact(
-    //     // 目标token地址
-    //     address outToken, 
-    //     // 接收地址
-    //     address to)
-    //     external
-    //     payable override lock
-    //     returns (uint amountIn, uint amountOut, uint oracleFeeChange, uint[5] memory tradeInfo)
-    // {
-        
-    // }
-
-    // // 将多余的资产转出
-    // // force balances to match reserves
-    // function skim(address to) external override lock {
-        
-    // }
-
-    // // 更新余额
-    // // force reserves to match balances
-    // function sync() external override lock {
-    // }
 
     // 计算净值
     // navps = calcNAVPerShare(reserve0, reserve1, _op.ethAmount, _op.erc20Amount);

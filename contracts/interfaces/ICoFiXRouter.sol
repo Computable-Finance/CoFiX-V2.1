@@ -4,8 +4,17 @@ pragma solidity ^0.8.4;
 
 interface ICoFiXRouter {
 
-    function getCNodeReward() external view returns (uint);
-    
+    struct Config {
+        // CNode分成，万分制。1000
+        uint16 cnodeRewardRate;
+    }
+
+    function getConfig() external view returns (Config memory);
+
+    function setConfig(Config memory config) external;
+
+    function getTradeReward(address pair) external view returns (uint);
+
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
     /// @param  token The address of ERC20 Token
     /// @param  amountETH The amount of ETH added to pool
