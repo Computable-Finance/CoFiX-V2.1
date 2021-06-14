@@ -9,8 +9,8 @@ describe("CoFiXRouter", function() {
         const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
         const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
         const CoFiXController = await ethers.getContractFactory("CoFiXController");
-        const CoFiXVaultForLP = await ethers.getContractFactory("CoFiXVaultForLP");
-        const CoFiXVaultForCNode = await ethers.getContractFactory("CoFiXVaultForCNode");
+        const CoFiXVaultForLP = await ethers.getContractFactory("CoFiXVaultForStaking");
+        const CoFiXVaultForCNode = await ethers.getContractFactory("CoFiXVaultForStaking");
 
         const cnode = await TestERC20.deploy('CNode', 'CNode', 18);
         const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
@@ -44,34 +44,27 @@ describe("CoFiXRouter", function() {
         await cnode.approve(cnodeVault.address, 100);
         console.log(addr1.address);
         await cnode.connect(addr1).approve(cnodeVault.address, 100);
-        await cnodeVault.stake(owner.address, 1);
-        await cnodeVault.connect(addr1).stake(addr1.address, 99);
-        // for(var i = 0; i < 100; ++i) {
-        //     await cnode.approve(cnodeVault.address, 100);
-        // }
-        // let earned = await cnodeVault.earned(owner.address);
-        // console.log('earned=' + earned);
-        // earned = await cnodeVault.earned(addr1.address);
-        // console.log('earned=' + earned);
+        await cnodeVault.stake(cnode.address, owner.address, 1);
+        await cnodeVault.connect(addr1).stake(cnode.address, addr1.address, 99);
 
         for (var i = 0; i < 10; ++i) {
-            let cr = await cnodeVault._calcReward(100);
+            let cr = await cnodeVault.calcReward(cnode.address, 100);
             let r = {
-                tradeReward: cr.tradeReward.toString(),
+                //tradeReward: cr.tradeReward.toString(),
                 newReward: cr.newReward.toString(),
                 rewardPerToken: cr.rewardPerToken.toString()
             }
             console.log(r);
-            let e = await cnodeVault.earned(owner.address);
+            let e = await cnodeVault.earned(cnode.address, owner.address);
             console.log('owner earned: ' + e);
-            e = await cnodeVault.earned(addr1.address);
+            e = await cnodeVault.earned(cnode.address, addr1.address);
             console.log('addr1 earned: ' + e);
-            console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(owner.address));
-            console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(addr1.address));
+            console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(cnode.address, owner.address));
+            console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(cnode.address, addr1.address));
             await cnodeVault.setCoFiXRouter(router.address);
         }
 
-        await cnodeVault.getReward();
+        await cnodeVault.getReward(cnode.address);
     });
 });
  

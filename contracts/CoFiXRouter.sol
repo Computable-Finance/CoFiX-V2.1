@@ -8,7 +8,7 @@ import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPair.sol";
-import "./interfaces/ICoFiXVaultForLP.sol";
+import "./interfaces/ICoFiXVaultForStaking.sol";
 import "./CoFiToken.sol";
 
 import "hardhat/console.sol";
@@ -25,7 +25,7 @@ contract CoFiXRouter is ICoFiXRouter {
     address immutable CNODE_TOKEN_ADDRESS;
 
     Config _config;
-    address _cofixVaultForLP;
+    address _coFiXVaultForStaking;
     mapping(address=>address) _pairs;
 
     modifier ensure(uint deadline) {
@@ -42,11 +42,11 @@ contract CoFiXRouter is ICoFiXRouter {
     }
 
     function getCoFiXVaultForLP() external view returns (address) {
-        return _cofixVaultForLP;
+        return _coFiXVaultForStaking;
     }
 
-    function setCoFiXVaultForLP(address cofixVaultForLP) external {
-        _cofixVaultForLP = cofixVaultForLP;
+    function setCoFiXVaultForLP(address coFiXVaultForStaking) external {
+        _coFiXVaultForStaking = coFiXVaultForStaking;
     }
 
     function addPair(address tokenAddress, address pairAddress) external {
@@ -128,9 +128,9 @@ contract CoFiXRouter is ICoFiXRouter {
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CRouter: less liquidity than expected");
 
-        address cofixVaultForLP = _cofixVaultForLP;
-        IERC20(pair).approve(cofixVaultForLP, liquidity);
-        ICoFiXVaultForLP(cofixVaultForLP).stake(pair, to, liquidity);
+        address coFiXVaultForStaking = _coFiXVaultForStaking;
+        IERC20(pair).approve(coFiXVaultForStaking, liquidity);
+        ICoFiXVaultForStaking(coFiXVaultForStaking).stake(pair, to, liquidity);
     }
 
     // 移除流动性

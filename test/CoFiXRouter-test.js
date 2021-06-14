@@ -9,7 +9,7 @@ describe("CoFiXRouter", function() {
         const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
         const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
         const CoFiXController = await ethers.getContractFactory("CoFiXController");
-        const CoFiXVaultForLP = await ethers.getContractFactory("CoFiXVaultForLP");
+        const CoFiXVaultForLP = await ethers.getContractFactory("CoFiXVaultForStaking");
 
         const cnode = await TestERC20.deploy('CNode', 'CNode', 18);
         const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
@@ -78,6 +78,23 @@ describe("CoFiXRouter", function() {
                 value: BigInt('10000000000000000')
             }
         );
+
+        receipt = await router.swapExactETHForTokens(
+            // 目标token地址
+            usdt.address.toString(),
+            // eth数量
+            BigInt('100000000000000000'),
+            // 预期获得的token的最小数量
+            BigInt('10'),
+            // 接收地址
+            owner.address,
+            // 出矿接收地址
+            owner.address,
+            BigInt('1723207627371'), {
+                value: BigInt('110000000000000000')
+            }
+        );
+        console.log((await receipt.wait()).gasUsed.toString());
 
         receipt = await router.swapExactETHForTokens(
             // 目标token地址

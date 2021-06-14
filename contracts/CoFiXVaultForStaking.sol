@@ -5,43 +5,46 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
-import "./interfaces/ICoFiXVaultForCNode.sol";
+import "./interfaces/ICoFiXVaultForStaking.sol";
 import "./interfaces/ICoFiXRouter.sol";
 import "./CoFiToken.sol";
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
-contract CoFiXVaultForCNode is ICoFiXVaultForCNode {
+contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
 
     // 账户信息
     struct Account {
         uint128 balance;
         uint128 rewardCursor;
     }
+    
+    struct StakeChannel{
+        uint totalStaked;
+        // 标记
+        uint tradeReward;
+        uint128 totalReward;
+        uint96 rewardPerToken;
+        uint32 blockCursor;
+        // address=>balance
+        mapping(address=>Account) accounts;
+    }
 
     constructor (address cofiToken, address cnodeToken) {
         COFI_TOKEN_ADDRESS = cofiToken;
         CNODE_TOKEN_ADDRESS = cnodeToken;
-        _blockCursor = block.number;
     }
 
     address immutable COFI_TOKEN_ADDRESS;
     address immutable CNODE_TOKEN_ADDRESS;
+
     uint constant COFI_GENESIS_BLOCK = 0;
 
     Config _config;
     address _cofixRouter;
-    uint _totalStaked;
-
-    // 标记
-    uint _totalReward;
-    uint _rewardPerToken;
-    uint _tradeReward;
-    uint _blockCursor;
-
-    // address=>balance
-    mapping(address=>Account) _accounts;
-
+    // pair=>StakeChannel
+    mapping(address=>StakeChannel) _channels;
+    
     function getConfig() external view override returns (Config memory) {
         return _config;
     }
@@ -58,96 +61,125 @@ contract CoFiXVaultForCNode is ICoFiXVaultForCNode {
         _cofixRouter = cofixRouter;
     }
 
-    function balanceOf(address addr) external view override returns (uint) {
-        return uint(_accounts[addr].balance);
+    function balanceOf(address pair, address addr) external view override returns (uint) {
+        return uint(_channels[pair].accounts[addr].balance);
     }
 
-    function earned(address addr) public view override returns (uint) {
+    function earned(address pair, address addr) public view override returns (uint) {
+        
+        StakeChannel storage channel = _channels[pair];
+        Account memory account = channel.accounts[addr];
+        uint newTradeReward = 0;
+        if (pair == CNODE_TOKEN_ADDRESS) {
+            uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
+            newTradeReward = tradeReward - channel.tradeReward;
+        }
 
-        Account memory account = _accounts[addr];
+        // 计算分红数据
         (
-            ,//uint tradeReward, 
             ,//uint newReward, 
             uint rewardPerToken
-        ) = _calcReward(_totalStaked);
+        ) = _calcReward(channel, channel.totalStaked, newTradeReward);
         return (rewardPerToken - uint(account.rewardCursor)) * uint(account.balance);
     }
 
-    function stake(address to, uint amount) external override {
+    function stake(address pair, address to, uint amount) external override {
 
-        _getReward(to);
+        StakeChannel storage channel = _channels[pair];
+        _getReward(pair, channel, to);
 
-        TransferHelper.safeTransferFrom(CNODE_TOKEN_ADDRESS, msg.sender, address(this), amount);
-        _totalStaked += amount;
+        TransferHelper.safeTransferFrom(pair, msg.sender, address(this), amount);
+        channel.totalStaked += amount;
 
-        Account storage account = _accounts[to];
+        Account storage account = channel.accounts[to];
         account.balance = uint128(uint(account.balance) + amount);
     }
 
-    function unstake(uint amount) external override {
+    function unstake(address pair, uint amount) external override {
         
-        _getReward(msg.sender);
+        StakeChannel storage channel = _channels[pair];
+        _getReward(pair, channel, msg.sender);
 
-        _totalStaked -= amount;
-        Account storage account = _accounts[msg.sender];
+        channel.totalStaked -= amount;
+        Account storage account = channel.accounts[msg.sender];
         account.balance = uint128(uint(account.balance) - amount);
-        TransferHelper.safeTransfer(CNODE_TOKEN_ADDRESS, msg.sender, amount);
+        TransferHelper.safeTransfer(pair, msg.sender, amount);
     }
 
-    function getReward() external override {
-        _getReward(msg.sender);
+    function getReward(address pair) external override {
+        uint reward = earned(pair, msg.sender);
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(msg.sender, reward);
     }
 
-    function _getReward(address addr) private {
+    function _getReward(address pair, StakeChannel storage channel, address addr) private {
 
-        Account memory account = _accounts[addr];
-        uint rewardPerToken = _updatReward();
+        Account memory account = channel.accounts[addr];
+        uint rewardPerToken = _updatReward(pair, channel);
         uint reward = (rewardPerToken - account.rewardCursor) * account.balance;
         account.rewardCursor = uint128(rewardPerToken);
-        _accounts[addr] = account;
-        CoFiToken(COFI_TOKEN_ADDRESS).mint(addr, reward);
+        channel.accounts[addr] = account;
+        if (reward > 0) {
+            CoFiToken(COFI_TOKEN_ADDRESS).mint(addr, reward);
+        }
     }
 
     // 更新分红信息
-    function _updatReward() private returns (uint){
-        uint totalStaked = _totalStaked;
+    function _updatReward(address pair, StakeChannel storage channel) private returns (uint){
+        uint totalStaked = channel.totalStaked;
         if (totalStaked > 0) {
+
+            uint newTradeReward = 0;
+            if (pair == CNODE_TOKEN_ADDRESS) {
+                uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
+                newTradeReward = tradeReward - channel.tradeReward;
+                // 更新交易分成
+                channel.tradeReward = tradeReward;
+            }
             (
-                uint tradeReward, 
                 uint newReward, 
                 uint rewardPerToken
-            ) = _calcReward(totalStaked);
+            ) = _calcReward(channel, totalStaked, newTradeReward);
             
             // 更新已经计算的累计分红数量
-            _totalReward += newReward;
+            channel.totalReward = uint128(uint(channel.totalReward) + newReward);
             // 更新单位份额的分红值
-            _rewardPerToken = rewardPerToken;
-            // 更新交易分成
-            _tradeReward = tradeReward;
+            channel.rewardPerToken = uint96(rewardPerToken);
             // 更新已经结算的区块
-            _blockCursor = block.number;
+            channel.blockCursor = uint32(block.number);
 
             return rewardPerToken;
         }
     }
 
-    function _calcReward(uint totalStaked) public view returns (
-        uint tradeReward, 
+    function _calcReward(StakeChannel storage channel, uint totalStaked, uint newTradeReward) internal view virtual returns (
         uint newReward, 
         uint rewardPerToken
     ) {
         // 重新计算总分红数量
-        tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(CNODE_TOKEN_ADDRESS);
         newReward =
             //_totalReward +
             // CNode区块出矿量
             // TODO: CNode出矿衰减
-            (block.number - _blockCursor) * 1 ether * uint(_config.cofiRate) * _redution(block.number - COFI_GENESIS_BLOCK) / 40000000 +
+            (block.number - uint(channel.blockCursor)) * 1 ether * uint(_config.cofiRate) * _redution(block.number - COFI_GENESIS_BLOCK) / 40000000 +
             // 交易出矿量给CNode的分成
-            tradeReward - _tradeReward;
+            newTradeReward;
+            //tradeReward - channel.tradeReward;
 
         // 重新计算单位份额分红值
-        rewardPerToken = newReward / totalStaked + _rewardPerToken;
+        rewardPerToken = newReward / totalStaked + uint(channel.rewardPerToken);
+    }
+
+    function calcReward(address pair, uint totalStaked) public view virtual returns (
+        uint newReward, 
+        uint rewardPerToken) {
+
+        StakeChannel storage channel = _channels[pair];
+        uint newTradeReward = 0;
+        if (pair == CNODE_TOKEN_ADDRESS) {
+            uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
+            newTradeReward = tradeReward - channel.tradeReward;
+        }
+        return _calcReward(channel, channel.totalStaked, newTradeReward);
     }
 
     // Nest ore drawing attenuation interval. 2400000 blocks, about one year
@@ -171,7 +203,7 @@ contract CoFiXVaultForCNode is ICoFiXVaultForCNode {
         // | (uint(40) << (16 * 10));
 
     // Calculation of attenuation gradient
-    function _redution(uint delta) private pure returns (uint) {
+    function _redution(uint delta) internal pure returns (uint) {
         
         if (delta < NEST_REDUCTION_LIMIT) {
             return (NEST_REDUCTION_STEPS >> ((delta / NEST_REDUCTION_SPAN) << 4)) & 0xFFFF;

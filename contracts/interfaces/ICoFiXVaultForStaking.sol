@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.4;
 
-interface ICoFiXVaultForLP {
+interface ICoFiXVaultForStaking {
 
     struct Config {
         // CoFi mining speed(100000based). 20000

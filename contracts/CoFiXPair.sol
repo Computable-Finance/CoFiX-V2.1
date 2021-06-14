@@ -235,8 +235,8 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         uint fee = amountIn * theta / 1 ether;
         //payable(_cofixDAO).transfer(fee);
         // TODO: 改为批量存入
-        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
-
+        _collect(fee);
+        
         console.log('fee=', fee);
 
         // 4. 挖矿逻辑
@@ -255,9 +255,16 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
     }
 
-    uint _Y;
-    uint _D;
-    uint _LASTBLOCK;
+    uint _totalFee;
+
+    function _collect(uint fee) private {
+        uint totalFee = _totalFee + fee;
+        if (totalFee >= 1 ether) {
+            _totalFee = 0;
+            ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
+        } 
+        _totalFee = totalFee;
+    }
 
     // BASE: 10000
     uint constant nt = 1000;
@@ -291,7 +298,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         uint fee = amountEthOut * theta / (1 ether - theta);
         //payable(_cofixDAO).transfer(fee);
         // TODO: 改为批量存入
-        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
+        _collect(fee);
 
         // 4. 挖矿逻辑
         uint ethBalance1 = address(this).balance - amountEthOut;
@@ -307,21 +314,29 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         payable(to).transfer(amountEthOut);
     }
 
+    //uint a;
+    //uint b;
+    uint112 _Y;
+    //uint a;
+    uint112 _D;
+    //uint b;
+    uint32 _LASTBLOCK;
+
     function _mint(uint D1) private returns (uint Z) {
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
-        uint D0 = _D;
+        uint D0 = uint(_D);
 
-        uint Y = _Y + D0 * nt * (block.number + 1 - _LASTBLOCK) / 10000;
+        uint Y = uint(_Y) + D0 * nt * (block.number + 1 - uint(_LASTBLOCK)) / 10000;
         if (D0 > D1) {
             Z = 1 ether * Y * (D0 - D1) / D0;
             //_CNodeReward += Z * 10 / 100;
             Y = Y - Z;
         }
 
-        _Y = Y;
-        _D = D1;
-        _LASTBLOCK = block.number;
+        _Y = uint112(Y);
+        _D = uint112(D1);
+        _LASTBLOCK = uint32(block.number);
     }
 
     uint256 constant internal C_BUYIN_ALPHA = 0; // α=0
