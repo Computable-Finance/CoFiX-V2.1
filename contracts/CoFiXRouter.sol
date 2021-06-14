@@ -154,7 +154,9 @@ contract CoFiXRouter is ICoFiXRouter {
         // 1. 转入份额
         TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);
 
-        ICoFiXPair(pair).burn{value: msg.value }(liquidity, to, msg.sender);
+        (amountToken, amountETH) = ICoFiXPair(pair).burn{value: msg.value }(liquidity, to, msg.sender);
+
+        require(liquidity >= amountETHMin, "");
     }
 
     uint _CNodeReward;
@@ -179,8 +181,10 @@ contract CoFiXRouter is ICoFiXRouter {
         address pair = pairFor(token);
 
         // 1. 转入eth
-        (uint amountTokenOut, uint Z) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
-        require(amountTokenOut >= amountOutMin);
+        uint Z;
+        (_amountOut, Z) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
+        require(_amountOut >= amountOutMin);
+        _amountIn = amountIn;
 
         uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
         CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
@@ -201,8 +205,10 @@ contract CoFiXRouter is ICoFiXRouter {
         address pair = pairFor(token);
 
         // 1. 转入eth
-        (uint amountEthOut, uint Z) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
-        require(amountEthOut >= amountOutMin);
+        uint Z;
+        (_amountOut, Z) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
+        require(_amountOut >= amountOutMin);
+        _amountIn = amountIn;
         uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
         CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
         _CNodeReward += cnodeReward;

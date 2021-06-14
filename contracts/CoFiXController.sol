@@ -13,6 +13,9 @@ contract CoFiXController is ICoFiXController {
     /// @return blockNumber The block number of price
     /// @return price The token price. (1eth equivalent to (price) token)
     function latestPrice(address tokenAddress, address paybackAddress) public payable override returns (uint blockNumber, uint price) {
+        // TODO:
+        require(tokenAddress != address(0));
+        require(paybackAddress != address(0));
         return (block.number - 1, 2700 * 1000000);
     }
 
@@ -39,6 +42,9 @@ contract CoFiXController is ICoFiXController {
         uint triggeredAvgPrice,
         uint triggeredSigmaSQ
     ) {
+        // TODO:
+        require(tokenAddress != address(0));
+        require(paybackAddress != address(0));
         return (block.number - 1, 2700 * 1000000, block.number - 1, 2700 * 1000000, 2600 * 1000000, 314000000000000);
     }
 

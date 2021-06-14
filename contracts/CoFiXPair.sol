@@ -124,7 +124,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
             paybackAddress
         );
 
-        Config memory config = _config;
+        //Config memory config = _config;
 
         uint total = totalSupply;
 
@@ -217,7 +217,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
             uint256 k, 
             uint256 ethAmount, 
             uint256 erc20Amount, 
-            uint256 blockNum, 
+            ,//uint256 blockNum, 
             uint256 theta
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value  - amountIn
@@ -249,7 +249,8 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
         uint D1 = (ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
                   / (INIT_TOKEN_AMOUNT + erc20Amount * INIT_ETH_AMOUNT / ethAmount);
         console.log('D1', D1);
-        _mint(D1);
+        
+        Z = _mint(D1);
 
         // 5. 转token给用户
         TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
@@ -280,7 +281,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
             uint256 k, 
             uint256 ethAmount, 
             uint256 erc20Amount, 
-            uint256 blockNum, 
+            ,//uint256 blockNum, 
             uint256 theta
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value
@@ -345,7 +346,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     uint256 constant internal C_SELLOUT_BETA = 2000000000000; // β=2e-06*1e18
 
     // α=0，β=2e-06
-    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
+    function impactCostForBuyInETH(uint vol) public pure override returns (uint impactCost) {
         uint gamma = 1; //CGammaMap[token];
         if (vol * gamma < 500 ether) {
             return 0;
@@ -355,7 +356,7 @@ contract CoFiXPair is ICoFiXPair, CoFiXERC20 {
     }
 
     // α=0，β=2e-06
-    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
+    function impactCostForSellOutETH(uint vol) public pure override returns (uint impactCost) {
         uint gamma = 1; //CGammaMap[token];
         if (vol * gamma < 500 ether) {
             return 0;

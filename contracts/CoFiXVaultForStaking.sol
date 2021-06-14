@@ -124,7 +124,7 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
     }
 
     // 更新分红信息
-    function _updatReward(address pair, StakeChannel storage channel) private returns (uint){
+    function _updatReward(address pair, StakeChannel storage channel) private returns (uint rewardPerToken){
         uint totalStaked = channel.totalStaked;
         if (totalStaked > 0) {
 
@@ -135,9 +135,10 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
                 // 更新交易分成
                 channel.tradeReward = tradeReward;
             }
+            uint newReward;
             (
-                uint newReward, 
-                uint rewardPerToken
+                newReward, 
+                rewardPerToken
             ) = _calcReward(channel, totalStaked, newTradeReward);
             
             // 更新已经计算的累计分红数量
@@ -146,8 +147,6 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
             channel.rewardPerToken = uint96(rewardPerToken);
             // 更新已经结算的区块
             channel.blockCursor = uint32(block.number);
-
-            return rewardPerToken;
         }
     }
 
@@ -179,7 +178,7 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
             uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
             newTradeReward = tradeReward - channel.tradeReward;
         }
-        return _calcReward(channel, channel.totalStaked, newTradeReward);
+        return _calcReward(channel, totalStaked, newTradeReward);
     }
 
     // Nest ore drawing attenuation interval. 2400000 blocks, about one year
