@@ -2,59 +2,65 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "./libs/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPair.sol";
 import "./interfaces/ICoFiXVaultForStaking.sol";
+import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
-contract CoFiXRouter is ICoFiXRouter {
+contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
+    // TODO: 为了方便测试，此处使用immutable变量，部署时采用openzeppelin的可升级方案，需要将这两个变量改为常量
+    address immutable COFI_TOKEN_ADDRESS;
+    address immutable CNODE_TOKEN_ADDRESS;
+
+    Config _config;
+    address _cofixVaultForStaking;
+    mapping(address=>address) _pairs;
+
+    /// @dev Create CoFiXRouter
+    /// @param cofiToken CoFi TOKEN
+    /// @param cnodeToken CNode TOKEN
     constructor (address cofiToken, address cnodeToken) {
         COFI_TOKEN_ADDRESS = cofiToken;
         CNODE_TOKEN_ADDRESS = cnodeToken;
     }
 
-    address immutable COFI_TOKEN_ADDRESS;
-    address immutable CNODE_TOKEN_ADDRESS;
-
-    Config _config;
-    address _coFiXVaultForStaking;
-    mapping(address=>address) _pairs;
-
+    // 验证时间没有超过截止时间
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'CRouter: EXPIRED');
+        require(deadline >= block.timestamp, "CoFiXRouter: EXPIRED");
         _;
     }
 
+    // 获取配置
     function getConfig() external view override returns (Config memory) {
         return _config;
     }
 
-    function setConfig(Config memory config) external override {
+    function setConfig(Config memory config) external override onlyGovernance {
         _config = config;
     }
 
-    function getCoFiXVaultForLP() external view returns (address) {
-        return _coFiXVaultForStaking;
+    /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
+    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    /// @param newGovernance INestGovernance implementation contract address
+    function update(address newGovernance) public override {
+        super.update(newGovernance);
+        _cofixVaultForStaking = ICoFiXGovernance(newGovernance).getCoFiXVaultForStakingAddress();
     }
 
-    function setCoFiXVaultForLP(address coFiXVaultForStaking) external {
-        _coFiXVaultForStaking = coFiXVaultForStaking;
-    }
-
-    function addPair(address tokenAddress, address pairAddress) external {
+    function addPair(address tokenAddress, address pairAddress) external override onlyGovernance {
         _pairs[tokenAddress] = pairAddress;
     }
 
     // calculates the CREATE2 address for a pair without making any external calls
-    function pairFor(address token) internal view returns (address pair) {
+    function _pairFor(address token) private view returns (address pair) {
         // pair = address(uint(keccak256(abi.encodePacked(
         //         hex'ff',
         //         _factory,
@@ -65,25 +71,26 @@ contract CoFiXRouter is ICoFiXRouter {
         return _pairs[token];
     }
 
-    // 添加流动性
-    // msg.value = amountETH + oracle fee
+    /// @dev 添加流动性
+    /// @param token 目标token
+    /// @param amountETH 要添加的eth数量
+    /// @param amountToken 要添加的token数量
+    /// @param liquidityMin 预期获得的最小份额数量
+    /// @param to 份额接收地址
+    /// @param deadline 截止时间
+    /// @return liquidity 获得的流动性份额
     function addLiquidity(
-        // 目标token
         address token,
-        // eth数量
         uint amountETH,
-        // token数量
         uint amountToken,
-        // 预期的最小份额数
         uint liquidityMin,
-        // 流动性接收地址
         address to,
-        // 截止时间
         uint deadline
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
+        // msg.value = amountETH + oracle fee
         // 0. 找到交易对合约
-        address pair = pairFor(token);
+        address pair = _pairFor(token);
         
         // 1. 转入资金
         // 收取token
@@ -94,11 +101,17 @@ contract CoFiXRouter is ICoFiXRouter {
         liquidity = ICoFiXPair(pair).mint{ value: msg.value }(to, amountETH, amountToken, msg.sender);
 
         // 份额数不能低于预期最小值
-        require(liquidity >= liquidityMin, "CRouter: less liquidity than expected");
+        require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
     }
 
-    // 添加流动性并存入收益池
-    // msg.value = amountETH + oracle fee
+    /// @dev 添加流动性并将份额转入收益池
+    /// @param token 目标token
+    /// @param amountETH 要添加的eth数量
+    /// @param amountToken 要添加的token数量
+    /// @param liquidityMin 预期获得的最小份额数量
+    /// @param to 份额接收地址
+    /// @param deadline 截止时间
+    /// @return liquidity 获得的流动性份额
     function addLiquidityAndStake(
         // 目标token
         address token,
@@ -115,7 +128,7 @@ contract CoFiXRouter is ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
         // 0. 找到交易对合约
-        address pair = pairFor(token);
+        address pair = _pairFor(token);
         
         // 1. 转入资金
         // 收取token
@@ -123,14 +136,15 @@ contract CoFiXRouter is ICoFiXRouter {
 
         // 2. 做市
         // 生成份额
-        liquidity = ICoFiXPair(pair).mint{ value: msg.value }(address(this), amountETH, amountToken, msg.sender);
-
+        address cofixVaultForStaking = _cofixVaultForStaking;
+        liquidity = ICoFiXPair(pair).mint{ 
+            value: msg.value 
+        }(cofixVaultForStaking, amountETH, amountToken, msg.sender);
         // 份额数不能低于预期最小值
-        require(liquidity >= liquidityMin, "CRouter: less liquidity than expected");
+        require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
 
-        address coFiXVaultForStaking = _coFiXVaultForStaking;
-        IERC20(pair).approve(coFiXVaultForStaking, liquidity);
-        ICoFiXVaultForStaking(coFiXVaultForStaking).stake(pair, to, liquidity);
+        // 3. 存入份额
+        ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(pair, to, liquidity);
     }
 
     // 移除流动性
@@ -149,7 +163,7 @@ contract CoFiXRouter is ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint amountToken, uint amountETH) 
     {
         // 0. 找到交易对
-        address pair = pairFor(token);
+        address pair = _pairFor(token);
 
         // 1. 转入份额
         TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);
@@ -178,16 +192,16 @@ contract CoFiXRouter is ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
     {
         // 0. 找到交易对
-        address pair = pairFor(token);
+        address pair = _pairFor(token);
 
         // 1. 转入eth
-        uint Z;
-        (_amountOut, Z) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
+        uint mined;
+        (_amountOut, mined) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
         require(_amountOut >= amountOutMin);
         _amountIn = amountIn;
 
-        uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
-        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
+        uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
         _CNodeReward += cnodeReward;
     }
 
@@ -202,15 +216,15 @@ contract CoFiXRouter is ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
     {
         // 0. 找到交易对
-        address pair = pairFor(token);
+        address pair = _pairFor(token);
 
         // 1. 转入eth
-        uint Z;
-        (_amountOut, Z) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
+        uint mined;
+        (_amountOut, mined) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
         require(_amountOut >= amountOutMin);
         _amountIn = amountIn;
-        uint cnodeReward = Z * uint(_config.cnodeRewardRate) / 10000;
-        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, Z - cnodeReward);
+        uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
         _CNodeReward += cnodeReward;
     }
 

@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./libs/ERC20.sol";
 
 // CoFiToken with Governance. It offers possibilities to adopt off-chain gasless governance infra.
 contract CoFiToken is ERC20("CoFi Token", "CoFi") {
@@ -23,7 +24,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     /// @notice A checkpoint for marking number of votes from a given block
     struct Checkpoint {
         uint32 fromBlock;
-        uint256 votes;
+        uint votes;
     }
 
     /// @notice A record of votes checkpoints for each account, by index
@@ -33,10 +34,10 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     mapping (address => uint32) public numCheckpoints;
 
     /// @notice The EIP-712 typehash for the contract's domain
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint chainId,address verifyingContract)");
 
     /// @notice The EIP-712 typehash for the delegation struct used by the contract
-    bytes32 public constant DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+    bytes32 public constant DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint nonce,uint expiry)");
 
     /// @notice A record of states for signing / validating signatures
     mapping (address => uint) public nonces;
@@ -86,7 +87,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     }
 
     /// @notice mint is used to distribute CoFi token to users, minters are CoFi mining pools
-    function mint(address _to, uint256 _amount) external {
+    function mint(address _to, uint _amount) external {
         require(minters[msg.sender], "CoFi: !minter");
         _mint(_to, _amount);
         _moveDelegates(address(0), _delegates[_to], _amount);
@@ -94,14 +95,14 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
 
     /// @notice SUSHI has a vote governance bug in its token implementation, CoFi fixed it here
     /// read https://blog.peckshield.com/2020/09/08/sushi/
-    function transfer(address _recipient, uint256 _amount) public override returns (bool) {
+    function transfer(address _recipient, uint _amount) public override returns (bool) {
         super.transfer(_recipient, _amount);
         _moveDelegates(_delegates[msg.sender], _delegates[_recipient], _amount);
         return true;
     }
 
     /// @notice override original transferFrom to fix vote issue
-    function transferFrom(address _sender, address _recipient, uint256 _amount) public override returns (bool) {
+    function transferFrom(address _sender, address _recipient, uint _amount) public override returns (bool) {
         super.transferFrom(_sender, _recipient, _amount);
         _moveDelegates(_delegates[_sender], _delegates[_recipient], _amount);
         return true;
@@ -187,7 +188,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     function getCurrentVotes(address account)
         external
         view
-        returns (uint256)
+        returns (uint)
     {
         uint32 nCheckpoints = numCheckpoints[account];
         return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
@@ -203,7 +204,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     function getPriorVotes(address account, uint blockNumber)
         external
         view
-        returns (uint256)
+        returns (uint)
     {
         require(blockNumber < block.number, "CoFi::getPriorVotes: not yet determined");
 
@@ -242,7 +243,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
         internal
     {
         address currentDelegate = _delegates[delegator];
-        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying CoFis (not scaled);
+        uint delegatorBalance = balanceOf(delegator); // balance of underlying CoFis (not scaled);
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -250,21 +251,21 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
         _moveDelegates(currentDelegate, delegatee, delegatorBalance);
     }
 
-    function _moveDelegates(address srcRep, address dstRep, uint256 amount) internal {
+    function _moveDelegates(address srcRep, address dstRep, uint amount) internal {
         if (srcRep != dstRep && amount > 0) {
             if (srcRep != address(0)) {
                 // decrease old representative
                 uint32 srcRepNum = numCheckpoints[srcRep];
-                uint256 srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
-                uint256 srcRepNew = srcRepOld - (amount);
+                uint srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
+                uint srcRepNew = srcRepOld - (amount);
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
 
             if (dstRep != address(0)) {
                 // increase new representative
                 uint32 dstRepNum = numCheckpoints[dstRep];
-                uint256 dstRepOld = dstRepNum > 0 ? checkpoints[dstRep][dstRepNum - 1].votes : 0;
-                uint256 dstRepNew = dstRepOld + (amount);
+                uint dstRepOld = dstRepNum > 0 ? checkpoints[dstRep][dstRepNum - 1].votes : 0;
+                uint dstRepNew = dstRepOld + (amount);
                 _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
             }
         }
@@ -273,8 +274,8 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     function _writeCheckpoint(
         address delegatee,
         uint32 nCheckpoints,
-        uint256 oldVotes,
-        uint256 newVotes
+        uint oldVotes,
+        uint newVotes
     )
         internal
     {
@@ -296,7 +297,7 @@ contract CoFiToken is ERC20("CoFi Token", "CoFi") {
     }
 
     function getChainId() internal view returns (uint) {
-        uint256 chainId;
+        uint chainId;
         assembly { chainId := chainid() }
         return chainId;
     }

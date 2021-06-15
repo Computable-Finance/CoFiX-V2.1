@@ -22,9 +22,9 @@ interface ICoFiXController is INestPriceFacade{
         address tokenAddress,
         address paybackAddress
     ) external payable returns (
-        uint256 ethAmount, 
-        uint256 erc20Amount, 
-        uint256 blockNum
+        uint ethAmount, 
+        uint tokenAmount, 
+        uint blockNum
     );
 
     // Calc variance of price and K in CoFiX is very expensive
@@ -35,11 +35,11 @@ interface ICoFiXController is INestPriceFacade{
         address tokenAddress,
         address paybackAddress
     ) external payable returns (
-        uint256 k, 
-        uint256 ethAmount, 
-        uint256 erc20Amount, 
-        uint256 blockNum, 
-        uint256 theta
+        uint k, 
+        uint ethAmount, 
+        uint tokenAmount, 
+        uint blockNum, 
+        uint theta
     );
 
     /**
@@ -48,5 +48,5 @@ interface ICoFiXController is INestPriceFacade{
      * @param bn The block number when (ETH, TOKEN) price takes into effective
      * @return k The K value
      */
-    function calcK(uint256 sigmaSQ, uint256 bn) external view returns (uint k);
+    function calcK(uint sigmaSQ, uint bn) external view returns (uint k);
 }

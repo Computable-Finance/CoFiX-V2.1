@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 /// @dev Router contract to interact with each CoFiXPair, no owner or governance
 interface ICoFiXFactory {
     // All pairs: {ETH <-> ERC20 Token}
-    event PairCreated(address indexed token, address pair, uint256);
+    event PairCreated(address indexed token, address pair, uint);
     event NewGovernance(address _new);
     event NewController(address _new);
     event NewFeeReceiver(address _new);
@@ -22,15 +22,15 @@ interface ICoFiXFactory {
     /// @return pair the address of new token pair
     function createPair(
         address token,
-	    uint256 initToken0Amount,
-        uint256 initToken1Amount
+	    uint initToken0Amount,
+        uint initToken1Amount
         )
         external
         returns (address pair);
 
     function getPair(address token) external view returns (address pair);
-    function allPairs(uint256) external view returns (address pair);
-    function allPairsLength() external view returns (uint256);
+    function allPairs(uint) external view returns (address pair);
+    function allPairsLength() external view returns (uint);
 
     function getTradeMiningStatus(address token) external view returns (bool status);
     function setTradeMiningStatus(address token, bool status) external;

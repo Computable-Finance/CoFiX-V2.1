@@ -12,7 +12,7 @@ contract TestERC20 is ERC20 {
     //string _symbol;
     //uint8 _decimals;
 
-    //uint256 _totalSupply;
+    //uint _totalSupply;
     //mapping(address=>uint) _balances;
     //mapping(address=>mapping(address=>uint)) _allowance;
 

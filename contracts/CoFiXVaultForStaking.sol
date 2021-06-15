@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./libs/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXVaultForStaking.sol";
 import "./interfaces/ICoFiXRouter.sol";
+import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
-contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
+contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
     // 账户信息
     struct Account {
@@ -29,15 +30,9 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
         // address=>balance
         mapping(address=>Account) accounts;
     }
-
-    constructor (address cofiToken, address cnodeToken) {
-        COFI_TOKEN_ADDRESS = cofiToken;
-        CNODE_TOKEN_ADDRESS = cnodeToken;
-    }
-
+    
     address immutable COFI_TOKEN_ADDRESS;
     address immutable CNODE_TOKEN_ADDRESS;
-
     uint constant COFI_GENESIS_BLOCK = 0;
 
     Config _config;
@@ -45,20 +40,30 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
     // pair=>StakeChannel
     mapping(address=>StakeChannel) _channels;
     
+    constructor (address cofiToken, address cnodeToken) {
+        COFI_TOKEN_ADDRESS = cofiToken;
+        CNODE_TOKEN_ADDRESS = cnodeToken;
+    }
+
+    /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
+    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    /// @param newGovernance INestGovernance implementation contract address
+    function update(address newGovernance) public override {
+        super.update(newGovernance);
+        _cofixRouter = ICoFiXGovernance(newGovernance).getCoFiXRouterAddress();
+    }
+
+    modifier onlyRouter() {
+        require(msg.sender == _cofixRouter, "CoFiXPair: Only for CoFiXRouter");
+        _;
+    }
+
     function getConfig() external view override returns (Config memory) {
         return _config;
     }
 
     function setConfig(Config memory config) external override {
         _config = config;
-    }
-
-    function getCoFiXRouter() external view returns (address) {
-        return _cofixRouter;
-    }
-
-    function setCoFiXRouter(address cofixRouter) external {
-        _cofixRouter = cofixRouter;
     }
 
     function balanceOf(address pair, address addr) external view override returns (uint) {
@@ -81,6 +86,18 @@ contract CoFiXVaultForStaking is ICoFiXVaultForStaking {
             uint rewardPerToken
         ) = _calcReward(channel, channel.totalStaked, newTradeReward);
         return (rewardPerToken - uint(account.rewardCursor)) * uint(account.balance);
+    }
+
+    function routerStake(address pair, address to, uint amount) external override onlyRouter {
+
+        StakeChannel storage channel = _channels[pair];
+        _getReward(pair, channel, to);
+
+        //TransferHelper.safeTransferFrom(pair, msg.sender, address(this), amount);
+        channel.totalStaked += amount;
+
+        Account storage account = channel.accounts[to];
+        account.balance = uint128(uint(account.balance) + amount);
     }
 
     function stake(address pair, address to, uint amount) external override {

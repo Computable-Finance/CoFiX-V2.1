@@ -56,11 +56,11 @@ contract CoFiXController is ICoFiXController {
         address tokenAddress,
         address paybackAddress
     ) external payable override returns (
-        uint256 ethAmount, 
-        uint256 erc20Amount, 
-        uint256 blockNum
+        uint ethAmount, 
+        uint tokenAmount, 
+        uint blockNum
     ) {
-        (blockNum, erc20Amount) = latestPrice(tokenAddress, paybackAddress);
+        (blockNum, tokenAmount) = latestPrice(tokenAddress, paybackAddress);
         ethAmount = 1 ether;
     }
 
@@ -72,11 +72,11 @@ contract CoFiXController is ICoFiXController {
         address tokenAddress,
         address paybackAddress
     ) external override payable returns (
-        uint256 k, 
-        uint256 ethAmount, 
-        uint256 erc20Amount, 
-        uint256 blockNum, 
-        uint256 theta
+        uint k, 
+        uint ethAmount, 
+        uint tokenAmount, 
+        uint blockNum, 
+        uint theta
     ) {
         (
             uint latestPriceBlockNumber, 
@@ -88,7 +88,7 @@ contract CoFiXController is ICoFiXController {
         ) = latestPriceAndTriggeredPriceInfo(tokenAddress, paybackAddress);
 
         ethAmount = 1 ether;
-        erc20Amount = latestPriceValue;
+        tokenAmount = latestPriceValue;
         blockNum = latestPriceBlockNumber;
         theta = 0.002 ether;
         
@@ -113,7 +113,7 @@ contract CoFiXController is ICoFiXController {
     * @param bn The block number when (ETH, TOKEN) price takes into effective
     * @return k The K value
     */
-    function calcK(uint256 sigmaSQ, uint256 bn) public view override returns (uint k) {
+    function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
 
         // 计算波动率
         uint sigma = sqrt(sigmaSQ * 1e18);

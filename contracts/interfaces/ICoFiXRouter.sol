@@ -13,6 +13,8 @@ interface ICoFiXRouter {
 
     function setConfig(Config memory config) external;
 
+    function addPair(address tokenAddress, address pairAddress) external;
+    
     function getTradeReward(address pair) external view returns (uint);
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
