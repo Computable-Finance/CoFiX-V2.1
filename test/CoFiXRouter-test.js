@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const e = require("../scripts/deploy.js");
+const deployer = require("../scripts/deploy.js");
 
 describe("CoFiXRouter", function() {
     it("test1", async function() {
@@ -12,11 +12,11 @@ describe("CoFiXRouter", function() {
             cofixDAO,
             router,
             controller,
-            vaultForLP,
+            vaultForStaking,
             governance,
             usdt,
             pair
-        } = await e.deploy();
+        } = await deployer.deploy();
 
         await usdt.transfer(owner.address, BigInt('10000000000000'));
         await usdt.approve(router.address, BigInt('10000000000000'));
@@ -33,13 +33,13 @@ describe("CoFiXRouter", function() {
 
         console.log((await receipt.wait()).gasUsed.toString());
 
-        let staked = await vaultForLP.balanceOf(pair.address, owner.address);
+        let staked = await vaultForStaking.balanceOf(pair.address, owner.address);
             
         console.log(staked.toString());
 
-        let liq = await vaultForLP.balanceOf(pair.address, owner.address);
+        let liq = await vaultForStaking.balanceOf(pair.address, owner.address);
         console.log('liq=' + liq.toString());
-        await vaultForLP.unstake(pair.address, liq);
+        await vaultForStaking.unstake(pair.address, liq);
         await pair.approve(router.address, liq);
         console.log('balance=' + (await pair.balanceOf(owner.address)).toString());
 

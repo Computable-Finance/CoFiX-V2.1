@@ -46,7 +46,7 @@ interface ICoFiXFactory {
     function setDAO(address _new) external;
     function getController() external view returns (address controller);
     function getFeeReceiver() external view returns (address feeReceiver); // For CoFi Holders
-    function getVaultForLP() external view returns (address vaultForLP);
+    function getVaultForLP() external view returns (address vaultForStaking);
     function getVaultForTrader() external view returns (address vaultForTrader);
     function getVaultForCNode() external view returns (address vaultForCNode);
     function getDAO() external view returns (address dao);

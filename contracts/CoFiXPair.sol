@@ -156,7 +156,6 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 5. 增发份额
         _mint(to, liquidity);
         emit Mint(msg.sender, amountETH, amountToken);
-        //console.log('liquidity', liquidity);
     }
 
     // 销毁流动性
@@ -205,7 +204,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 3. 销毁份额
         _burn(address(this), liquidity);
 
-        // 4. 根据资金池剩余情况进行调整
+        // 4. TODO: 根据资金池剩余情况进行调整
         // 5. 资金转入用户指定地址
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(address(this), to, amountTokenOut);
@@ -248,13 +247,13 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 3. 扣除交易手续费
         uint fee = amountIn * theta / 1 ether;
         _collect(fee);
-        console.log('fee=', fee);
 
         // 4. 挖矿逻辑
         uint ethBalance1 = address(this).balance;
         uint tokenBalance1 = IERC20(TOKEN_ADDRESS).balanceOf(address(this)) - amountTokenOut;
         // 【注意】Pt此处没有引入K值，后续需要引入
-        uint D1 = (ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
+        uint D1 = //(ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
+                  _calcD(ethBalance1, tokenBalance1)
                   / (INIT_TOKEN_AMOUNT + tokenAmount * INIT_ETH_AMOUNT / ethAmount);
         mined = _mint(D1);
 
@@ -294,8 +293,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2.1. K值计算
         // 2.2. 冲击成本计算
         uint C = impactCostForBuyInETH(amountIn);
-        amountETHOut = amountIn * ethAmount * (1 ether - theta)/ tokenAmount / (1 ether + k + C); 
 
+        amountETHOut = amountIn * ethAmount * (1 ether - theta)/ tokenAmount / (1 ether + k + C); 
         // 3. 扣除交易手续费
         uint fee = amountETHOut * theta / (1 ether - theta);
         _collect(fee);
@@ -304,12 +303,22 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint ethBalance1 = address(this).balance - amountETHOut;
         uint tokenBalance1 = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
         // 【注意】Pt此处没有引入K值，后续需要引入
-        uint D1 = (ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
+        uint D1 = //(ethBalance1 * INIT_TOKEN_AMOUNT - tokenBalance1 * INIT_ETH_AMOUNT)
+                  _calcD(ethBalance1, tokenBalance1)
                   / (INIT_TOKEN_AMOUNT + tokenAmount * INIT_ETH_AMOUNT / ethAmount);
         mined = _mint(D1);
 
         // 5. 转token给用户
         payable(to).transfer(amountETHOut);
+    }
+
+    function _calcD(uint ethBalance1, uint tokenBalance1) private view returns (uint) {
+        uint left = ethBalance1 * INIT_TOKEN_AMOUNT;
+        uint right = tokenBalance1 * INIT_ETH_AMOUNT;
+        if (left > right) {
+            return left - right;
+        } 
+        return right - left;
     }
 
     //uint a;
@@ -330,7 +339,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // D0 < D1时，是否更新Y值
         uint Y = uint(_Y) + D0 * nt * (block.number + 1 - uint(_LASTBLOCK)) / 10000;
         if (D0 > D1) {
-            mined = 1 ether * Y * (D0 - D1) / D0;
+            mined = Y * (D0 - D1) / D0;
             //_CNodeReward += mined * 10 / 100;
             Y = Y - mined;
         }
@@ -399,12 +408,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
         // NV = (Et + Ut / Pt) / ( (1 + (U0 / Pt * E0)) * Ft )
         // NV = (Et * E0 + Ut * E0  / Pt) / ( (E0 + U0 / Pt) * Ft )
-        //console.log('ethBalance', ethBalance);
-        //console.log('tokenBalance', tokenBalance);
         navps = (ethBalance * INIT_ETH_AMOUNT * tokenAmount + tokenBalance * INIT_ETH_AMOUNT * ethAmount) * 1 ether
                 / totalSupply / (INIT_ETH_AMOUNT * tokenAmount + INIT_TOKEN_AMOUNT * ethAmount);
-        //console.log('totalSupply', totalSupply);
-        //console.log('navps', navps);
     }
 
     // use it in this contract, for optimized gas usage

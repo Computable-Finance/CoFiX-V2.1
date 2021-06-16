@@ -12,6 +12,8 @@ interface ICoFiXVaultForStaking {
     function getConfig() external view returns (Config memory);
 
     function setConfig(Config memory config) external;
+
+    function initStakingChannel(address pair, uint cofiWeight, uint initBlockNumber) external;
     
     function balanceOf(address pair, address addr) external view returns (uint);
 

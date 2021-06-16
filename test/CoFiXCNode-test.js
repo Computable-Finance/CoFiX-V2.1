@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const e = require("../scripts/deploy.js");
+const deployer = require("../scripts/deploy.js");
 
 describe("CoFiXRouter", function() {
     it("test1", async function() {
@@ -10,13 +10,13 @@ describe("CoFiXRouter", function() {
             cofixDAO,
             router,
             controller,
-            vaultForLP,
+            vaultForStaking,
             governance,
             usdt,
             pair
-        } = await e.deploy();
+        } = await deployer.deploy();
 
-        let cnodeVault = vaultForLP;
+        let cnodeVault = vaultForStaking;
         await cnodeVault.setConfig({
             cofiRate: 20000
         });
