@@ -11,20 +11,20 @@ describe("CoFiXRouter", function() {
             cofi,
             cnode,
             cofixDAO,
-            router,
-            controller,
-            vaultForStaking,
-            governance,
+            cofixRouter,
+            cofixController,
+            cofixVaultForStaking,
+            cofixGovernance,
             usdt,
             pair
         } = await deployer.deploy();
 
         // await usdt.transfer(owner.address, BigInt('10000000000000'));
-        // await usdt.approve(router.address, BigInt('10000000000000'));
+        // await usdt.approve(cofixRouter.address, BigInt('10000000000000'));
         
         // if (true) {
         //     // 1. 添加2eth的流动性，预期获得1999999999000000000份额
-        //     let receipt = await router.addLiquidity(
+        //     let receipt = await cofixRouter.addLiquidity(
         //         usdt.address,
         //         BigInt('2000000000000000000'),
         //         BigInt('6000000000'),
@@ -41,12 +41,12 @@ describe("CoFiXRouter", function() {
         //     expect(liquidity).to.equal(BigInt('1999999999000000000'));
         //     expect(await ethers.provider.getBalance(pair.address)).to.equal(BigInt('2000000000000000000'));
         //     expect(await usdt.balanceOf(pair.address)).to.equal('6000000000');
-        //     expect(await vaultForStaking.balanceOf(pair.address, owner.address)).to.equal('0');
+        //     expect(await cofixVaultForStaking.balanceOf(pair.address, owner.address)).to.equal('0');
         // }
         
         // if (true) {
         //     // 2. 添加2eth的流动性并存入收益池，预期获得2000000000000000000份额
-        //     let receipt = await router.addLiquidityAndStake(
+        //     let receipt = await cofixRouter.addLiquidityAndStake(
         //         usdt.address,
         //         BigInt('2000000000000000000'),
         //         BigInt('6000000000'),
@@ -64,16 +64,16 @@ describe("CoFiXRouter", function() {
         //     expect(await usdt.balanceOf(pair.address)).to.equal('12000000000');
 
         //     await usdt.transfer(owner.address, 0);
-        //     console.log('staked: ' + (await vaultForStaking.balanceOf(pair.address, owner.address)).toString());
-        //     console.log('[owner earned]: ' + (await vaultForStaking.earned(pair.address, owner.address)).toString());
+        //     console.log('staked: ' + (await cofixVaultForStaking.balanceOf(pair.address, owner.address)).toString());
+        //     console.log('[owner earned]: ' + (await cofixVaultForStaking.earned(pair.address, owner.address)).toString());
 
-        //     expect(await vaultForStaking.balanceOf(pair.address, owner.address)).to.equal('2000000000000000000');
+        //     expect(await cofixVaultForStaking.balanceOf(pair.address, owner.address)).to.equal('2000000000000000000');
         // }
 
         // await usdt.transfer(addr1.address, BigInt('5000000000000'));
-        // await usdt.connect(addr1).approve(router.address, BigInt('10000000000000')); 
+        // await usdt.connect(addr1).approve(cofixRouter.address, BigInt('10000000000000')); 
         // if (true) {
-        //     let receipt = await router.connect(addr1).addLiquidityAndStake(
+        //     let receipt = await cofixRouter.connect(addr1).addLiquidityAndStake(
         //         usdt.address,
         //         BigInt('2000000000000000000'),
         //         BigInt('6000000000'),
@@ -89,14 +89,14 @@ describe("CoFiXRouter", function() {
         //     expect(await ethers.provider.getBalance(pair.address)).to.equal('6000000000000000000');
         //     expect(await usdt.balanceOf(pair.address)).to.equal('18000000000');
 
-        //     expect(await vaultForStaking.balanceOf(pair.address, addr1.address)).to.equal('2000000000000000000');
+        //     expect(await cofixVaultForStaking.balanceOf(pair.address, addr1.address)).to.equal('2000000000000000000');
         // }
 
         // console.log('-----------------------');
         // if (true) {
         //     await usdt.transfer(owner.address, 0);
-        //     console.log('[owner earned]: ' + (await vaultForStaking.earned(pair.address, owner.address)).toString());
-        //     console.log('[addr1 earned]: ' + (await vaultForStaking.earned(pair.address, addr1.address)).toString());
+        //     console.log('[owner earned]: ' + (await cofixVaultForStaking.earned(pair.address, owner.address)).toString());
+        //     console.log('[addr1 earned]: ' + (await cofixVaultForStaking.earned(pair.address, addr1.address)).toString());
         // }
 
         // if (true) {
@@ -105,7 +105,7 @@ describe("CoFiXRouter", function() {
         //     console.log('addr2 usdt:' + (await usdt.balanceOf(addr2.address)).toString());
         //     console.log('addr2 cofi:' + (await cofi.balanceOf(addr2.address)).toString());
 
-        //     let receipt = await router.connect(addr2).swapExactETHForTokens(
+        //     let receipt = await cofixRouter.connect(addr2).swapExactETHForTokens(
         //         // 目标token地址
         //         usdt.address,
         //         // eth数量
@@ -125,8 +125,8 @@ describe("CoFiXRouter", function() {
         //     console.log('addr2 usdt:' + (await usdt.balanceOf(addr2.address)).toString());
         //     console.log('addr2 cofi:' + (await cofi.balanceOf(addr2.address)).toString());
 
-        //     await usdt.connect(addr2).approve(router.address, BigInt('1989514326'));
-        //     receipt = await router.connect(addr2).swapExactTokensForETH(
+        //     await usdt.connect(addr2).approve(cofixRouter.address, BigInt('1989514326'));
+        //     receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
         //         usdt.address,
         //         BigInt('1989514326'),
         //         BigInt('100'),

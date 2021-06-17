@@ -10,17 +10,17 @@ describe("CoFiXRouter", function() {
             cofi,
             cnode,
             cofixDAO,
-            router,
-            controller,
-            vaultForStaking,
-            governance,
+            cofixRouter,
+            cofixController,
+            cofixVaultForStaking,
+            cofixGovernance,
             usdt,
             pair
         } = await deployer.deploy();
 
         await usdt.transfer(owner.address, BigInt('10000000000000'));
-        await usdt.approve(router.address, BigInt('10000000000000'));
-        let receipt = await router.addLiquidityAndStake(
+        await usdt.approve(cofixRouter.address, BigInt('10000000000000'));
+        let receipt = await cofixRouter.addLiquidityAndStake(
             usdt.address,
             BigInt('2000000000000000000'),
             BigInt('6000000000'),
@@ -33,23 +33,23 @@ describe("CoFiXRouter", function() {
 
         console.log((await receipt.wait()).gasUsed.toString());
 
-        let staked = await vaultForStaking.balanceOf(pair.address, owner.address);
+        let staked = await cofixVaultForStaking.balanceOf(pair.address, owner.address);
             
         console.log(staked.toString());
 
-        let liq = await vaultForStaking.balanceOf(pair.address, owner.address);
+        let liq = await cofixVaultForStaking.balanceOf(pair.address, owner.address);
         console.log('liq=' + liq.toString());
-        await vaultForStaking.unstake(pair.address, liq);
-        await pair.approve(router.address, liq);
+        await cofixVaultForStaking.unstake(pair.address, liq);
+        await pair.approve(cofixRouter.address, liq);
         console.log('balance=' + (await pair.balanceOf(owner.address)).toString());
 
-        await router.removeLiquidityGetTokenAndETH(
+        await cofixRouter.removeLiquidityGetTokenAndETH(
             // 要移除的token对
             usdt.address,
             // 移除的额度
-            liq,
-            // 预期最少可以获得的eth数量
             1,
+            // 预期最少可以获得的eth数量
+            0,
             // 接收地址
             owner.address,
             // 截止时间
@@ -58,7 +58,7 @@ describe("CoFiXRouter", function() {
             }
         );
 
-        receipt = await router.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactETHForTokens(
             // 目标token地址
             usdt.address.toString(),
             // eth数量
@@ -75,7 +75,7 @@ describe("CoFiXRouter", function() {
         );
         console.log((await receipt.wait()).gasUsed.toString());
 
-        receipt = await router.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactETHForTokens(
             // 目标token地址
             usdt.address.toString(),
             // eth数量

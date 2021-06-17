@@ -198,16 +198,16 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
                 tokenAmount
             );
         }
-        amountETHOut = navps * liquidity;
-        amountTokenOut = amountETHOut * INIT_TOKEN_AMOUNT / INIT_ETH_AMOUNT;
 
+        amountETHOut = navps * liquidity / 1 ether;
+        amountTokenOut = amountETHOut * INIT_TOKEN_AMOUNT / INIT_ETH_AMOUNT;
         // 3. 销毁份额
         _burn(address(this), liquidity);
 
         // 4. TODO: 根据资金池剩余情况进行调整
         // 5. 资金转入用户指定地址
         payable(to).transfer(amountETHOut);
-        TransferHelper.safeTransfer(address(this), to, amountTokenOut);
+        TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
     }
 
     /// @dev 用eth兑换token
@@ -237,7 +237,6 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             TOKEN_ADDRESS,
             paybackAddress
         );
-
         // 2. 计算兑换结果
         // 2.1. K值计算
         // 2.2. 冲击成本计算

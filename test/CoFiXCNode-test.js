@@ -8,15 +8,15 @@ describe("CoFiXRouter", function() {
             cofi,
             cnode,
             cofixDAO,
-            router,
-            controller,
-            vaultForStaking,
-            governance,
+            cofixRouter,
+            cofixController,
+            cofixVaultForStaking,
+            cofixGovernance,
             usdt,
             pair
         } = await deployer.deploy();
 
-        let cnodeVault = vaultForStaking;
+        let cnodeVault = cofixVaultForStaking;
         await cnodeVault.setConfig({
             cofiRate: 20000
         });
@@ -43,7 +43,7 @@ describe("CoFiXRouter", function() {
             console.log('addr1 earned: ' + e);
             console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(cnode.address, owner.address));
             console.log('balanceOf[owner]=' + await cnodeVault.balanceOf(cnode.address, addr1.address));
-            await cnodeVault.update(governance.address);
+            await cnodeVault.update(cofixGovernance.address);
         }
 
         await cnodeVault.getReward(cnode.address);
