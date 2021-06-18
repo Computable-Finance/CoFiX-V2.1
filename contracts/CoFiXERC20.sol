@@ -71,9 +71,9 @@ contract CoFiXERC20 is ICoFiXERC20 {
     }
 
     function transferFrom(address from, address to, uint value) external override returns (bool) {
-        //if (allowance[from][msg.sender] != uint(-1)) {
-        //    allowance[from][msg.sender] = allowance[from][msg.sender] - (value);
-        //}
+        if (allowance[from][msg.sender] != 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) {
+           allowance[from][msg.sender] = allowance[from][msg.sender] - (value);
+        }
         _transfer(from, to, value);
         return true;
     }

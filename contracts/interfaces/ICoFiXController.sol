@@ -38,8 +38,8 @@ interface ICoFiXController is INestPriceFacade{
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum, 
-        uint theta
+        uint blockNum//, 
+        //uint theta
     );
 
     /**

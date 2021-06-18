@@ -3,9 +3,20 @@
 pragma solidity ^0.8.4;
 
 import "./interfaces/ICoFiXController.sol";
+import "hardhat/console.sol";
 
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
+
+    /// @dev Get the latest effective price
+    /// @param tokenAddress Destination token address
+    /// @return blockNumber The block number of price
+    /// @return price The token price. (1eth equivalent to (price) token)
+    function latestPriceView(address tokenAddress) external view returns (uint blockNumber, uint price) {
+        // TODO:
+        require(tokenAddress != address(0));
+        return (block.number - 1, 2700 * 1000000);
+    }
 
     /// @dev Get the latest effective price
     /// @param tokenAddress Destination token address
@@ -45,7 +56,7 @@ contract CoFiXController is ICoFiXController {
         // TODO:
         require(tokenAddress != address(0));
         require(paybackAddress != address(0));
-        return (block.number - 1, 2700 * 1000000, block.number - 1, 2700 * 1000000, 2600 * 1000000, 314000000000000);
+        return (block.number - 1, 2700 * 1000000, block.number - 1, 2700 * 1000000, 2600 * 1000000, 10853469234);
     }
 
     // Calc variance of price and K in CoFiX is very expensive
@@ -75,8 +86,8 @@ contract CoFiXController is ICoFiXController {
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum, 
-        uint theta
+        uint blockNum//, 
+        //uint theta
     ) {
         (
             uint latestPriceBlockNumber, 
@@ -90,7 +101,7 @@ contract CoFiXController is ICoFiXController {
         ethAmount = 1 ether;
         tokenAmount = latestPriceValue;
         blockNum = latestPriceBlockNumber;
-        theta = 0.002 ether;
+        //theta = 0.002 ether;
         
         // uint sigma = sqrt(triggeredSigmaSQ * 1 ether);
         // //_k = K_ALPHA.mul(_op.T).mul(1e18).add(K_BETA.mul(_op.sigma)).mul(gamma).div(K_GAMMA_BASE).div(1e18);
@@ -115,6 +126,7 @@ contract CoFiXController is ICoFiXController {
     */
     function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
 
+        //10853469234
         // 计算波动率
         uint sigma = sqrt(sigmaSQ * 1e18);
         uint gama = 1 ether;

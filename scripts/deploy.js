@@ -25,27 +25,41 @@ exports.deploy = async function () {
     // cofixVaultForStaking: 0x69E6CAae16Acf21134D839835C5f8bC9F2522680
     // pair: 0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52
 
-    const cnode = await TestERC20.deploy('CNode', 'CNode', 0);
+    console.log('** 开始部署合约 **');
+    
+    let cnode = await TestERC20.deploy('CNode', 'CNode', 0);
     //const cnode = await TestERC20.attach('0x2dC52e1FcD06a43285c5D7f5E833131b1c411852');
     console.log('cnode: ' + cnode.address);
+    
     const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
     //const usdt = await TestERC20.attach('0xd5798C4DbC5AC13DbE4809d2914b5fd5e5030948');
     console.log('usdt: ' + usdt.address);
+    
     const cofi = await CoFiToken.deploy();
     //const cofi = await CoFiToken.attach('0x30C69c1511608aBCf5f7052CE330A47673BEF80a');
     console.log('cofi: ' + cofi.address);
+
+    const pair = await CoFiXPair.deploy('XT-1', 'XToken-1', usdt.address, BigInt('1000000000000000000'), BigInt('3000000000'));
+    //const pair = await CoFiXPair.attach('0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52');
+    console.log('pair: ' + pair.address);
+    cnode = pair;
+    
     const cofixGovernance = await CoFiXGovernance.deploy();
     //const cofixGovernance = await CoFiXGovernance.attach('0x615c7448ED870aD41a24FE7e96016b2d9406C169');
     console.log('cofixGovernance: ' + cofixGovernance.address);
+    
     const cofixDAO = await CoFiXDAO.deploy(cofi.address);
     //const cofixDAO = await CoFiXDAO.attach('0x7D3d375759Dce4D8609EcA61fCe5898e5Dd52E09');
     console.log('cofixDAO: ' + cofixDAO.address);
+    
     const cofixRouter = await CoFiXRouter.deploy(cofi.address, cnode.address);
     //const cofixRouter = await CoFiXRouter.attach('0x537A8955B0E0466A487F8a417717551ac05bB580');
     console.log('cofixRouter: ' + cofixRouter.address);
+    
     const cofixController = await CoFiXController.deploy();
     //const cofixController = await CoFiXController.attach('0xA1e38e9DECB554b6AaC4b9B58f74Af1eb33CE291');
     console.log('cofixController: ' + cofixController.address);
+    
     const cofixVaultForStaking = await CoFiXVaultForStaking.deploy(cofi.address, cnode.address);
     //const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0x69E6CAae16Acf21134D839835C5f8bC9F2522680');
     console.log('cofixVaultForStaking: ' + cofixVaultForStaking.address);
@@ -58,7 +72,9 @@ exports.deploy = async function () {
     await cofixDAO.initialize(cofixGovernance.address);
     console.log('cofixVaultForStaking.initialize');
     await cofixVaultForStaking.initialize(cofixGovernance.address);
-        
+    console.log('pair.initialize');
+    await pair.initialize(cofixGovernance.address);
+
     console.log('cofixGovernance.setBuiltinAddress');
     await cofixGovernance.setBuiltinAddress(
         cofi.address,
@@ -68,21 +84,16 @@ exports.deploy = async function () {
         cofixController.address,
         cofixVaultForStaking.address
     );
+    
     console.log('cofixRouter.update');
     await cofixRouter.update(cofixGovernance.address);
     console.log('cofixDAO.update');
     await cofixDAO.update(cofixGovernance.address);
     console.log('cofixVaultForStaking.update');
     await cofixVaultForStaking.update(cofixGovernance.address);
-
-    const pair = await CoFiXPair.deploy('XT-1', 'XToken-1', usdt.address, BigInt('1000000000000000000'), BigInt('3000000000'));
-    //const pair = await CoFiXPair.attach('0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52');
-    console.log('pair: ' + pair.address);
-    
-    console.log('pair.initialize');
-    await pair.initialize(cofixGovernance.address);
     console.log('pair.update');
     await pair.update(cofixGovernance.address);
+
     console.log('cofixVaultForStaking.setConfig');
     await cofixVaultForStaking.setConfig({
         cofiRate: 20000
@@ -102,7 +113,7 @@ exports.deploy = async function () {
     await cofi.addMinter(cofixVaultForStaking.address);
     console.log('usdt: ' + usdt.address);
 
-    return {
+    const contracts = {
         cofi: cofi,
         cnode: cnode,
         cofixDAO: cofixDAO,
@@ -114,4 +125,7 @@ exports.deploy = async function () {
         usdt: usdt,
         pair: pair
     };
+    //console.log(contracts);
+    console.log('** 合约部署完成 **');
+    return contracts;
 }

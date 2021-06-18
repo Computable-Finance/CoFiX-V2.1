@@ -20,14 +20,26 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         uint128 rewardCursor;
     }
     
+    // Stake通道信息
     struct StakeChannel{
+
+        // 配置
+        // 出矿权重
         uint cofiWeight;
+        // stake重量
         uint totalStaked;
-        // 标记
+
+        // pair全局挖矿标记
+        // 已结算的交易出矿总量标记
         uint tradeReward;
+        // 已结算的总出矿量标记
         uint128 totalReward;
+        // 已结算的单位token可以领取的分红标记
         uint96 rewardPerToken;
+        // 结算区块标记
         uint32 blockCursor;
+
+        // 账户标记
         // address=>balance
         mapping(address=>Account) accounts;
     }
@@ -36,9 +48,10 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     address immutable CNODE_TOKEN_ADDRESS;
     uint constant COFI_GENESIS_BLOCK = 0;
     uint constant TOTAL_COFI_WEIGHT = 100000;
+
     Config _config;
     address _cofixRouter;
-    // pair=>StakeChannel
+    // staking通道信息pair=>StakeChannel
     mapping(address=>StakeChannel) _channels;
     
     constructor (address cofiToken, address cnodeToken) {
@@ -81,19 +94,21 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         
         StakeChannel storage channel = _channels[pair];
         Account memory account = channel.accounts[addr];
+        uint totalStaked = channel.totalStaked;
         uint newTradeReward = 0;
         uint balance = uint(account.balance);
         if (pair == CNODE_TOKEN_ADDRESS) {
             uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
             newTradeReward = tradeReward - channel.tradeReward;
-            balance *= 1 ether;
+            //balance *= 1 ether;
+            //totalStaked *= 1 ether;
         }
 
         // 计算分红数据
         (
             ,//uint newReward, 
             uint rewardPerToken
-        ) = _calcReward(channel, channel.totalStaked, newTradeReward);
+        ) = _calcReward(channel, totalStaked, newTradeReward);
         return (rewardPerToken - uint(account.rewardCursor)) * balance / 1 ether;
     }
 
@@ -139,7 +154,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     function _getReward(address pair, StakeChannel storage channel, address addr) private {
         Account memory account = channel.accounts[addr];
         uint rewardPerToken = _updatReward(pair, channel);
-        uint reward = (rewardPerToken - account.rewardCursor) * account.balance;
+        uint reward = (rewardPerToken - account.rewardCursor) * account.balance / 1 ether;
         account.rewardCursor = uint128(rewardPerToken);
         channel.accounts[addr] = account;
         if (reward > 0) {
@@ -158,7 +173,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
                 newTradeReward = tradeReward - channel.tradeReward;
                 // 更新交易分成
                 channel.tradeReward = tradeReward;
-                totalStaked *= 1 ether;
+                //totalStaked *= 1 ether;
             }
             uint newReward;
             (
@@ -209,7 +224,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         if (pair == CNODE_TOKEN_ADDRESS) {
             uint tradeReward = ICoFiXRouter(_cofixRouter).getTradeReward(pair);
             newTradeReward = tradeReward - channel.tradeReward;
-            totalStaked *= 1 ether;
+            //totalStaked *= 1 ether;
         }
         return _calcReward(channel, totalStaked, newTradeReward);
     }

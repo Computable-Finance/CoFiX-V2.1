@@ -26,7 +26,7 @@ describe("CoFiXRouter", function() {
             BigInt('6000000000'),
             BigInt('900000000000000000'),
             owner.address,
-            BigInt('1723207627371'), {
+            BigInt('1800000000000'), {
                 value: BigInt('2010000000000000000')
             }
         );
@@ -53,7 +53,7 @@ describe("CoFiXRouter", function() {
             // 接收地址
             owner.address,
             // 截止时间
-            BigInt('1723207627371'), {
+            BigInt('1800000000000'), {
                 value: BigInt('10000000000000000')
             }
         );
@@ -69,7 +69,7 @@ describe("CoFiXRouter", function() {
             owner.address,
             // 出矿接收地址
             owner.address,
-            BigInt('1723207627371'), {
+            BigInt('1800000000000'), {
                 value: BigInt('110000000000000000')
             }
         );
@@ -86,7 +86,7 @@ describe("CoFiXRouter", function() {
             owner.address,
             // 出矿接收地址
             owner.address,
-            BigInt('1723207627371'), {
+            BigInt('1800000000000'), {
                 value: BigInt('110000000000000000')
             }
         );

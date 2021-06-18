@@ -60,7 +60,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     // calculates the CREATE2 address for a pair without making any external calls
-    function _pairFor(address token) private view returns (address pair) {
+    function pairFor(address token) external view override returns (address pair) {
         // pair = address(uint(keccak256(abi.encodePacked(
         //         hex'ff',
         //         _factory,
@@ -90,7 +90,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     {
         // msg.value = amountETH + oracle fee
         // 0. 找到交易对合约
-        address pair = _pairFor(token);
+        address pair = _pairs[token];
         
         // 1. 转入资金
         // 收取token
@@ -128,7 +128,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
         // 0. 找到交易对合约
-        address pair = _pairFor(token);
+        address pair = _pairs[token];
         
         // 1. 转入资金
         // 收取token
@@ -163,7 +163,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint amountToken, uint amountETH) 
     {
         // 0. 找到交易对
-        address pair = _pairFor(token);
+        address pair = _pairs[token];
 
         // 1. 转入份额
         TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);
@@ -192,7 +192,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
     {
         // 0. 找到交易对
-        address pair = _pairFor(token);
+        address pair = _pairs[token];
 
         // 1. 转入eth
         uint mined;
@@ -216,9 +216,10 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
     {
         // 0. 找到交易对
-        address pair = _pairFor(token);
+        address pair = _pairs[token];
 
-        // 1. 转入eth
+        // 1. 转入etoken
+        TransferHelper.safeTransferFrom(token, msg.sender, pair, amountIn);
         uint mined;
         (_amountOut, mined) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
         require(_amountOut >= amountOutMin);

@@ -20,6 +20,7 @@ import "hardhat/console.sol";
 contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
+    uint constant public THETA = 0.002 ether;
     uint constant MINIMUM_LIQUIDITY = 10**9; 
     address immutable public TOKEN_ADDRESS; 
 
@@ -190,10 +191,12 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint total = totalSupply;
         // 计算净值
         uint navps = 1 ether;
+        uint ethBalance = address(this).balance;
+        uint tokenBalance = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
         if (total > 0) {
             navps = calcNAVPerShare(
-                address(this).balance - msg.value, 
-                IERC20(TOKEN_ADDRESS).balanceOf(address(this)), 
+                ethBalance, 
+                tokenBalance, 
                 ethAmount, 
                 tokenAmount
             );
@@ -201,10 +204,19 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
         amountETHOut = navps * liquidity / 1 ether;
         amountTokenOut = amountETHOut * INIT_TOKEN_AMOUNT / INIT_ETH_AMOUNT;
+
         // 3. 销毁份额
         _burn(address(this), liquidity);
 
         // 4. TODO: 根据资金池剩余情况进行调整
+        if (amountETHOut > ethBalance) {
+            amountTokenOut += (amountETHOut - ethBalance) * tokenAmount / ethAmount;
+            amountETHOut = ethBalance;
+        } else if (amountTokenOut > tokenBalance) {
+            amountETHOut += (amountTokenOut - tokenBalance) * ethAmount / tokenAmount;
+            amountTokenOut = tokenBalance;
+        }
+
         // 5. 资金转入用户指定地址
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
@@ -229,22 +241,23 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             uint k, 
             uint ethAmount, 
             uint tokenAmount, 
-            ,//uint blockNum, 
-            uint theta
+            //uint blockNum, 
+            //uint theta
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value  - amountIn
         } (
             TOKEN_ADDRESS,
             paybackAddress
         );
+
         // 2. 计算兑换结果
         // 2.1. K值计算
         // 2.2. 冲击成本计算
         uint C = impactCostForSellOutETH(amountIn);
-        amountTokenOut = amountIn * tokenAmount * (1 ether - theta)/ ethAmount / (1 ether + k + C);
+        amountTokenOut = amountIn * tokenAmount * (1 ether - THETA) / ethAmount / (1 ether + k + C);
 
         // 3. 扣除交易手续费
-        uint fee = amountIn * theta / 1 ether;
+        uint fee = amountIn * THETA / 1 ether;
         _collect(fee);
 
         // 4. 挖矿逻辑
@@ -279,8 +292,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             uint k, 
             uint ethAmount, 
             uint tokenAmount, 
-            ,//uint blockNum, 
-            uint theta
+            //uint blockNum, 
+            //uint theta
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value
         } (
@@ -293,9 +306,9 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2.2. 冲击成本计算
         uint C = impactCostForBuyInETH(amountIn);
 
-        amountETHOut = amountIn * ethAmount * (1 ether - theta)/ tokenAmount / (1 ether + k + C); 
+        amountETHOut = amountIn * ethAmount * (1 ether - THETA)/ tokenAmount / (1 ether + k + C); 
         // 3. 扣除交易手续费
-        uint fee = amountETHOut * theta / (1 ether - theta);
+        uint fee = amountETHOut * THETA / (1 ether - THETA);
         _collect(fee);
 
         // 4. 挖矿逻辑
