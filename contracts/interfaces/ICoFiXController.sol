@@ -20,7 +20,7 @@ interface ICoFiXController is INestPriceFacade{
     // We can make use of `data` bytes in the future
     function queryPrice(
         address tokenAddress,
-        address paybackAddress
+        address payback
     ) external payable returns (
         uint ethAmount, 
         uint tokenAmount, 
@@ -33,7 +33,7 @@ interface ICoFiXController is INestPriceFacade{
     // We can make use of `data` bytes in the future
     function queryOracle(
         address tokenAddress,
-        address paybackAddress
+        address payback
     ) external payable returns (
         uint k, 
         uint ethAmount, 

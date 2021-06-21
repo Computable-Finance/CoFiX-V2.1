@@ -2,22 +2,32 @@
 
 pragma solidity ^0.8.4;
 
+/// @dev This interface defines methods for CoFiXRouter
 interface ICoFiXRouter {
 
+    /// @dev CoFiXRouter configuration structure
     struct Config {
-        // CNode分成，万分制。1000
+        // CoFi交易挖矿给CNode的分成比例，万分制。1000
         uint16 cnodeRewardRate;
     }
 
-    function getConfig() external view returns (Config memory);
-
+    /// @dev Modify configuration
+    /// @param config Configuration object
     function setConfig(Config memory config) external;
 
-    function addPair(address tokenAddress, address pairAddress) external;
-    
-    function pairFor(address token) external view returns (address pair);
+    /// @dev Get configuration
+    /// @return Configuration object
+    function getConfig() external view returns (Config memory);
 
-    function getTradeReward(address pair) external view returns (uint);
+    /// @dev 添加交易对映射。token=>pair
+    /// @param token token地址
+    /// @param pair pair地址
+    function addPair(address token, address pair) external;
+    
+    /// @dev 根据token地址获取pair
+    /// @param token 目标token地址
+    /// @return pair pair地址
+    function pairFor(address token) external view returns (address pair);
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
     /// @param  token The address of ERC20 Token
@@ -76,8 +86,8 @@ interface ICoFiXRouter {
     /// @param  to The target address receiving the Token
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
-    /// @return _amountIn The real amount of ETH transferred into pool
-    /// @return _amountOut The real amount of Token transferred out of pool
+    /// @return amountIn_ The real amount of ETH transferred into pool
+    /// @return amountOut_ The real amount of Token transferred out of pool
     function swapExactETHForTokens(
         address token,
         uint amountIn,
@@ -85,7 +95,7 @@ interface ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint _amountIn, uint _amountOut);
+    ) external payable returns (uint amountIn_, uint amountOut_);
 
     /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
     /// @param  token The address of ERC20 Token
@@ -94,8 +104,8 @@ interface ICoFiXRouter {
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
-    /// @return _amountIn The real amount of Token transferred into pool
-    /// @return _amountOut The real amount of ETH transferred out of pool
+    /// @return amountIn_ The real amount of Token transferred into pool
+    /// @return amountOut_ The real amount of ETH transferred out of pool
     function swapExactTokensForETH(
         address token,
         uint amountIn,
@@ -103,82 +113,10 @@ interface ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint _amountIn, uint _amountOut);
+    ) external payable returns (uint amountIn_, uint amountOut_);
 
-    // /// @dev Trader swap exact amount of ERC20 Tokens for other ERC20 Tokens (notice: msg.value = oracle fee)
-    // /// @param  tokenIn The address of ERC20 Token a trader want to swap into pool
-    // /// @param  tokenOut The address of ERC20 Token a trader want to swap out of pool
-    // /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    // /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    // /// @param  to The target address receiving the Token
-    // /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    // /// @param  deadline The dealine of this request
-    // /// @return _amountIn The real amount of Token transferred into pool
-    // /// @return _amountOut The real amount of Token transferred out of pool
-    // function swapExactTokensForTokens(
-    //     address tokenIn,
-    //     address tokenOut,
-    //     uint amountIn,
-    //     uint amountOutMin,
-    //     address to,
-    //     address rewardTo,
-    //     uint deadline
-    // ) external payable returns (uint _amountIn, uint _amountOut);
-
-    // /// @dev Swaps an exact amount of input tokens for as many output tokens as possible, along the route determined by the path. The first element of path is the input token, the last is the output token, and any intermediate elements represent intermediate pairs to trade through (if, for example, a direct pair does not exist). `msg.sender` should have already given the router an allowance of at least amountIn on the input token. The swap execution can be done via cofix or uniswap. That's why it's called hybrid.
-    // /// @param amountIn The amount of input tokens to send.
-    // /// @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
-    // /// @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
-    // /// @param dexes An array of dex type values, specifying the exchanges to be used, e.g. CoFiX, Uniswap.
-    // /// @param to Recipient of the output tokens.
-    // /// @param  rewardTo The target address receiving the CoFi Token as rewards.
-    // /// @param deadline Unix timestamp after which the transaction will revert.
-    // /// @return amounts The input token amount and all subsequent output token amounts.
-    // function hybridSwapExactTokensForTokens(
-    //     uint amountIn,
-    //     uint amountOutMin,
-    //     address[] calldata path,
-    //     DEX_TYPE[] calldata dexes,
-    //     address to,
-    //     address rewardTo,
-    //     uint deadline
-    // ) external payable returns (uint[] memory amounts);
-
-    // /// @dev Swaps an exact amount of ETH for as many output tokens as possible, along the route determined by the path. The first element of path must be WETH, the last is the output token, and any intermediate elements represent intermediate pairs to trade through (if, for example, a direct pair does not exist).
-    // /// @param amountIn The amount of input tokens to send.
-    // /// @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
-    // /// @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
-    // /// @param dexes An array of dex type values, specifying the exchanges to be used, e.g. CoFiX, Uniswap.
-    // /// @param to Recipient of the output tokens.
-    // /// @param  rewardTo The target address receiving the CoFi Token as rewards.
-    // /// @param deadline Unix timestamp after which the transaction will revert.
-    // /// @return amounts The input token amount and all subsequent output token amounts.
-    // function hybridSwapExactETHForTokens(
-    //     uint amountIn,
-    //     uint amountOutMin,
-    //     address[] calldata path,
-    //     DEX_TYPE[] calldata dexes,
-    //     address to,
-    //     address rewardTo,
-    //     uint deadline
-    // ) external payable returns (uint[] memory amounts);
-
-    // /// @dev Swaps an exact amount of tokens for as much ETH as possible, along the route determined by the path. The first element of path is the input token, the last must be WETH, and any intermediate elements represent intermediate pairs to trade through (if, for example, a direct pair does not exist). If the to address is a smart contract, it must have the ability to receive ETH.
-    // /// @param amountIn The amount of input tokens to send.
-    // /// @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
-    // /// @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
-    // /// @param dexes An array of dex type values, specifying the exchanges to be used, e.g. CoFiX, Uniswap.
-    // /// @param to Recipient of the output tokens.
-    // /// @param  rewardTo The target address receiving the CoFi Token as rewards.
-    // /// @param deadline Unix timestamp after which the transaction will revert.
-    // /// @return amounts The input token amount and all subsequent output token amounts.
-    // function hybridSwapExactTokensForETH(
-    //     uint amountIn,
-    //     uint amountOutMin,
-    //     address[] calldata path,
-    //     DEX_TYPE[] calldata dexes,
-    //     address to,
-    //     address rewardTo,
-    //     uint deadline
-    // ) external payable returns (uint[] memory amounts);
+    /// @dev 获取目标pair的交易挖矿分成
+    /// @param pair 目标pair地址
+    /// @return 目标pair的交易挖矿分成
+    function getTradeReward(address pair) external view returns (uint);
 }

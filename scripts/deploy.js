@@ -42,7 +42,7 @@ exports.deploy = async function () {
     const pair = await CoFiXPair.deploy('XT-1', 'XToken-1', usdt.address, BigInt('1000000000000000000'), BigInt('3000000000'));
     //const pair = await CoFiXPair.attach('0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52');
     console.log('pair: ' + pair.address);
-    cnode = pair;
+    //cnode = pair;
     
     const cofixGovernance = await CoFiXGovernance.deploy();
     //const cofixGovernance = await CoFiXGovernance.attach('0x615c7448ED870aD41a24FE7e96016b2d9406C169');
@@ -100,6 +100,7 @@ exports.deploy = async function () {
     });
     console.log('cofixVaultForStaking.initStakingChannel');
     await cofixVaultForStaking.initStakingChannel(pair.address, 100000, 0);
+    await cofixVaultForStaking.initStakingChannel(cnode.address, 100000, 0);
 
     console.log('cofixRouter.setConfig');
     await cofixRouter.setConfig({

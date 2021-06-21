@@ -11,16 +11,13 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "hardhat/console.sol";
 
-// Router contract to interact with each CoFiXPair, no owner or governance
+/// @dev CoFiX公共资金的管理
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     address immutable COFI_TOKEN_ADDRESS;
 
     // Configuration
     Config _config;
-
-    // DAO applications
-    mapping(address=>uint) _applications;
 
     // /// @dev Redeeming information
     // struct RedeemInfo {
@@ -38,6 +35,9 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     // Redeem quota consumed
     // block.number * quotaPerBlock - quota
     uint _redeemed;
+
+    // DAO applications
+    mapping(address=>uint) _applications;
 
     constructor(address cofiToken) {
         COFI_TOKEN_ADDRESS = cofiToken;
@@ -143,8 +143,8 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     /// @dev Redeem CoFi for ethers
     /// @notice Ethfee will be charged
     /// @param amount The amount of ntoken
-    /// @param paybackAddress As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
-    function redeem(uint amount, address paybackAddress) external payable override {
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    function redeem(uint amount, address payback) external payable override {
         
         // 1. Load configuration
         Config memory config = _config;
@@ -157,7 +157,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
             uint ethAmount, 
             uint tokenAmount, 
             //uint blockNum
-        ) = ICoFiXController(_cofixController).queryPrice(COFI_TOKEN_ADDRESS, paybackAddress);
+        ) = ICoFiXController(_cofixController).queryPrice(COFI_TOKEN_ADDRESS, payback);
 
         // 4. Calculate the number of eth that can be exchanged for redeem
         uint value = amount * ethAmount / tokenAmount;

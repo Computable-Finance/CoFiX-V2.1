@@ -21,9 +21,9 @@ interface ICoFiXVaultForStaking {
 
     function routerStake(address pair, address to, uint amount) external;
     
-    function stake(address pair, address to, uint amount) external;
+    function stake(address pair, uint amount) external;
 
-    function unstake(address pair, uint amount) external;
+    function withdraw(address pair, uint amount) external;
 
     function getReward(address pair) external;
 }

@@ -8,20 +8,32 @@ import "./libs/TransferHelper.sol";
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPair.sol";
 import "./interfaces/ICoFiXVaultForStaking.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 
 import "hardhat/console.sol";
 
-// Router contract to interact with each CoFiXPair, no owner or governance
+/// @dev Router contract to interact with each CoFiXPair
 contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     // TODO: 为了方便测试，此处使用immutable变量，部署时采用openzeppelin的可升级方案，需要将这两个变量改为常量
+
+    // Address of CoFiToken
     address immutable COFI_TOKEN_ADDRESS;
+    // Address of CoFiNode
     address immutable CNODE_TOKEN_ADDRESS;
 
+    // Configuration
     Config _config;
+
+    // 记录CNode的累计交易挖矿分成
+    uint _cnodeReward;
+
+    // Address of CoFiXVaultForStaing
     address _cofixVaultForStaking;
+
+    // Mapping for token=>pair
     mapping(address=>address) _pairs;
 
     /// @dev Create CoFiXRouter
@@ -38,13 +50,16 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         _;
     }
 
-    // 获取配置
-    function getConfig() external view override returns (Config memory) {
-        return _config;
-    }
-
+    /// @dev Modify configuration
+    /// @param config Configuration object
     function setConfig(Config memory config) external override onlyGovernance {
         _config = config;
+    }
+
+    /// @dev Get configuration
+    /// @return Configuration object
+    function getConfig() external view override returns (Config memory) {
+        return _config;
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -55,30 +70,28 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         _cofixVaultForStaking = ICoFiXGovernance(newGovernance).getCoFiXVaultForStakingAddress();
     }
 
-    function addPair(address tokenAddress, address pairAddress) external override onlyGovernance {
-        _pairs[tokenAddress] = pairAddress;
+    /// @dev 添加交易对映射。token=>pair
+    /// @param token token地址
+    /// @param pair pair地址
+    function addPair(address token, address pair) external override onlyGovernance {
+        _pairs[token] = pair;
     }
 
-    // calculates the CREATE2 address for a pair without making any external calls
+    /// @dev 根据token地址获取pair
+    /// @param token 目标token地址
+    /// @return pair pair地址
     function pairFor(address token) external view override returns (address pair) {
-        // pair = address(uint(keccak256(abi.encodePacked(
-        //         hex'ff',
-        //         _factory,
-        //         keccak256(abi.encodePacked(token)),
-        //         hex'fb0c5470b7fbfce7f512b5035b5c35707fd5c7bd43c8d81959891b0296030118' // init code hash
-        //     )))); // calc the real init code hash, not suitable for us now, could use this in the future
-        //return ICoFiXV2Factory(_factory).getPair(token);
         return _pairs[token];
     }
 
-    /// @dev 添加流动性
-    /// @param token 目标token
-    /// @param amountETH 要添加的eth数量
-    /// @param amountToken 要添加的token数量
-    /// @param liquidityMin 预期获得的最小份额数量
-    /// @param to 份额接收地址
-    /// @param deadline 截止时间
-    /// @return liquidity 获得的流动性份额
+    /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
+    /// @param  token The address of ERC20 Token
+    /// @param  amountETH The amount of ETH added to pool
+    /// @param  amountToken The amount of Token added to pool
+    /// @param  liquidityMin The minimum liquidity maker wanted
+    /// @param  to The target address receiving the liquidity pool (XToken)
+    /// @param  deadline The dealine of this request
+    /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
         address token,
         uint amountETH,
@@ -88,7 +101,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
-        // msg.value = amountETH + oracle fee
         // 0. 找到交易对合约
         address pair = _pairs[token];
         
@@ -98,32 +110,28 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
         // 2. 做市
         // 生成份额
-        liquidity = ICoFiXPair(pair).mint{ value: msg.value }(to, amountETH, amountToken, msg.sender);
+        liquidity = ICoFiXPair(pair).mint { 
+            value: msg.value 
+        } (to, amountETH, amountToken, msg.sender);
 
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
     }
 
-    /// @dev 添加流动性并将份额转入收益池
-    /// @param token 目标token
-    /// @param amountETH 要添加的eth数量
-    /// @param amountToken 要添加的token数量
-    /// @param liquidityMin 预期获得的最小份额数量
-    /// @param to 份额接收地址
-    /// @param deadline 截止时间
-    /// @return liquidity 获得的流动性份额
+    /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically (notice: msg.value = amountETH + oracle fee)
+    /// @param  token The address of ERC20 Token
+    /// @param  amountETH The amount of ETH added to pool
+    /// @param  amountToken The amount of Token added to pool
+    /// @param  liquidityMin The minimum liquidity maker wanted
+    /// @param  to The target address receiving the liquidity pool (XToken)
+    /// @param  deadline The dealine of this request
+    /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
-        // 目标token
         address token,
-        // eth数量
         uint amountETH,
-        // token数量
         uint amountToken,
-        // 最低预期份额
         uint liquidityMin,
-        // 接收地址
         address to,
-        // 交易截止时间
         uint deadline
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
@@ -137,9 +145,10 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 2. 做市
         // 生成份额
         address cofixVaultForStaking = _cofixVaultForStaking;
-        liquidity = ICoFiXPair(pair).mint{ 
+        liquidity = ICoFiXPair(pair).mint { 
             value: msg.value 
-        }(cofixVaultForStaking, amountETH, amountToken, msg.sender);
+        } (cofixVaultForStaking, amountETH, amountToken, msg.sender);
+
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
 
@@ -147,8 +156,14 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(pair, to, liquidity);
     }
 
-    // 移除流动性
-    // msg.value = oracle fee
+    /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) (notice: msg.value = oracle fee)
+    /// @param  token The address of ERC20 Token
+    /// @param  liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
+    /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
+    /// @param  to The target address receiving the Token
+    /// @param  deadline The dealine of this request
+    /// @return amountToken The real amount of Token transferred from the pool
+    /// @return amountETH The real amount of ETH transferred from the pool
     function removeLiquidityGetTokenAndETH(
         // 要移除的token对
         address token,
@@ -168,44 +183,63 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 1. 转入份额
         TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);
 
-        (amountToken, amountETH) = ICoFiXPair(pair).burn{value: msg.value }(liquidity, to, msg.sender);
+        // 2. 移除流动性并返还资金
+        (amountToken, amountETH) = ICoFiXPair(pair).burn {
+            value: msg.value
+        } (liquidity, to, msg.sender);
 
-        require(liquidity >= amountETHMin, "");
+        // 3. 得到的ETH不能少于期望值
+        require(amountETH >= amountETHMin, "CoFiXRouter: less eth than expected");
     }
 
-    uint _CNodeReward;
-
-    // 用指定数量的eth兑换token
-    // msg.value = amountIn + oracle fee
+    /// @dev Trader swap exact amount of ETH for ERC20 Tokens (notice: msg.value = amountIn + oracle fee)
+    /// @param  token The address of ERC20 Token
+    /// @param  amountIn The exact amount of ETH a trader want to swap into pool
+    /// @param  amountOutMin The minimum amount of Token a trader want to swap out of pool
+    /// @param  to The target address receiving the Token
+    /// @param  rewardTo The target address receiving the CoFi Token as rewards
+    /// @param  deadline The dealine of this request
+    /// @return amountIn_ The real amount of ETH transferred into pool
+    /// @return amountOut_ The real amount of Token transferred out of pool
     function swapExactETHForTokens(
-        // 目标token地址
         address token,
-        // eth数量
         uint amountIn,
-        // 预期获得的token的最小数量
         uint amountOutMin,
-        // 接收地址
         address to,
-        // 出矿接收地址
         address rewardTo,
         uint deadline
-    ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
+    ) external override payable ensure(deadline) returns (uint amountIn_, uint amountOut_)
     {
         // 0. 找到交易对
         address pair = _pairs[token];
 
-        // 1. 转入eth
+        // 1. 执行交易
         uint mined;
-        (_amountOut, mined) = ICoFiXPair(pair).swapForToken{ value: msg.value }(amountIn, to, msg.sender);
-        require(_amountOut >= amountOutMin);
-        _amountIn = amountIn;
+        (amountOut_, mined) = ICoFiXPair(pair).swapForToken {
+            value: msg.value
+        } (amountIn, to, msg.sender);
+        
+        // 2. 得到的token数量不能少于期望值
+        require(amountOut_ >= amountOutMin, "CoFiXRouter: got less eth than expected");
+        amountIn_ = amountIn;
 
+        // 3. 交易挖矿
         uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
+        // 交易者可以获得的数量
         CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
-        _CNodeReward += cnodeReward;
+        // CNode分成
+        _cnodeReward += cnodeReward;
     }
 
-    // msg.value = oracle fee
+    /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
+    /// @param  token The address of ERC20 Token
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
+    /// @param  rewardTo The target address receiving the CoFi Token as rewards
+    /// @param  deadline The dealine of this request
+    /// @return amountIn_ The real amount of Token transferred into pool
+    /// @return amountOut_ The real amount of ETH transferred out of pool
     function swapExactTokensForETH(
         address token,
         uint amountIn,
@@ -213,26 +247,37 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external override payable ensure(deadline) returns (uint _amountIn, uint _amountOut)
+    ) external override payable ensure(deadline) returns (uint amountIn_, uint amountOut_)
     {
         // 0. 找到交易对
         address pair = _pairs[token];
 
-        // 1. 转入etoken
+        // 1. 转入token并执行交易
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountIn);
         uint mined;
-        (_amountOut, mined) = ICoFiXPair(pair).swapForETH{ value: msg.value }(amountIn, to, msg.sender);
-        require(_amountOut >= amountOutMin);
-        _amountIn = amountIn;
+        (amountOut_, mined) = ICoFiXPair(pair).swapForETH {
+            value: msg.value
+        } (amountIn, to, msg.sender);
+
+        // 2. 得到的eth数量不能少于期望值
+        require(amountOut_ >= amountOutMin);
+        amountIn_ = amountIn;
+
+        // 3. 交易挖矿
         uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
+        // 交易者可以获得的数量
         CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
-        _CNodeReward += cnodeReward;
+        // CNode分成
+        _cnodeReward += cnodeReward;
     }
 
+    /// @dev 获取目标pair的交易挖矿分成
+    /// @param pair 目标pair地址
+    /// @return 目标pair的交易挖矿分成
     function getTradeReward(address pair) external view override returns (uint) {
         // 只有CNode有交易出矿分成，做市份额没有        
         if (pair == CNODE_TOKEN_ADDRESS) {
-            return _CNodeReward;
+            return _cnodeReward;
         }
         return 0;
     }

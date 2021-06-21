@@ -72,8 +72,8 @@ interface ICoFiXDAO {
     /// @dev Redeem CoFi for ethers
     /// @notice Ethfee will be charged
     /// @param amount The amount of ntoken
-    /// @param paybackAddress As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
-    function redeem(uint amount, address paybackAddress) external payable;
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    function redeem(uint amount, address payback) external payable;
 
     /// @dev Get the current amount available for repurchase
     function quotaOf() external view returns (uint);

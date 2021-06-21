@@ -39,7 +39,7 @@ describe("CoFiXRouter", function() {
 
         let liq = await cofixVaultForStaking.balanceOf(pair.address, owner.address);
         console.log('liq=' + liq.toString());
-        await cofixVaultForStaking.unstake(pair.address, liq);
+        await cofixVaultForStaking.withdraw(pair.address, liq);
         await pair.approve(cofixRouter.address, liq);
         console.log('balance=' + (await pair.balanceOf(owner.address)).toString());
 
