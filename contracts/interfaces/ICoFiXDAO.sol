@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.4;
 
+/// @dev This interface defines the DAO methods
 interface ICoFiXDAO {
 
     /// @dev Application Flag Changed event
@@ -9,16 +10,16 @@ interface ICoFiXDAO {
     /// @param flag Authorization flag, 1 means authorization, 0 means cancel authorization
     event ApplicationChanged(address addr, uint flag);
     
-    /// @dev Configuration structure of nest ledger contract
+    /// @dev Configuration structure of CoFiXDAO contract
     struct Config {
         // Redeem activate threshold, when the circulation of token exceeds this threshold, 
         // 回购状态, 1表示启动
         uint8 RepurchaseStatus;
 
-        // The number of nest redeem per block. 100
+        // The number of CoFi redeem per block. 100
         uint16 cofiPerBlock;
 
-        // The maximum number of nest in a single redeem. 30000
+        // The maximum number of CoFi in a single redeem. 30000
         uint32 cofiLimit;
 
         // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000

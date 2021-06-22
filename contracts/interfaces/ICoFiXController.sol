@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 import "./INestPriceFacade.sol";
 
 /// @dev This interface defines the methods for price call entry
-interface ICoFiXController is INestPriceFacade{
+interface ICoFiXController is INestPriceFacade {
 
     struct Config {
         uint32 alpha;

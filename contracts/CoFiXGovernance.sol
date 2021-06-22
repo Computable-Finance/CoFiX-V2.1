@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 import "./interfaces/ICoFiXGovernance.sol";
 import "./CoFiXMapping.sol";
 
-/// @dev Nest governance contract
+/// @dev CoFiX governance contract
 contract CoFiXGovernance is CoFiXMapping, ICoFiXGovernance {
 
     /// @dev To support open-zeppelin/upgrades

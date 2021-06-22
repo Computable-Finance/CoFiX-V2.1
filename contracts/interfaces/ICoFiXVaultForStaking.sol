@@ -7,8 +7,8 @@ interface ICoFiXVaultForStaking {
 
     /// @dev CoFiXRouter configuration structure
     struct Config {
-        // CoFi mining speed(100000based). 20000
-        uint32 cofiRate;
+        // CoFi mining speed
+        uint96 cofiRate;
     }
 
     /// @dev Modify configuration
@@ -22,8 +22,7 @@ interface ICoFiXVaultForStaking {
     /// @dev 初始化锁仓参数
     /// @param pair 目标交易对
     /// @param cofiWeight CoFi出矿速度权重
-    /// @param initBlockNumber 初始区块号（可以去掉?）
-    function initStakingChannel(address pair, uint cofiWeight, uint initBlockNumber) external;
+    function initStakingChannel(address pair, uint cofiWeight) external;
     
     /// @dev 获取目标地址锁仓的数量
     /// @param pair 目标交易对

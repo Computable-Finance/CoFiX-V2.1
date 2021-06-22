@@ -91,21 +91,5 @@ describe("CoFiXRouter", function() {
             }
         );
         console.log((await receipt.wait()).gasUsed.toString());
-
-        // // 用指定数量的eth兑换token
-        // // msg.value = amountIn + oracle fee
-        // function swapExactETHForTokens(
-        //     // 目标token地址
-        //     address token,
-        //     // eth数量
-        //     uint amountIn,
-        //     // 预期获得的token的最小数量
-        //     uint amountOutMin,
-        //     // 接收地址
-        //     address to,
-        //     // 出矿接收地址
-        //     address rewardTo,
-        //     uint deadline
-        // )
     });
 });

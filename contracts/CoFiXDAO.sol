@@ -14,24 +14,14 @@ import "hardhat/console.sol";
 /// @dev CoFiX公共资金的管理
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
+    // Address of CoFiToken
     address immutable COFI_TOKEN_ADDRESS;
 
     // Configuration
     Config _config;
 
-    // /// @dev Redeeming information
-    // struct RedeemInfo {
-        
-    //     // Redeem quota consumed
-    //     // block.number * quotaPerBlock - quota
-    //     uint128 quota;
-
-    //     // Redeem threshold by circulation of ntoken, when this value equal to config.activeThreshold, 
-    //     // redeeming is enabled without checking the circulation of the ntoken
-    //     // When config.activeThreshold modified, it will check whether repo is enabled again according to the circulation
-    //     uint32 threshold;
-    // }
     address _cofixController;
+
     // Redeem quota consumed
     // block.number * quotaPerBlock - quota
     uint _redeemed;
@@ -39,6 +29,8 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     // DAO applications
     mapping(address=>uint) _applications;
 
+    /// @dev Create CoFiXDAO
+    /// @param cofiToken CoFi TOKEN
     constructor(address cofiToken) {
         COFI_TOKEN_ADDRESS = cofiToken;
     }
@@ -54,7 +46,6 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     /// @dev Modify configuration
     /// @param config Configuration object
     function setConfig(Config memory config) external override onlyGovernance {
-        //require(uint(config.nestRewardScale) <= 10000, "NestLedger:!value");
         _config = config;
     }
 
@@ -154,34 +145,30 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
         // 3. Query price
         (
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNum
-        ) = ICoFiXController(_cofixController).queryPrice(COFI_TOKEN_ADDRESS, payback);
+            /* uint latestPriceBlockNumber */, 
+            uint latestPriceValue,
+            /* uint triggeredPriceBlockNumber */,
+            /* uint triggeredPriceValue */,
+            uint triggeredAvgPrice,
+            /* uint triggeredSigma */
+        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
+            value: msg.value
+        } (COFI_TOKEN_ADDRESS, payback);
 
         // 4. Calculate the number of eth that can be exchanged for redeem
-        uint value = amount * ethAmount / tokenAmount;
+        uint value = amount * 1 ether / latestPriceValue;
 
         // 5. Calculate redeem quota
         (uint quota, uint scale) = _quotaOf(config, _redeemed);
-        _redeemed = (scale - (quota - amount));
+        _redeemed = scale - (quota - amount);
 
         // TODO: 检查价格偏差
         // 6. Check the redeeming amount and price deviation
-        // This check is not required
-        // require(quota >= amount, "NestRedeeming:!amount");
-        //require(
-        //    latestPriceValue * 10000 <= triggeredAvgPrice * (10000 + uint(config.priceDeviationLimit)) && 
-        //    latestPriceValue * 10000 >= triggeredAvgPrice * (10000 - uint(config.priceDeviationLimit)), "NestRedeeming:!price");
-        
-        // 7. Ntoken transferred to redeem
-        //address nestLedgerAddress = _nestLedgerAddress;
-        //TransferHelper.safeTransferFrom(ntokenAddress, msg.sender, nestLedgerAddress, amount);
-        
-        // 8. Settlement
-        // If a token is not a real token, it should also have no funds in the account book and cannot complete the settlement. 
-        // Therefore, it is no longer necessary to check whether the token is a legal token
-        //INestLedger(nestLedgerAddress).pay(ntokenAddress, address(0), msg.sender, value);
+        require(
+            latestPriceValue * 10000 <= triggeredAvgPrice * (10000 + uint(config.priceDeviationLimit)) && 
+            latestPriceValue * 10000 >= triggeredAvgPrice * (10000 - uint(config.priceDeviationLimit)), 
+            "CoFiXDAO:!price"
+        );
 
         payable(msg.sender).transfer(value);
     }
@@ -204,7 +191,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     // Calculate redeem quota
     function _quotaOf(Config memory config, uint redeemed) private view returns (uint quota, uint scale) {
-        // nest config
+        // Load cofiLimit
         uint quotaLimit = uint(config.cofiLimit);
         // Calculate
         scale = block.number * uint(config.cofiPerBlock) * 1 ether;

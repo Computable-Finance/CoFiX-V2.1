@@ -10,7 +10,7 @@ import "./interfaces/ICoFiXGovernance.sol";
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
-/// @dev Base contract of nest
+/// @dev Base contract of CoFiX
 contract CoFiXBase {
 
     // // Address of nest token contract

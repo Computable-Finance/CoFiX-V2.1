@@ -28,32 +28,14 @@ describe("CoFiXRouter", function() {
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
             let BASE = BigInt('10');
-            // let base = BigInt('1');
-            // while (decimals > BigInt('0')) {
-            //     base *= BigInt('10');
-            //     --decimals;            
-            // }
-            
-            // let left = bi / base;
-            // let right = bi % base;
-            // return left + '.' + right;
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
-                //if (c != '0' || r != '') {
-                //    r = c + r;
-                //}
                 r = c + r;
                 bi /= BASE;
 
                 --decimals;
             }
-
-            // if (r == '') {
-            //     r = bi.toString();
-            // } else {
-            //     r = bi.toString() + '.' + r;
-            // }
             r = bi.toString() + '.' + r;
             return r;
         }
@@ -120,7 +102,6 @@ describe("CoFiXRouter", function() {
                 }
             );
             await showReceipt(receipt);
-
             status = await getStatus();
             console.log(status);
 
@@ -230,11 +211,11 @@ describe("CoFiXRouter", function() {
             
             expect(toDecimal(toBigInt(status.pair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691795687'));
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691797838'));
             console.log('6. addr2使用2691.795687兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
                 usdt.address,
-                BigInt('2691795687'),
+                BigInt('2691797838'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址

@@ -25,32 +25,14 @@ describe("CoFiXRouter", function() {
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
             let BASE = BigInt('10');
-            // let base = BigInt('1');
-            // while (decimals > BigInt('0')) {
-            //     base *= BigInt('10');
-            //     --decimals;            
-            // }
-            
-            // let left = bi / base;
-            // let right = bi % base;
-            // return left + '.' + right;
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
-                //if (c != '0' || r != '') {
-                //    r = c + r;
-                //}
                 r = c + r;
                 bi /= BASE;
 
                 --decimals;
             }
-
-            // if (r == '') {
-            //     r = bi.toString();
-            // } else {
-            //     r = bi.toString() + '.' + r;
-            // }
             r = bi.toString() + '.' + r;
             return r;
         }

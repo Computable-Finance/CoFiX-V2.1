@@ -6,7 +6,7 @@ import "./libs/IERC20.sol";
 import "./interfaces/ICoFiXMapping.sol";
 import "./CoFiXBase.sol";
 
-/// @dev The contract is for nest builtin contract address mapping
+/// @dev The contract is for CoFiX builtin contract address mapping
 abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
 
     /// @dev Address of CoFi token contract
@@ -18,7 +18,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @dev ICoFiXDAO implementation contract address
     address _cofixDAO;
 
-    /// @dev ICoFiXRouter implementation contract address for nest
+    /// @dev ICoFiXRouter implementation contract address for CoFiX
     address _cofixRouter;
 
     /// @dev ICoFiXController implementation contract address for ntoken
@@ -34,7 +34,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @param cofiToken Address of CoFi token contract
     /// @param cofiNode Address of CoFi Node contract
     /// @param cofixDAO ICoFiXDAO implementation contract address
-    /// @param cofixRouter ICoFiXRouter implementation contract address for nest
+    /// @param cofixRouter ICoFiXRouter implementation contract address for CoFiX
     /// @param cofixController ICoFiXController implementation contract address for ntoken
     /// @param cofixVaultForStaking ICoFiXVaultForStaking implementation contract address
     function setBuiltinAddress(
@@ -45,7 +45,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
         address cofixController,
         address cofixVaultForStaking
     ) external override onlyGovernance {
-        
+
         if (cofiToken != address(0)) {
             _cofiToken = cofiToken;
         }
@@ -70,7 +70,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @return cofiToken Address of CoFi token contract
     /// @return cofiNode Address of CoFi Node contract
     /// @return cofixDAO ICoFiXDAO implementation contract address
-    /// @return cofixRouter ICoFiXRouter implementation contract address for nest
+    /// @return cofixRouter ICoFiXRouter implementation contract address for CoFiX
     /// @return cofixController ICoFiXController implementation contract address for ntoken
     function getBuiltinAddress() external view override returns (
         address cofiToken,
@@ -102,8 +102,8 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @return ICoFiXDAO implementation contract address
     function getCoFiXDAOAddress() external view override returns (address) { return _cofixDAO; }
 
-    /// @dev Get ICoFiXRouter implementation contract address for nest
-    /// @return ICoFiXRouter implementation contract address for nest
+    /// @dev Get ICoFiXRouter implementation contract address for CoFiX
+    /// @return ICoFiXRouter implementation contract address for CoFiX
     function getCoFiXRouterAddress() external view override returns (address) { return _cofixRouter; }
 
     /// @dev Get ICoFiXContgroller implementation contract address for ntoken
@@ -114,7 +114,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @return ICofixVaultForStaking implementation contract address
     function getCoFiXVaultForStakingAddress() external view override returns (address) { return _cofixVaultForStaking; }
 
-    /// @dev Registered address. The address registered here is the address accepted by nest system
+    /// @dev Registered address. The address registered here is the address accepted by CoFiX system
     /// @param key The key
     /// @param addr Destination address. 0 means to delete the registration information
     function registerAddress(string memory key, address addr) external override onlyGovernance {

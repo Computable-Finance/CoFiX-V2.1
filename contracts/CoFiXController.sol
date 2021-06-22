@@ -101,19 +101,6 @@ contract CoFiXController is ICoFiXController {
         ethAmount = 1 ether;
         tokenAmount = latestPriceValue;
         blockNum = latestPriceBlockNumber;
-        //theta = 0.002 ether;
-        
-        // uint sigma = sqrt(triggeredSigmaSQ * 1 ether);
-        // //_k = K_ALPHA.mul(_op.T).mul(1e18).add(K_BETA.mul(_op.sigma)).mul(gamma).div(K_GAMMA_BASE).div(1e18);
-        // // K=(0.00001*T+10*σ)*γ(σ)
-        // uint gama = 1 ether;
-        // if (sigma > 0.0005 ether) {
-        //     gama = 2 ether;
-        // } else if (sigma > 0.0003 ether) {
-        //     gama = 1.5 ether;
-        // }
-
-        // k = (0.00001 ether * (block.number - blockNum) * 14 + 10 ether * sigma) * gama / 1 ether / 1 ether;
 
         k = calcK(triggeredSigmaSQ, blockNum);
     }
@@ -132,14 +119,13 @@ contract CoFiXController is ICoFiXController {
         // 计算波动率
 
         // TODO: 修改算法为配置
-        uint sigma = sqrt(sigmaSQ * 1e18);
+        uint sigma = sqrt(sigmaSQ / 1e4) * 1e11;
         uint gama = 1 ether;
         if (sigma > 0.0005 ether) {
             gama = 2 ether;
         } else if (sigma > 0.0003 ether) {
             gama = 1.5 ether;
         }
-        // _k = K_ALPHA.mul(_op.T).mul(1e18).add(K_BETA.mul(_op.sigma)).mul(gamma).div(K_GAMMA_BASE).div(1e18);
         // k = (K_ALPHA.mul(_T   ).mul(1e18).add(K_BETA.mul(     vola)).mul(gamma).div(K_GAMMA_BASE).div(1e18));
         k = (0.00001 ether * (block.number - bn) * 14 + 10 ether * sigma) * gama / 1 ether / 1 ether;
     }
@@ -148,10 +134,10 @@ contract CoFiXController is ICoFiXController {
     function sqrt(uint y) public pure returns (uint z) {
         if (y > 3) {
             z = y;
-            uint x = y / 2 + 1;
+            uint x = (y >> 1) + 1;
             while (x < z) {
                 z = x;
-                x = (y / x + x) / 2;
+                x = (y / x + x) >> 1;
             }
         } else if (y != 0) {
             z = 1;
