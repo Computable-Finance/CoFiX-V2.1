@@ -393,12 +393,6 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
         }
-
-        let bi = BigInt('10853469234') * BigInt('1000000000000000000');
-        let s1 = (await cofixController.sqrt(bi)).toString();
-        let s2 = (BigInt(await cofixController.sqrt2_(BigInt('10853469234'))) * BigInt('1000000000')).toString();
-        console.log('s1=', s1);
-        console.log('s2=', s2);
     });
 });
  

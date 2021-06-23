@@ -113,11 +113,6 @@ contract CoFiXController is ICoFiXController {
     * @return k The K value
     */
     function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
-
-        // TODO: 考虑波动率开方精度问题，是否可以不需要那么高的精度
-        //10853469234
-        // 计算波动率
-
         // TODO: 修改算法为配置
         uint sigma = sqrt(sigmaSQ / 1e4) * 1e11;
         uint gama = 1 ether;
@@ -132,19 +127,6 @@ contract CoFiXController is ICoFiXController {
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
     function sqrt(uint y) public pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = (y >> 1) + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) >> 1;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
-    }
-
-    function sqrt2_(uint y) public pure returns (uint z) {
         if (y > 3) {
             z = y;
             uint x = (y >> 1) + 1;
