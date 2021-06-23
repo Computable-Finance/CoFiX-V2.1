@@ -15,8 +15,8 @@ import "./CoFiXERC20.sol";
 
 import "hardhat/console.sol";
 
-/// @dev Pair contract for each trading pair, storing assets and handling settlement
-contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
+/// @dev ETH/PETH平行资产交易对
+contract PETHCoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 10**9; 
@@ -25,11 +25,6 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000
     uint constant nt = 1000;
-    uint constant VOL_BASE = 500 ether;
-    uint constant C_BUYIN_ALPHA = 0; // α=0
-    uint constant C_BUYIN_BETA = 2000000000000; // β=2e-06*1e18
-    //uint constant C_SELLOUT_ALPHA = 0; // α=0
-    //uint constant C_SELLOUT_BETA = 2000000000000; // β=2e-06*1e18
 
     // ERC20 - name
     string public name;
@@ -133,33 +128,36 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2. 调用预言机
         // 计算K值
         // 计算θ
-        (
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNum, 
-        ) = ICoFiXController(_cofixController).queryPrice { 
-            // 多余的部分，都作为预言机调用费用
-            value: msg.value - amountETH
-        } (
-            TOKEN_ADDRESS,
-            payback
-        );
+        // (
+        //     uint ethAmount, 
+        //     uint tokenAmount, 
+        //     //uint blockNum, 
+        // ) = ICoFiXController(_cofixController).queryPrice { 
+        //     // 多余的部分，都作为预言机调用费用
+        //     value: msg.value - amountETH
+        // } (
+        //     TOKEN_ADDRESS,
+        //     payback
+        // );
+        if (msg.value > amountETH) {
+            payable(payback).transfer(msg.value - amountETH);
+        }
 
         // 3. 计算净值和份额
         uint navps = 1 ether;
         uint total = totalSupply;
         if (total > 0) {
-            // TODO: Pt此处没有引入K值，后续需要引入
-            navps = _calcTotalValue(
-                // 当前eth余额，减去amountETH等于交易前eth余额
-                address(this).balance - amountETH, 
-                // 当前token余额，减去amountToken等于交易前token余额
-                IERC20(TOKEN_ADDRESS).balanceOf(address(this)) - amountToken,
-                // 价格 - eth数量 
-                ethAmount, 
-                // 价格 - token数量
-                tokenAmount
-            ) * 1 ether / total;
+            // // TODO: Pt此处没有引入K值，后续需要引入
+            // navps = _calcTotalValue(
+            //     // 当前eth余额，减去amountETH等于交易前eth余额
+            //     address(this).balance - amountETH, 
+            //     // 当前token余额，减去amountToken等于交易前token余额
+            //     IERC20(TOKEN_ADDRESS).balanceOf(address(this)) - amountToken,
+            //     // 价格 - eth数量 
+            //     ethAmount, 
+            //     // 价格 - token数量
+            //     tokenAmount
+            // ) * 1 ether / total;
 
             // 做市没有冲击成本
             // 当发行量不为0时，正常发行份额
@@ -197,32 +195,38 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint amountETHOut
     ) { 
         // 1. 调用预言机
-        (
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNum, 
-        ) = ICoFiXController(_cofixController).queryPrice { 
-            value: msg.value 
-        } (
-            TOKEN_ADDRESS,
-            payback
-        );
+        // (
+        //     uint ethAmount, 
+        //     uint tokenAmount, 
+        //     //uint blockNum, 
+        // ) = ICoFiXController(_cofixController).queryPrice { 
+        //     value: msg.value 
+        // } (
+        //     TOKEN_ADDRESS,
+        //     payback
+        // );
+        if (msg.value > 0) {
+            payable(payback).transfer(msg.value);
+        }
+
+        uint ethAmount = 1 ether;
+        uint tokenAmount = 1 ether;
 
         // 2. 计算净值，根据净值计算等比资金
         // 计算净值
         uint ethBalance = address(this).balance;
         uint tokenBalance = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
         uint navps = 1 ether;
-        uint total = totalSupply;
-        if (total > 0) {
-            // Pt此处没有引入K值，后续需要引入
-            navps = _calcTotalValue(
-                ethBalance, 
-                tokenBalance, 
-                ethAmount, 
-                tokenAmount
-            ) * 1 ether / total;
-        }
+        //uint total = totalSupply;
+        // if (total > 0) {
+        //     // Pt此处没有引入K值，后续需要引入
+        //     navps = _calcTotalValue(
+        //         ethBalance, 
+        //         tokenBalance, 
+        //         ethAmount, 
+        //         tokenAmount
+        //     ) * 1 ether / total;
+        // }
 
         // TODO: 赎回时需要计算冲击成本
         // TODO: 确定赎回的时候是否有手续费逻辑
@@ -279,18 +283,25 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint mined
     ) {
         // 1. 调用预言机获取价格
-        (
-            uint k, 
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNum, 
-            //uint theta
-        ) = ICoFiXController(_cofixController).queryOracle { 
-            value: msg.value  - amountIn
-        } (
-            TOKEN_ADDRESS,
-            payback
-        );
+        // (
+        //     uint k, 
+        //     uint ethAmount, 
+        //     uint tokenAmount, 
+        //     //uint blockNum, 
+        //     //uint theta
+        // ) = ICoFiXController(_cofixController).queryOracle { 
+        //     value: msg.value  - amountIn
+        // } (
+        //     TOKEN_ADDRESS,
+        //     payback
+        // );
+
+        uint k = 0;
+        uint ethAmount = 1 ether;
+        uint tokenAmount = 1 ether;
+        if (msg.value > amountIn) {
+            payable(payback).transfer(msg.value - amountIn);
+        }
 
         // 2. 计算兑换结果
         // 2.1. K值计算
@@ -333,18 +344,24 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint mined
     ) {
         // 1. 调用预言机获取价格
-        (
-            uint k, 
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNum, 
-            //uint theta
-        ) = ICoFiXController(_cofixController).queryOracle { 
-            value: msg.value
-        } (
-            TOKEN_ADDRESS,
-            payback
-        );
+        // (
+        //     uint k, 
+        //     uint ethAmount, 
+        //     uint tokenAmount, 
+        //     //uint blockNum, 
+        //     //uint theta
+        // ) = ICoFiXController(_cofixController).queryOracle { 
+        //     value: msg.value
+        // } (
+        //     TOKEN_ADDRESS,
+        //     payback
+        // );
+        uint k = 0;
+        uint ethAmount = 1 ether;
+        uint tokenAmount = 1 ether;
+        if (msg.value > 0) {
+            payable(payback).transfer(msg.value);
+        }
 
         // 2. 计算兑换结果
         // 2.1. K值计算
@@ -427,22 +444,28 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // α=0，β=2e-06
     function impactCostForBuyInETH(uint vol) public pure override returns (uint impactCost) {
-        uint gamma = 1; //CGammaMap[token];
-        if (vol * gamma < VOL_BASE) {
-            return 0;
-        }
-        // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1e18) * gamma; // combine mul div
+        // 无用判断
+        require(vol >= 0);
+        // uint gamma = 1; //CGammaMap[token];
+        // if (vol * gamma < VOL_BASE) {
+        //     return 0;
+        // }
+        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
+        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1e18) * gamma; // combine mul div
+        return 0;
     }
 
     // α=0，β=2e-06
     function impactCostForSellOutETH(uint vol) public pure override returns (uint impactCost) {
-        uint gamma = 1; //CGammaMap[token];
-        if (vol * gamma < VOL_BASE) {
-            return 0;
-        }
-        // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1e18) * gamma; // combine mul div
+        // 无用判断
+        require(vol >= 0);
+        // uint gamma = 1; //CGammaMap[token];
+        // if (vol * gamma < VOL_BASE) {
+        //     return 0;
+        // }
+        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
+        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1e18) * gamma; // combine mul div
+        return 0;
     }
 
     // 计算净值

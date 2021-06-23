@@ -84,6 +84,10 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         return _pairs[token];
     }
 
+    function _pairFor(address token0, address token1) private view returns (address pair) {
+        return address(0);
+    }
+
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
     /// @param  token The address of ERC20 Token
     /// @param  amountETH The amount of ETH added to pool
@@ -271,6 +275,60 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         _cnodeReward += cnodeReward;
     }
 
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        address rewardTo,
+        uint deadline
+    ) external payable override ensure(deadline) returns (uint[] memory amounts) {
+
+        address pair = _pairFor(path[0], path[1]);
+        if (path[0] != address(0)) {
+            TransferHelper.safeTransferFrom(path[0], msg.sender, pair, amountIn);
+        }
+
+        uint totalMined;
+        (amounts, totalMined) = _swap(path, amountIn, to);
+
+        require(amounts[amounts.length - 1] >= amountOutMin);
+
+        // 3. 交易挖矿
+        uint cnodeReward = totalMined * uint(_config.cnodeRewardRate) / 10000;
+        // 交易者可以获得的数量
+        CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, totalMined - cnodeReward);
+        // CNode分成
+        _cnodeReward += cnodeReward;
+    }
+
+    function _swap(address[] calldata path, uint amountIn, address to) private returns (uint[] memory amounts, uint totalMined) {
+        amounts = new uint[](path.length - 1);
+        totalMined = 0;
+        uint mined;
+        for (uint i = 1; i < path.length; ++i) {
+            address token0 = path[i - 1];
+            address token1 = path[i];
+            address pair = _pairFor(token0, token1);
+            address next = to;
+            if (i + 1 < path.length) {
+                next = _pairFor(path[i], path[i + 1]);
+            }
+            (amounts[i - 1], mined) = ICoFiXPair(pair).swap {
+                value: msg.value
+            } (token0, token1, amountIn, next, msg.sender);
+            totalMined += mined;
+        }
+    }
+
+    /// @dev 查找从源token地址到目标token地址的路由路径
+    /// @param from 源token地址
+    /// @param to 目标token地址
+    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
+    function getRouterPath(address from, address to) external view override returns (address[] memory path) {
+        
+    }
+    
     /// @dev 获取目标pair的交易挖矿分成
     /// @param pair 目标pair地址
     /// @return 目标pair的交易挖矿分成

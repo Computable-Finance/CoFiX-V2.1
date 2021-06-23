@@ -40,9 +40,9 @@ interface ICoFiXPair {
     }
     
     /// @dev 获取初始资产比例
-    /// @param initETHAmount 初始资产比例 - ETH
-    /// @param initTokenAmount 初始资产比例 - TOKEN
-    function getInitialAssetRatio() external view returns (uint initETHAmount, uint initTokenAmount);
+    /// @param initToken0Amount 初始资产比例 - ETH
+    /// @param initToken1Amount 初始资产比例 - TOKEN
+    function getInitialAssetRatio() external view returns (uint initToken0Amount, uint initToken1Amount);
 
     /// @dev 添加流动性并增发份额
     /// @param to 份额接收地址
@@ -74,6 +74,10 @@ interface ICoFiXPair {
         uint amountETHOut
     );
     
+    function swap(address src, address dest, uint amountIn, address to, address payback) external payable returns (
+        uint amountOut, uint mined
+    );
+
     /// @dev 用eth兑换token
     /// @param amountIn 兑换的eth数量
     /// @param to 兑换资金接收地址

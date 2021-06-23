@@ -115,6 +115,29 @@ interface ICoFiXRouter {
         uint deadline
     ) external payable returns (uint amountIn_, uint amountOut_);
 
+    /// @dev 多级路由兑换
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  path 路由路径
+    /// @param  to The target address receiving the ETH
+    /// @param  rewardTo The target address receiving the CoFi Token as rewards
+    /// @param  deadline The dealine of this request
+    /// @return amounts 兑换路径中每次换得的资产数量
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        address rewardTo,
+        uint deadline
+    ) external payable returns (uint[] memory amounts);
+
+    /// @dev 查找从源token地址到目标token地址的路由路径
+    /// @param from 源token地址
+    /// @param to 目标token地址
+    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
+    function getRouterPath(address from, address to) external view returns (address[] memory path);
+
     /// @dev 获取目标pair的交易挖矿分成
     /// @param pair 目标pair地址
     /// @return 目标pair的交易挖矿分成
