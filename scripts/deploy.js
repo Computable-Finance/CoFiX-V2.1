@@ -34,6 +34,9 @@ exports.deploy = async function () {
     const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
     //const usdt = await TestERC20.attach('0xd5798C4DbC5AC13DbE4809d2914b5fd5e5030948');
     console.log('usdt: ' + usdt.address);
+
+    const nest = await TestERC20.deploy('NEST', 'NEST', 18);
+    console.log('nest: ' + nest.address);
     
     const cofi = await CoFiToken.deploy();
     //const cofi = await CoFiToken.attach('0x30C69c1511608aBCf5f7052CE330A47673BEF80a');
@@ -43,6 +46,9 @@ exports.deploy = async function () {
     //const pair = await CoFiXPair.attach('0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52');
     console.log('pair: ' + pair.address);
     //cnode = pair;
+
+    const nestPair = await CoFiXPair.deploy('XT-2', 'XToken-2', nest.address, BigInt('1'), BigInt('20000'));
+    console.log('nestPair: ' + nestPair.address);
     
     const cofixGovernance = await CoFiXGovernance.deploy();
     //const cofixGovernance = await CoFiXGovernance.attach('0x615c7448ED870aD41a24FE7e96016b2d9406C169');
@@ -74,6 +80,7 @@ exports.deploy = async function () {
     await cofixVaultForStaking.initialize(cofixGovernance.address);
     console.log('pair.initialize');
     await pair.initialize(cofixGovernance.address);
+    await nestPair.initialize(cofixGovernance.address);
 
     console.log('cofixGovernance.setBuiltinAddress');
     await cofixGovernance.setBuiltinAddress(
@@ -93,6 +100,7 @@ exports.deploy = async function () {
     await cofixVaultForStaking.update(cofixGovernance.address);
     console.log('pair.update');
     await pair.update(cofixGovernance.address);
+    await nestPair.update(cofixGovernance.address);
 
     console.log('cofixVaultForStaking.setConfig');
     await cofixVaultForStaking.setConfig({
@@ -100,6 +108,7 @@ exports.deploy = async function () {
     });
     console.log('cofixVaultForStaking.initStakingChannel');
     await cofixVaultForStaking.initStakingChannel(pair.address, 100000);
+    await cofixVaultForStaking.initStakingChannel(nestPair.address, 20000);
     await cofixVaultForStaking.initStakingChannel(cnode.address, 100000);
 
     console.log('cofixRouter.setConfig');
@@ -108,11 +117,18 @@ exports.deploy = async function () {
     });
     console.log('cofixRouter.addPair');
     await cofixRouter.addPair(usdt.address, pair.address);
+    await cofixRouter.addPair(nest.address, nestPair.address);
     console.log('cofi.addMinter');
     await cofi.addMinter(cofixRouter.address);
     console.log('cofi.addMinter');
     await cofi.addMinter(cofixVaultForStaking.address);
     console.log('usdt: ' + usdt.address);
+
+    await cofixRouter.registerRouterPath(nest.address, usdt.address, [
+        nest.address, 
+        '0x0000000000000000000000000000000000000000', 
+        usdt.address
+    ]);
 
     const contracts = {
         cofi: cofi,
@@ -124,7 +140,9 @@ exports.deploy = async function () {
         cofixGovernance: cofixGovernance,
 
         usdt: usdt,
-        pair: pair
+        nest: nest,
+        pair: pair,
+        nestPair: nestPair
     };
     //console.log(contracts);
     console.log('** 合约部署完成 **');

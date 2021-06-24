@@ -24,10 +24,29 @@ interface ICoFiXRouter {
     /// @param pair pair地址
     function addPair(address token, address pair) external;
     
+    /// @dev 注册交易对
+    /// @param token0 交易对token0。（0地址表示eth）
+    /// @param token1 交易对token1。（0地址表示eth）
+    /// @param pair 交易对资金池
+    function registerPair(address token0, address token1, address pair) external;
+
     /// @dev 根据token地址获取pair
-    /// @param token 目标token地址
+    /// @param token0 交易对token0。（0地址表示eth）
+    /// @param token1 交易对token1。（0地址表示eth）
     /// @return pair pair地址
-    function pairFor(address token) external view returns (address pair);
+    function pairFor(address token0, address token1) external view returns (address pair);
+
+    /// @dev 注册路由路径
+    /// @param from 源token地址
+    /// @param to 目标token地址
+    /// @param path 路由地址
+    function registerRouterPath(address from, address to, address[] calldata path) external;
+
+    /// @dev 查找从源token地址到目标token地址的路由路径
+    /// @param from 源token地址
+    /// @param to 目标token地址
+    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
+    function getRouterPath(address from, address to) external view returns (address[] memory path);
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
     /// @param  token The address of ERC20 Token
@@ -131,12 +150,6 @@ interface ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable returns (uint[] memory amounts);
-
-    /// @dev 查找从源token地址到目标token地址的路由路径
-    /// @param from 源token地址
-    /// @param to 目标token地址
-    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
-    function getRouterPath(address from, address to) external view returns (address[] memory path);
 
     /// @dev 获取目标pair的交易挖矿分成
     /// @param pair 目标pair地址

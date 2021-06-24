@@ -18,6 +18,13 @@ interface ICoFiXController is INestPriceFacade {
     // We use expected value of K based on statistical calculations here to save gas
     // In the near future, NEST could provide the variance of price directly. We will adopt it then.
     // We can make use of `data` bytes in the future
+
+    /// @dev 查询价格
+    /// @param tokenAddress 目标token地址
+    /// @param payback 手续费退回接收地址
+    /// @return ethAmount 价格-eth数量
+    /// @return tokenAmount 价格-token数量
+    /// @return blockNum 价格所在区块
     function queryPrice(
         address tokenAddress,
         address payback

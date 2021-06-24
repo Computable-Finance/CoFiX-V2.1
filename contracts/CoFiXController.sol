@@ -56,6 +56,9 @@ contract CoFiXController is ICoFiXController {
         // TODO:
         require(tokenAddress != address(0));
         require(payback != address(0));
+        if (tokenAddress == 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0) {
+            return (block.number - 1, 27000 * 1000000, block.number - 1, 27000 * 1000000, 26000 * 1000000, 10853469234);
+        }
         return (block.number - 1, 2700 * 1000000, block.number - 1, 2700 * 1000000, 2600 * 1000000, 10853469234);
     }
 

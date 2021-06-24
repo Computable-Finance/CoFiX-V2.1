@@ -432,11 +432,13 @@ contract PCoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // 批量存入手续费
     function _collect(uint fee) private {
+        // TODO: 收取原生资产作为手续费
         uint totalFee = _totalFee + fee;
         // 总手续费超过1ETH时才存入
         if (totalFee >= 1 ether) {
             _totalFee = 0;
-            ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
+            //ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
+            TransferHelper.safeTransfer(TOKEN0_ADDRESS, _cofixDAO, fee);
         } 
         _totalFee = totalFee;
     }
