@@ -5,6 +5,11 @@ pragma solidity ^0.8.4;
 /// @dev Router contract to interact with each CoFiXPair
 interface ICoFiXPool {
 
+    /*
+    ETH交易对: ETU/USDT, ETH/HBTC, ETH/NEST, ETH/COFI
+    稳定币交易池：USDT|DAI|TUSD|PUSD, ETH|PETH
+     */
+
     /// @dev 做市出矿事件
     /// @param to 份额接收地址
     /// @param amountETH 要添加的eth数量

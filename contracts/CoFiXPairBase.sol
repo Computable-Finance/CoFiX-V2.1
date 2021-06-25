@@ -19,7 +19,7 @@ pragma solidity ^0.8.4;
 // abstract contract CoFiXPairBase is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
 //     // it's negligible because we calc liquidity in ETH
-//     uint constant MINIMUM_LIQUIDITY = 10**9; 
+//     uint constant MINIMUM_LIQUIDITY = 10e9; 
 //     uint constant public THETA = 0.002 ether;
 
 //     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000

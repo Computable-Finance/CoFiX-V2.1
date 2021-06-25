@@ -19,7 +19,7 @@ import "hardhat/console.sol";
 contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
-    uint constant MINIMUM_LIQUIDITY = 10**9; 
+    uint constant MINIMUM_LIQUIDITY = 10e9; 
     uint constant public THETA = 0.002 ether;
     address immutable public TOKEN_ADDRESS; 
 
@@ -251,8 +251,23 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         emit Burn(to, liquidity, amountTokenOut, amountETHOut);
     }
 
-    function swap(address src, address dest, uint amountIn, address to, address payback) external payable override returns (
-        uint amountOut, uint mined
+    /// @dev 执行兑换交易
+    /// @param src 源资产token地址
+    /// @param dest 目标资产token地址
+    /// @param amountIn 输入源资产数量
+    /// @param to 兑换资金接收地址
+    /// @param payback 退回的手续费接收地址
+    /// @return amountOut 兑换到的目标资产数量
+    /// @return mined 出矿量
+    function swap(
+        address src, 
+        address dest, 
+        uint amountIn, 
+        address to, 
+        address payback
+    ) external payable override returns (
+        uint amountOut, 
+        uint mined
     ) {
         if (src == address(0)) {
             require(dest == TOKEN_ADDRESS);

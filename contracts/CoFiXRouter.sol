@@ -418,4 +418,8 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     receive() external payable {
 
     }
+
+    function getValue() external pure returns (uint) {
+        return 3.1415926535e10;
+    }
 }
