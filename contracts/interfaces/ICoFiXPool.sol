@@ -11,43 +11,51 @@ interface ICoFiXPool {
      */
 
     /// @dev 做市出矿事件
+    /// @param token 目标token地址
     /// @param to 份额接收地址
     /// @param amountETH 要添加的eth数量
     /// @param amountToken 要添加的token数量
     /// @param liquidity 获得的流动性份额
-    event Mint(address to, uint amountETH, uint amountToken, uint liquidity);
+    event Mint(address token, address to, uint amountETH, uint amountToken, uint liquidity);
     
     /// @dev 移除流动性并销毁
+    /// @param token 目标token地址
     /// @param to 资金接收地址
     /// @param liquidity 需要移除的流动性份额
     /// @param amountTokenOut 获得的token数量
     /// @param amountETHOut 获得的eth数量
-    event Burn(address to, uint liquidity, uint amountTokenOut, uint amountETHOut);
+    event Burn(address token, address to, uint liquidity, uint amountTokenOut, uint amountETHOut);
 
     /// @dev 添加流动性并增发份额
+    /// @param token 目标token地址
     /// @param to 份额接收地址
     /// @param amountETH 要添加的eth数量
     /// @param amountToken 要添加的token数量
     /// @param payback 退回的手续费接收地址
+    /// @return xtoken 获得的流动性份额代币地址
     /// @return liquidity 获得的流动性份额
     function mint(
+        address token,
         address to, 
         uint amountETH, 
         uint amountToken,
         address payback
     ) external payable returns (
+        address xtoken,
         uint liquidity
     );
 
     /// @dev 移除流动性并销毁
-    /// @param liquidity 需要移除的流动性份额
+    /// @param token 目标token地址
     /// @param to 资金接收地址
+    /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
     /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
     function burn(
-        uint liquidity, 
+        address token,
         address to, 
+        uint liquidity, 
         address payback
     ) external payable returns (
         uint amountTokenOut, 
@@ -72,4 +80,6 @@ interface ICoFiXPool {
         uint amountOut, 
         uint mined
     );
+
+    function getXToken(address token) external view returns (address);
 }

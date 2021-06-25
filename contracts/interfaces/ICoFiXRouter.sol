@@ -57,6 +57,7 @@ interface ICoFiXRouter {
     /// @param  deadline The dealine of this request
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
+        address pool,
         address token,
         uint amountETH,
         uint amountToken,
@@ -74,6 +75,7 @@ interface ICoFiXRouter {
     /// @param  deadline The dealine of this request
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
+        address pool,
         address token,
         uint amountETH,
         uint amountToken,

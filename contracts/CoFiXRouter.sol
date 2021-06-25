@@ -159,6 +159,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  deadline The dealine of this request
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
+        address pool,
         address token,
         uint amountETH,
         uint amountToken,
@@ -168,7 +169,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
         // 0. 找到交易对合约
-        address pair = _pairFor(address(0), token);
+        address pair = pool; //_pairFor(address(0), token);
         
         // 1. 转入资金
         // 收取token
@@ -176,9 +177,9 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
         // 2. 做市
         // 生成份额
-        liquidity = ICoFiXPair(pair).mint { 
+        (, liquidity) = ICoFiXPair(pair).mint { 
             value: msg.value 
-        } (to, amountETH, amountToken, msg.sender);
+        } (token, to, amountETH, amountToken, msg.sender);
 
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
@@ -193,6 +194,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  deadline The dealine of this request
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
+        address pool,
         address token,
         uint amountETH,
         uint amountToken,
@@ -202,7 +204,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint liquidity)
     {
         // 0. 找到交易对合约
-        address pair = _pairFor(address(0), token);
+        address pair = pool; //_pairFor(address(0), token);
         
         // 1. 转入资金
         // 收取token
@@ -211,15 +213,16 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 2. 做市
         // 生成份额
         address cofixVaultForStaking = _cofixVaultForStaking;
-        liquidity = ICoFiXPair(pair).mint { 
+        address xtoken;
+        (xtoken, liquidity) = ICoFiXPair(pair).mint { 
             value: msg.value 
-        } (cofixVaultForStaking, amountETH, amountToken, msg.sender);
+        } (token, cofixVaultForStaking, amountETH, amountToken, msg.sender);
 
         // 份额数不能低于预期最小值
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
 
         // 3. 存入份额
-        ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(pair, to, liquidity);
+        ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(xtoken, to, liquidity);
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) (notice: msg.value = oracle fee)
@@ -252,7 +255,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 2. 移除流动性并返还资金
         (amountToken, amountETH) = ICoFiXPair(pair).burn {
             value: msg.value
-        } (liquidity, to, msg.sender);
+        } (token, to, liquidity, msg.sender);
 
         // 3. 得到的ETH不能少于期望值
         require(amountETH >= amountETHMin, "CoFiXRouter: less eth than expected");
@@ -353,7 +356,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable override ensure(deadline) returns (uint[] memory amounts) {
-
         address token = path[0];
         if (token != address(0)) {
             TransferHelper.safeTransferFrom(token, msg.sender, address(this), amountIn);
@@ -417,9 +419,5 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     receive() external payable {
 
-    }
-
-    function getValue() external pure returns (uint) {
-        return 3.1415926535e10;
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 
 import "./ICoFiXPool.sol";
 
-/// @dev Router contract to interact with each CoFiXPair
+/// @dev 二元资金池: eth/token
 interface ICoFiXPair is ICoFiXPool {
 
     /// @dev 用eth兑换token事件
@@ -62,16 +62,6 @@ interface ICoFiXPair is ICoFiXPool {
         uint mined
     );
 
-    /// @dev 计算买入eth的冲击成本
-    /// @param vol 以eth计算的交易规模
-    /// @return impactCost 冲击成本
-    function impactCostForBuyInETH(uint vol) external view returns (uint impactCost);
-
-    /// @dev 计算卖出eth的冲击成本
-    /// @param vol 以eth计算的交易规模
-    /// @return impactCost 冲击成本
-    function impactCostForSellOutETH(uint vol) external view returns (uint impactCost);
-
     /// @dev 计算净值
     /// @param ethBalance 资金池eth余额
     /// @param tokenBalance 资金池token余额
@@ -84,4 +74,14 @@ interface ICoFiXPair is ICoFiXPool {
         uint ethAmount, 
         uint tokenAmount
     ) external view returns (uint navps);
+    
+    /// @dev 计算买入eth的冲击成本
+    /// @param vol 以eth计算的交易规模
+    /// @return impactCost 冲击成本
+    function impactCostForBuyInETH(uint vol) external view returns (uint impactCost);
+
+    /// @dev 计算卖出eth的冲击成本
+    /// @param vol 以eth计算的交易规模
+    /// @return impactCost 冲击成本
+    function impactCostForSellOutETH(uint vol) external view returns (uint impactCost);
 }

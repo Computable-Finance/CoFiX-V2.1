@@ -15,7 +15,7 @@ import "./CoFiXERC20.sol";
 
 import "hardhat/console.sol";
 
-/// @dev Pair contract for each trading pair, storing assets and handling settlement
+/// @dev 二元资金池: eth/token
 contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
@@ -110,21 +110,26 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     }
 
     /// @dev 添加流动性并增发份额
+    /// @param token 目标token地址
     /// @param to 份额接收地址
     /// @param amountETH 要添加的eth数量
     /// @param amountToken 要添加的token数量
     /// @param payback 退回的手续费接收地址
+    /// @return xtoken 获得的流动性份额代币地址
     /// @return liquidity 获得的流动性份额
     function mint(
-        address to, 
+        address token,
+        address to,
         uint amountETH, 
         uint amountToken,
         address payback
     ) external payable override check returns (
+        address xtoken,
         uint liquidity
     ) {
         // 1. 验证资金的正确性
         // 确保比例正确
+        require(token == TOKEN_ADDRESS, "CoFiXPair: invalid token address");
         require(
             amountETH * uint(INIT_TOKEN1_AMOUNT) == amountToken * uint(INIT_TOKEN0_AMOUNT), 
             "CPair: invalid asset ratio"
@@ -177,25 +182,29 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
         // 5. 增发份额
         _mint(to, liquidity);
-        emit Mint(to, amountETH, amountToken, liquidity);
+        xtoken = address(this);
+        emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
     // 销毁流动性
     // this low-level function should be called from a contract which performs important safety checks
     /// @dev 移除流动性并销毁
-    /// @param liquidity 需要移除的流动性份额
+    /// @param token 目标token地址
     /// @param to 资金接收地址
+    /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
     /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
     function burn(
-        uint liquidity, 
+        address token,
         address to, 
+        uint liquidity, 
         address payback
     ) external payable override check returns (
         uint amountTokenOut, 
         uint amountETHOut
     ) { 
+        require(token == TOKEN_ADDRESS, "CoFiXPair: invalid token address");
         // 1. 调用预言机
         (
             uint ethAmount, 
@@ -248,7 +257,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(TOKEN_ADDRESS, to, amountTokenOut);
 
-        emit Burn(to, liquidity, amountTokenOut, amountETHOut);
+        emit Burn(token, to, liquidity, amountTokenOut, amountETHOut);
     }
 
     /// @dev 执行兑换交易
@@ -509,5 +518,12 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     // use it in this contract, for optimized gas usage
     function _calcLiquidity(uint amount0, uint navps) private pure returns (uint liquidity) {
         liquidity = amount0 * 1 ether / navps;
+    }
+
+    function getXToken(address token) external view override returns (address) {
+        if (token == TOKEN_ADDRESS) {
+            return address(this);
+        }
+        return address(0);
     }
 }

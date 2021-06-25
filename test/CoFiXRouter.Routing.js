@@ -152,10 +152,5 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
         }
-
-        if (true) {
-            let v = await cofixRouter.getValue();
-            console.log('v=' + v.toString());
-        }
     });
 });

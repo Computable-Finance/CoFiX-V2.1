@@ -11,17 +11,18 @@ import "./interfaces/ICoFiXDAO.sol";
 
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
-import "./CoFiXERC20.sol";
+import "./CoFiXAnchorToken.sol";
 
 import "hardhat/console.sol";
 
-/// @dev TOKEN/PTOKEN资产交易对
-contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
+/// @dev 锚定池
+contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
 
     struct TokenInfo {
         address tokenAddress;
-        uint base;
-        uint initAmount;
+        uint96 base;
+        address xtokenAddress;
+        uint96 initAmount;
         uint112 _Y;
         uint112 _D;
         uint32 _LASTBLOCK;
@@ -33,12 +34,6 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
 
     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000
     uint constant nt = 1000;
-
-    // ERC20 - name
-    string public name;
-    
-    // ERC20 - symbol
-    string public symbol;
 
     // Configration
     //Config _config;
@@ -52,10 +47,6 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
     // Lock flag
     uint8 _unlocked = 1;
 
-    // TODO: 将CoFiXController合并到CoFiXRouter中
-    // Address of CoFiXController
-    address _cofixController;
-
     uint _totalFee;
 
     TokenInfo[] _tokens;
@@ -63,12 +54,28 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor (
-        string memory name_, 
-        string memory symbol_
+        address[] memory tokens,
+        uint[] memory bases
     ) {
-        name = name_;
-        symbol = symbol_;
+        for (uint i = 0; i < tokens.length; ++i) {
+            address token = tokens[i];
+            _tokenMapping[token] = _tokens.length;
+            TokenInfo storage ti = _tokens.push();
+            address xtokenAddress = address(new CoFiXAnchorToken('XT', 'XToken', address(this)));
+            ti.tokenAddress = token;
+            ti.base = uint96(bases[i]);
+            ti.xtokenAddress = xtokenAddress;
+            ti.initAmount = uint96(0);
+        }
     }
+
+    // function _pow(uint base, uint n) private pure returns (uint) {
+    //     uint v = 1;
+    //     while (n > 0) {
+    //         v *= base;
+    //         --n;
+    //     }
+    // }
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
@@ -88,23 +95,27 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
             ,//cofiNode,
             _cofixDAO,
             _cofixRouter,
-            _cofixController,
+            ,//_cofixController,
             //cofixVaultForStaking
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
     }
 
     /// @dev 添加流动性并增发份额
+    /// @param token 目标token地址
     /// @param to 份额接收地址
     /// @param amountETH 要添加的eth数量
     /// @param amountToken 要添加的token数量
     /// @param payback 退回的手续费接收地址
+    /// @return xtoken 获得的流动性份额代币地址
     /// @return liquidity 获得的流动性份额
     function mint(
+        address token,
         address to, 
         uint amountETH, 
         uint amountToken,
         address payback
     ) external payable override check returns (
+        address xtoken,
         uint liquidity
     ) {
         // 1. 验证资金的正确性
@@ -113,83 +124,55 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
         // 2. 调用预言机
         // 计算K值
         // 计算θ
-        // (
-        //     uint ethAmount, 
-        //     uint tokenAmount, 
-        //     //uint blockNum, 
-        // ) = ICoFiXController(_cofixController).queryPrice { 
-        //     // 多余的部分，都作为预言机调用费用
-        //     value: msg.value - amountETH
-        // } (
-        //     TOKEN1_ADDRESS,
-        //     payback
-        // );
         if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
 
         // 3. 计算净值和份额
-        uint navps = 1 ether;
-        uint total = totalSupply;
+        TokenInfo storage ti = _tokens[_tokenMapping[token]];
+        uint base = ti.base;
+        xtoken = ti.xtokenAddress;
+        //uint navps = 1 ether;
+        uint total = CoFiXAnchorToken(xtoken).totalSupply();
+        liquidity = amountToken * 1 ether / base;
         if (total > 0) {
-            // // TODO: Pt此处没有引入K值，后续需要引入
-            // navps = _calcTotalValue(
-            //     // 当前eth余额，减去amountETH等于交易前eth余额
-            //     address(this).balance - amountETH, 
-            //     // 当前token余额，减去amountToken等于交易前token余额
-            //     IERC20(TOKEN1_ADDRESS).balanceOf(address(this)) - amountToken,
-            //     // 价格 - eth数量 
-            //     ethAmount, 
-            //     // 价格 - token数量
-            //     tokenAmount
-            // ) * 1 ether / total;
-
-            // 做市没有冲击成本
             // 当发行量不为0时，正常发行份额
-            liquidity = _calcLiquidity(amountETH, navps);
+            //liquidity = _calcLiquidity(amountETH, navps);
         } else {
             // TODO: 确定基础份额的逻辑
-            liquidity = _calcLiquidity(amountETH, navps) - (MINIMUM_LIQUIDITY);
+            liquidity -= MINIMUM_LIQUIDITY;
             // permanently lock the first MINIMUM_LIQUIDITY tokens
             // 当发行量为0时，有一个基础份额
-            _mint(address(0), MINIMUM_LIQUIDITY); 
+            CoFiXAnchorToken(xtoken).mint(address(0), MINIMUM_LIQUIDITY); 
         }
 
         // // 份额必须大于0
         // require(liquidity > 0, "CPair: SHORT_LIQUIDITY_MINTED");
 
         // 5. 增发份额
-        _mint(to, liquidity);
-        emit Mint(to, amountETH, amountToken, liquidity);
+        CoFiXAnchorToken(xtoken).mint(to, liquidity);
+        emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
     // 销毁流动性
     // this low-level function should be called from a contract which performs important safety checks
     /// @dev 移除流动性并销毁
-    /// @param liquidity 需要移除的流动性份额
+    /// @param token 目标token地址
     /// @param to 资金接收地址
+    /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
     /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
     function burn(
-        uint liquidity, 
+        address token,
         address to, 
+        uint liquidity, 
         address payback
     ) external payable override check returns (
         uint amountTokenOut, 
         uint amountETHOut
     ) { 
         // 1. 调用预言机
-        // (
-        //     uint ethAmount, 
-        //     uint tokenAmount, 
-        //     //uint blockNum, 
-        // ) = ICoFiXController(_cofixController).queryPrice { 
-        //     value: msg.value 
-        // } (
-        //     TOKEN1_ADDRESS,
-        //     payback
-        // );
         if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
@@ -197,30 +180,19 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
         // 2. 计算净值，根据净值计算等比资金
         // 计算净值
         uint navps = 1 ether;
-        //uint total = totalSupply;
-        // if (total > 0) {
-        //     // Pt此处没有引入K值，后续需要引入
-        //     navps = _calcTotalValue(
-        //         ethBalance, 
-        //         tokenBalance, 
-        //         ethAmount, 
-        //         tokenAmount
-        //     ) * 1 ether / total;
-        // }
-
         // TODO: 赎回时需要计算冲击成本
         // TODO: 确定赎回的时候是否有手续费逻辑
         amountTokenOut = navps * liquidity / 1 ether;
 
         // 3. 销毁份额
-        _burn(address(this), liquidity);
+        CoFiXAnchorToken(_tokens[_tokenMapping[token]].xtokenAddress).burn(address(this), liquidity);
 
         // 4. TODO: 根据资金池剩余情况进行调整
 
         // 5. 资金转入用户指定地址
         TransferHelper.safeTransfer(address(0), to, amountTokenOut);
 
-        emit Burn(to, liquidity, amountTokenOut, amountETHOut);
+        emit Burn(token, to, liquidity, amountTokenOut, amountETHOut);
     }
 
     /// @dev 执行兑换交易
@@ -241,10 +213,13 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
         uint amountOut, 
         uint mined
     ) {
+        if (msg.value > 0) {
+            payable(payback).transfer(msg.value);
+        }
+        
         TokenInfo storage token0 = _tokens[_tokenMapping[src]];
         TokenInfo storage token1 = _tokens[_tokenMapping[dest]];
-
-        uint amountOut = amountIn * token1.base / token0.base;
+        amountOut = amountIn * token1.base / token0.base;
         IERC20(dest).transfer(to, amountOut);
         IERC20(dest).transfer(_cofixDAO, amountOut * THETA / 1 ether);
 
@@ -282,8 +257,12 @@ contract MultiCoFiXPool is CoFiXBase, ICoFiXPool, CoFiXERC20 {
         ti._LASTBLOCK = uint32(block.number);
     }
 
-    // use it in this contract, for optimized gas usage
-    function _calcLiquidity(uint amount0, uint navps) private pure returns (uint liquidity) {
-        liquidity = amount0 * 1 ether / navps;
+    // // use it in this contract, for optimized gas usage
+    // function _calcLiquidity(uint amount0, uint navps) private pure returns (uint liquidity) {
+    //     liquidity = amount0 * 1 ether / navps;
+    // }
+
+    function getXToken(address token) external view override returns (address) {
+        return _tokens[_tokenMapping[token]].xtokenAddress;
     }
 }
