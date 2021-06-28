@@ -44,6 +44,10 @@ interface ICoFiXDAO {
     /// @return Authorization flag, 1 means authorization, 0 means cancel authorization
     function checkApplication(address addr) external view returns (uint);
 
+    function setTokenExchange(address token, address target, uint exchange) external;
+
+    function getTokenExchange(address token) external view returns (address target, uint exchange);
+
     /// @dev Carve reward
     /// @param pair Destination pair
     function carveETHReward(address pair) external payable;
@@ -75,6 +79,13 @@ interface ICoFiXDAO {
     /// @param amount The amount of ntoken
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
     function redeem(uint amount, address payback) external payable;
+
+    /// @dev Redeem CoFi for Token
+    /// @notice Ethfee will be charged
+    /// @param token The target token
+    /// @param amount The amount of ntoken
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    function redeemToken(address token, uint amount, address payback) external payable;
 
     /// @dev Get the current amount available for repurchase
     function quotaOf() external view returns (uint);

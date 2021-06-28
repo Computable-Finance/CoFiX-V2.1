@@ -14,6 +14,11 @@ import "hardhat/console.sol";
 /// @dev CoFiX公共资金的管理
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
+    struct TokenPriceExchange {
+        address target;
+        uint96 exchange;
+    }
+
     // Address of CoFiToken
     address immutable COFI_TOKEN_ADDRESS;
 
@@ -28,6 +33,8 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     // DAO applications
     mapping(address=>uint) _applications;
+
+    mapping(address=>TokenPriceExchange) _tokenExchanges;
 
     /// @dev Create CoFiXDAO
     /// @param cofiToken CoFi TOKEN
@@ -68,6 +75,16 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     /// @return Authorization flag, 1 means authorization, 0 means cancel authorization
     function checkApplication(address addr) external view override returns (uint) {
         return _applications[addr];
+    }
+
+    function setTokenExchange(address token, address target, uint exchange) external override {
+        require(exchange <= 0xFFFFFFFFFFFFFFFFFFFFFFFF, "CoFiXDAO: exchange value overflow");
+        _tokenExchanges[token] = TokenPriceExchange(target, uint96(exchange));
+    }
+
+    function getTokenExchange(address token) external view override returns (address target, uint exchange) {
+        TokenPriceExchange memory e = _tokenExchanges[token];
+        return (e.target, uint(e.exchange));
     }
 
     /// @dev Carve reward
@@ -171,6 +188,68 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         );
 
         payable(msg.sender).transfer(value);
+    }
+
+    /// @dev Redeem CoFi for Token
+    /// @notice Ethfee will be charged
+    /// @param token The target token
+    /// @param amount The amount of ntoken
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    function redeemToken(address token, uint amount, address payback) external payable override {
+        
+        // 1. Load configuration
+        Config memory config = _config;
+
+        // 2. Check redeeming stat
+        require(uint(config.RepurchaseStatus) == 1, "CoFiXDAO: Repurchase status error");
+
+        TokenPriceExchange memory exchange = _tokenExchanges[token];
+        require(exchange.target != address(0), "CoFiXDAO: Token not allowed");
+
+        // 3. Query price
+        (
+            /* uint latestPriceBlockNumber */, 
+            uint cofiLatestPriceValue,
+            /* uint triggeredPriceBlockNumber */,
+            /* uint triggeredPriceValue */,
+            uint cofiTriggeredAvgPrice,
+            /* uint triggeredSigma */
+        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
+            value: msg.value >> 1
+        } (COFI_TOKEN_ADDRESS, payback);
+
+        (
+            /* uint latestPriceBlockNumber */, 
+            uint tokenLatestPriceValue,
+            /* uint triggeredPriceBlockNumber */,
+            /* uint triggeredPriceValue */,
+            uint tokenTriggeredAvgPrice,
+            /* uint triggeredSigma */
+        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
+            value: msg.value >> 1
+        } (exchange.target, payback);
+
+        tokenLatestPriceValue = tokenLatestPriceValue * 1 ether / uint(exchange.exchange);
+        tokenTriggeredAvgPrice = tokenTriggeredAvgPrice * 1 ether / uint(exchange.exchange);
+
+        // 4. Calculate the number of eth that can be exchanged for redeem
+        uint value = amount * tokenLatestPriceValue / cofiLatestPriceValue;
+
+        // 5. Calculate redeem quota
+        (uint quota, uint scale) = _quotaOf(config, _redeemed);
+        _redeemed = scale - (quota - amount);
+
+        // TODO: 检查价格偏差
+        // 6. Check the redeeming amount and price deviation
+        require(
+            cofiLatestPriceValue * tokenTriggeredAvgPrice * 10000 
+                <= cofiTriggeredAvgPrice * tokenLatestPriceValue * (10000 + uint(config.priceDeviationLimit)) && 
+            cofiLatestPriceValue * tokenTriggeredAvgPrice * 10000 
+                >= cofiTriggeredAvgPrice * tokenLatestPriceValue * (10000 - uint(config.priceDeviationLimit)), 
+            "CoFiXDAO:!price"
+        );
+
+        TransferHelper.safeTransfer(token, msg.sender, value);
     }
 
     /// @dev Get the current amount available for repurchase

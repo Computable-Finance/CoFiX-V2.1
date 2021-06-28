@@ -3,6 +3,7 @@
 pragma solidity ^0.8.4;
 
 import "./libs/IERC20.sol";
+import "./libs/ERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXPool.sol";
@@ -29,7 +30,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
     }
 
     // it's negligible because we calc liquidity in ETH
-    uint constant MINIMUM_LIQUIDITY = 10e9; 
+    uint constant MINIMUM_LIQUIDITY = 1e9; 
     uint constant public THETA = 0.002 ether;
 
     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000
@@ -54,28 +55,26 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor (
+        uint index,
         address[] memory tokens,
         uint[] memory bases
     ) {
+        string memory si = getAddressStr(index);
         for (uint i = 0; i < tokens.length; ++i) {
             address token = tokens[i];
             _tokenMapping[token] = _tokens.length;
             TokenInfo storage ti = _tokens.push();
-            address xtokenAddress = address(new CoFiXAnchorToken('XT', 'XToken', address(this)));
+            
+            string memory idx = getAddressStr(i);
+            string memory name = strConcat(strConcat(strConcat('XToken-', si), '-'), idx);
+            string memory symbol = strConcat(strConcat(strConcat('XT-', si), '-'), idx);
+            address xtokenAddress = address(new CoFiXAnchorToken(name, symbol, address(this)));
             ti.tokenAddress = token;
             ti.base = uint96(bases[i]);
             ti.xtokenAddress = xtokenAddress;
             ti.initAmount = uint96(0);
         }
     }
-
-    // function _pow(uint base, uint n) private pure returns (uint) {
-    //     uint v = 1;
-    //     while (n > 0) {
-    //         v *= base;
-    //         --n;
-    //     }
-    // }
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
@@ -98,6 +97,16 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
             ,//_cofixController,
             //cofixVaultForStaking
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
+    }
+
+    function _transfer(address token, address to, uint value) private {
+        if (value > 0) {
+            if (token == address(0)) {
+                payable(to).transfer(value);
+            } else {
+                TransferHelper.safeTransfer(token, to, value);
+            }
+        }
     }
 
     /// @dev 添加流动性并增发份额
@@ -124,7 +133,9 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         // 2. 调用预言机
         // 计算K值
         // 计算θ
-        if (msg.value > 0) {
+        if (token == address(0)) {
+            _transfer(address(0), payback, msg.value - amountToken);
+        } else if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
 
@@ -190,7 +201,8 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         // 4. TODO: 根据资金池剩余情况进行调整
 
         // 5. 资金转入用户指定地址
-        TransferHelper.safeTransfer(address(0), to, amountTokenOut);
+        //TransferHelper.safeTransfer(token, to, amountTokenOut);
+        _transfer(token, to, amountTokenOut);
 
         emit Burn(token, to, liquidity, amountTokenOut, amountETHOut);
     }
@@ -213,15 +225,19 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         uint amountOut, 
         uint mined
     ) {
-        if (msg.value > 0) {
+        if (src == address(0)) {
+            _transfer(address(0), payback, msg.value - amountIn);
+        } else if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
         
         TokenInfo storage token0 = _tokens[_tokenMapping[src]];
         TokenInfo storage token1 = _tokens[_tokenMapping[dest]];
         amountOut = amountIn * token1.base / token0.base;
-        IERC20(dest).transfer(to, amountOut);
-        IERC20(dest).transfer(_cofixDAO, amountOut * THETA / 1 ether);
+        uint fee = amountOut * THETA / 1 ether;
+
+        _transfer(dest, to, amountOut - fee);
+        _transfer(dest, _cofixDAO, fee);
 
         mined = _cofiMint(token0) + _cofiMint(token1);
 
@@ -264,5 +280,38 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
 
     function getXToken(address token) external view override returns (address) {
         return _tokens[_tokenMapping[token]].xtokenAddress;
+    }
+
+    /// @dev from NESTv3.0
+    function strConcat(string memory _a, string memory _b) private pure returns (string memory)
+    {
+        bytes memory _ba = bytes(_a);
+        bytes memory _bb = bytes(_b);
+        string memory ret = new string(_ba.length + _bb.length);
+        bytes memory bret = bytes(ret);
+        uint k = 0;
+        for (uint i = 0; i < _ba.length; i++) {
+            bret[k++] = _ba[i];
+        } 
+        for (uint i = 0; i < _bb.length; i++) {
+            bret[k++] = _bb[i];
+        } 
+        return string(ret);
+    } 
+    
+    /// @dev Convert number into a string, if less than 4 digits, make up 0 in front, from NestV3.0
+    function getAddressStr(uint iv) private pure returns (string memory) 
+    {
+        bytes memory buf = new bytes(64);
+        uint index = 0;
+        do {
+            buf[index++] = bytes1(uint8(iv % 10 + 48));
+            iv /= 10;
+        } while (iv > 0);
+        bytes memory str = new bytes(index);
+        for(uint i = 0; i < index; ++i) {
+            str[i] = buf[index - i - 1];
+        }
+        return string(str);
     }
 }

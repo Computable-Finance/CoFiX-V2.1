@@ -22,6 +22,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     // Address of CoFiToken
     address immutable COFI_TOKEN_ADDRESS;
+
     // Address of CoFiNode
     address immutable CNODE_TOKEN_ADDRESS;
 
@@ -100,25 +101,23 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev 注册路由路径
-    /// @param from 源token地址
-    /// @param to 目标token地址
+    /// @param src 源token地址
+    /// @param dest 目标token地址
     /// @param path 路由地址
-    function registerRouterPath(address from, address to, address[] calldata path) external override {
-        require(from == path[0], "CoFiXRouter: first path error");
-        require(to == path[path.length - 1], "CoFiXRouter: last path error");
-        _paths[_getKey(from, to)] = path;
+    function registerRouterPath(address src, address dest, address[] calldata path) external override onlyGovernance {
+        require(src == path[0], "CoFiXRouter: first path error");
+        require(dest == path[path.length - 1], "CoFiXRouter: last path error");
+        _paths[_getKey(src, dest)] = path;
     }
 
     /// @dev 查找从源token地址到目标token地址的路由路径
-    /// @param from 源token地址
-    /// @param to 目标token地址
+    /// @param src 源token地址
+    /// @param dest 目标token地址
     /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
-    function getRouterPath(address from, address to) external view override returns (address[] memory path) {
-        path = _paths[_getKey(from, to)];
+    function getRouterPath(address src, address dest) external view override returns (address[] memory path) {
+        path = _paths[_getKey(src, dest)];
         uint j = path.length - 1;
-        if (from == path[0] && to == path[j]) {
-
-        } else if (to == path[0] && from == path[j]) {
+        if (dest == path[0] && src == path[j]) {
             for (uint i = 0; i < j;) {
                 address tmp = path[i];
                 path[i] = path[j];
@@ -127,7 +126,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
                 --j;
             }
         } else {
-            revert('CoFiXRouter: path error');
+            require(src == path[0] && dest == path[j], 'CoFiXRouter: path error');
         }
     }
     
@@ -151,12 +150,14 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
+    /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
-    /// @param  amountETH The amount of ETH added to pool
+    /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
     /// @param  deadline The dealine of this request
+    /// @return xtoken 获得的流动性份额代币地址
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
         address pool,
@@ -166,7 +167,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint liquidityMin,
         address to,
         uint deadline
-    ) external override payable ensure(deadline) returns (uint liquidity)
+    ) external override payable ensure(deadline) returns (address xtoken, uint liquidity)
     {
         // 0. 找到交易对合约
         address pair = pool; //_pairFor(address(0), token);
@@ -177,7 +178,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
         // 2. 做市
         // 生成份额
-        (, liquidity) = ICoFiXPair(pair).mint { 
+        (xtoken, liquidity) = ICoFiXPair(pair).mint { 
             value: msg.value 
         } (token, to, amountETH, amountToken, msg.sender);
 
@@ -186,12 +187,14 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically (notice: msg.value = amountETH + oracle fee)
+    /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
-    /// @param  amountETH The amount of ETH added to pool
+    /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
     /// @param  deadline The dealine of this request
+    /// @return xtoken 获得的流动性份额代币地址
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
         address pool,
@@ -201,7 +204,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint liquidityMin,
         address to,
         uint deadline
-    ) external override payable ensure(deadline) returns (uint liquidity)
+    ) external override payable ensure(deadline) returns (address xtoken, uint liquidity)
     {
         // 0. 找到交易对合约
         address pair = pool; //_pairFor(address(0), token);
@@ -213,7 +216,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 2. 做市
         // 生成份额
         address cofixVaultForStaking = _cofixVaultForStaking;
-        address xtoken;
         (xtoken, liquidity) = ICoFiXPair(pair).mint { 
             value: msg.value 
         } (token, cofixVaultForStaking, amountETH, amountToken, msg.sender);
@@ -226,6 +228,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) (notice: msg.value = oracle fee)
+    /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
     /// @param  liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
@@ -234,6 +237,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @return amountToken The real amount of Token transferred from the pool
     /// @return amountETH The real amount of ETH transferred from the pool
     function removeLiquidityGetTokenAndETH(
+        address pool,
         // 要移除的token对
         address token,
         // 移除的额度
@@ -247,10 +251,11 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     ) external override payable ensure(deadline) returns (uint amountToken, uint amountETH) 
     {
         // 0. 找到交易对
-        address pair = _pairFor(address(0), token);
+        address pair =  pool; //_pairFor(address(0), token);
+        address xtoken = ICoFiXPool(pair).getXToken(token);
 
         // 1. 转入份额
-        TransferHelper.safeTransferFrom(pair, msg.sender, pair, liquidity);
+        TransferHelper.safeTransferFrom(xtoken, msg.sender, pair, liquidity);
 
         // 2. 移除流动性并返还资金
         (amountToken, amountETH) = ICoFiXPair(pair).burn {
@@ -341,17 +346,17 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev 多级路由兑换
+    /// @param  path 路由路径
     /// @param  amountIn The exact amount of Token a trader want to swap into pool
     /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  path 路由路径
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
     /// @return amounts 兑换路径中每次换得的资产数量
     function swapExactTokensForTokens(
+        address[] calldata path,
         uint amountIn,
         uint amountOutMin,
-        address[] calldata path,
         address to,
         address rewardTo,
         uint deadline
@@ -370,7 +375,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             TransferHelper.safeTransfer(token, to, amountOut);
         }
 
-        require(amountOut >= amountOutMin);
+        require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
 
         // 3. 交易挖矿
         uint cnodeReward = totalMined * uint(_config.cnodeRewardRate) / 10000;
@@ -400,7 +405,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             }
             (amountIn, mined) = ICoFiXPool(pair).swap {
                 value: address(this).balance
-            }(token0, token1, amountIn, address(this), address(this));
+            } (token0, token1, amountIn, address(this), address(this));
             totalMined += mined;
             amounts[i] = amountIn;
         }

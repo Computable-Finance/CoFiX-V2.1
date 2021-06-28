@@ -15,12 +15,13 @@ describe("CoFiXRouter", function() {
             cofixVaultForStaking,
             cofixGovernance,
             usdt,
-            pair
+            usdtPair
         } = await deployer.deploy();
 
         await usdt.transfer(owner.address, BigInt('10000000000000'));
         await usdt.approve(cofixRouter.address, BigInt('10000000000000'));
         let receipt = await cofixRouter.addLiquidityAndStake(
+            usdtPair.address,
             usdt.address,
             BigInt('2000000000000000000'),
             BigInt('6000000000'),
@@ -33,17 +34,18 @@ describe("CoFiXRouter", function() {
 
         console.log((await receipt.wait()).gasUsed.toString());
 
-        let staked = await cofixVaultForStaking.balanceOf(pair.address, owner.address);
+        let staked = await cofixVaultForStaking.balanceOf(usdtPair.address, owner.address);
             
         console.log(staked.toString());
 
-        let liq = await cofixVaultForStaking.balanceOf(pair.address, owner.address);
+        let liq = await cofixVaultForStaking.balanceOf(usdtPair.address, owner.address);
         console.log('liq=' + liq.toString());
-        await cofixVaultForStaking.withdraw(pair.address, liq);
-        await pair.approve(cofixRouter.address, liq);
-        console.log('balance=' + (await pair.balanceOf(owner.address)).toString());
+        await cofixVaultForStaking.withdraw(usdtPair.address, liq);
+        await usdtPair.approve(cofixRouter.address, liq);
+        console.log('balance=' + (await usdtPair.balanceOf(owner.address)).toString());
 
         await cofixRouter.removeLiquidityGetTokenAndETH(
+            usdtPair.address,
             // 要移除的token对
             usdt.address,
             // 移除的额度

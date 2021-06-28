@@ -16,7 +16,7 @@ describe("CoFiXRouter", function() {
             cofixVaultForStaking,
             cofixGovernance,
             usdt,
-            pair,
+            usdtPair,
             nest,
             nestPair
         } = await deployer.deploy();
@@ -62,16 +62,16 @@ describe("CoFiXRouter", function() {
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 nest: toDecimal(await nest.balanceOf(account), 6),
                 cofi: toDecimal(await cofi.balanceOf(account)),
-                xtoken: toDecimal(await pair.balanceOf(account)),
-                staked: toDecimal(await cofixVaultForStaking.balanceOf(pair.address, account)),
-                earned: toDecimal(await cofixVaultForStaking.earned(pair.address, account))
+                xtoken: toDecimal(await usdtPair.balanceOf(account)),
+                staked: toDecimal(await cofixVaultForStaking.balanceOf(usdtPair.address, account)),
+                earned: toDecimal(await cofixVaultForStaking.earned(usdtPair.address, account))
             };
         }
         const getStatus = async function() {
-            let pairStatus = await getAccountInfo(pair);
+            let pairStatus = await getAccountInfo(usdtPair);
             let p = await cofixController.latestPriceView(usdt.address);
-            let navps = toDecimal(await pair.calcNAVPerShare(
-                await ethers.provider.getBalance(pair.address),
+            let navps = toDecimal(await usdtPair.calcNAVPerShare(
+                await ethers.provider.getBalance(usdtPair.address),
                 //toBigInt(pairStatus.eth), 
                 toBigInt(pairStatus.usdt, 6), 
                 toBigInt(1), 
@@ -80,7 +80,7 @@ describe("CoFiXRouter", function() {
             return {
                 height: await ethers.provider.getBlockNumber(),
                 navps: navps,
-                pair: pairStatus,
+                usdtPair: pairStatus,
                 owner: await getAccountInfo(owner),
                 addr1: await getAccountInfo(addr1),
                 addr2: await getAccountInfo(addr2)
@@ -99,6 +99,7 @@ describe("CoFiXRouter", function() {
             console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
             // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
             let receipt = await cofixRouter.addLiquidity(
+                usdtPair.address,
                 usdt.address,
                 toBigInt(2),
                 toBigInt(6000, 6),
@@ -117,6 +118,7 @@ describe("CoFiXRouter", function() {
             console.log('2. 添加2eth的流动性，预期获得1.999999999000000000份额');
             // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
             let receipt = await cofixRouter.addLiquidity(
+                nestPair.address,
                 nest.address,
                 toBigInt(2),
                 toBigInt(40000),
@@ -138,14 +140,14 @@ describe("CoFiXRouter", function() {
             let path = await cofixRouter.getRouterPath(usdt.address, nest.address);
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
+                path,
                 toBigInt(1000, 6),
                 toBigInt(1, 6),
-                path,
                 //[usdt.address, '0x0000000000000000000000000000000000000000', nest.address],
                 addr1.address,
                 addr1.address,
                 BigInt('1800000000000'), {
-                    value: BigInt('10000000000000000')
+                    value: BigInt('20000000000000000')
                 }
             );
             await showReceipt(receipt);

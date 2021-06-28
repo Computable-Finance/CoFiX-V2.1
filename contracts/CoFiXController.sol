@@ -8,14 +8,32 @@ import "hardhat/console.sol";
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
 
+    struct Price {
+        uint price;
+        uint dbn;
+    }
+
+    mapping(address=>Price) _prices;
+
+    function setPrice(address token, uint price, uint dbn) external {
+        _prices[token] = Price(price, dbn);
+    }
+
     /// @dev Get the latest effective price
     /// @param tokenAddress Destination token address
     /// @return blockNumber The block number of price
     /// @return price The token price. (1eth equivalent to (price) token)
-    function latestPriceView(address tokenAddress) external view returns (uint blockNumber, uint price) {
+    function latestPriceView(address tokenAddress) public view returns (uint blockNumber, uint price) {
         // TODO:
-        require(tokenAddress != address(0));
-        return (block.number - 1, 2700 * 1000000);
+        //require(tokenAddress != address(0));
+        //return (block.number - 1, 2700 * 1000000);
+
+        Price memory p = _prices[tokenAddress];
+        if (p.price == 0) {
+            p = Price(2700 * 1000000, 1);
+        }
+
+        return (block.number - p.dbn, p.price);
     }
 
     /// @dev Get the latest effective price
@@ -24,10 +42,12 @@ contract CoFiXController is ICoFiXController {
     /// @return blockNumber The block number of price
     /// @return price The token price. (1eth equivalent to (price) token)
     function latestPrice(address tokenAddress, address payback) public payable override returns (uint blockNumber, uint price) {
-        // TODO:
-        require(tokenAddress != address(0));
-        require(payback != address(0));
-        return (block.number - 1, 2700 * 1000000);
+        if (msg.value > 0.01 ether) {
+            payable(payback).transfer(msg.value - 0.01 ether);
+        } else {
+            require(msg.value == 0.01 ether, "CoFiXController: Error fee");
+        }
+        return latestPriceView(tokenAddress);
     }
 
     /// @dev Returns the results of latestPrice() and triggeredPriceInfo()
@@ -53,13 +73,14 @@ contract CoFiXController is ICoFiXController {
         uint triggeredAvgPrice,
         uint triggeredSigmaSQ
     ) {
-        // TODO:
-        require(tokenAddress != address(0));
-        require(payback != address(0));
-        if (tokenAddress == 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0) {
-            return (block.number - 1, 27000 * 1000000, block.number - 1, 27000 * 1000000, 26000 * 1000000, 10853469234);
+        if (msg.value > 0.01 ether) {
+            payable(payback).transfer(msg.value - 0.01 ether);
+        } else {
+            require(msg.value == 0.01 ether, "CoFiXController: Error fee");
         }
-        return (block.number - 1, 2700 * 1000000, block.number - 1, 2700 * 1000000, 2600 * 1000000, 10853469234);
+
+        (uint bn, uint price) = latestPriceView(tokenAddress);
+        return (block.number - bn, price, block.number - bn, price, price * 95 / 100, 10853469234);
     }
 
     // Calc variance of price and K in CoFiX is very expensive

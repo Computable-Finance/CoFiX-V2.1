@@ -19,7 +19,7 @@ import "hardhat/console.sol";
 contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
-    uint constant MINIMUM_LIQUIDITY = 10e9; 
+    uint constant MINIMUM_LIQUIDITY = 1e9; 
     uint constant public THETA = 0.002 ether;
     address immutable public TOKEN_ADDRESS; 
 
@@ -59,7 +59,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     // Address of CoFiXController
     address _cofixController;
 
-    uint _totalFee;
+    //uint _totalFee;
     uint112 _Y;
     uint112 _D;
     uint32 _LASTBLOCK;
@@ -316,6 +316,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             payback
         );
 
+        // TODO: 公式需要确认
         // 2. 计算兑换结果
         // 2.1. K值计算
         // 2.2. 冲击成本计算
@@ -373,11 +374,14 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2. 计算兑换结果
         // 2.1. K值计算
         // 2.2. 冲击成本计算
-        uint C = impactCostForBuyInETH(amountIn);
-        amountETHOut = amountIn * ethAmount * (1 ether - THETA) / tokenAmount / (1 ether + k + C); 
-        
+        amountETHOut = amountIn * ethAmount / tokenAmount;
+        uint C = impactCostForBuyInETH(amountETHOut);
+        amountETHOut = amountETHOut * 1 ether / (1 ether + k + C); 
+        uint fee = amountETHOut * THETA / 1 ether;
+        amountETHOut = amountETHOut - fee;
+
         // 3. 扣除交易手续费
-        uint fee = amountETHOut * THETA / (1 ether - THETA);
+        //uint fee = amountETHOut * THETA / (1 ether - THETA);
         _collect(fee);
 
         // 4. 挖矿逻辑
@@ -436,13 +440,14 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // 批量存入手续费
     function _collect(uint fee) private {
-        uint totalFee = _totalFee + fee;
-        // 总手续费超过1ETH时才存入
-        if (totalFee >= 1 ether) {
-            _totalFee = 0;
-            ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
-        } 
-        _totalFee = totalFee;
+        // uint totalFee = _totalFee + fee;
+        // // 总手续费超过1ETH时才存入
+        // if (totalFee >= 1 ether) {
+        //     _totalFee = 0;
+        //     ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
+        // } 
+        // _totalFee = totalFee;
+        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
     }
 
     // // impact cost

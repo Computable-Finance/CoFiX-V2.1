@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const deployer = require("../scripts/rinkeby@20210628.js");
 
 describe("CoFiXRouter", function() {
     it("test1", async function() {
