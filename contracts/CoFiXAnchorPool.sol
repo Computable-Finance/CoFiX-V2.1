@@ -54,11 +54,17 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
     mapping(address=>uint) _tokenMapping;
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
-    constructor (
+    constructor () {
+        
+    }
+
+    function init (
+        address governance,
         uint index,
         address[] memory tokens,
         uint[] memory bases
-    ) {
+    ) external {
+        super.initialize(governance);
         string memory si = getAddressStr(index);
         for (uint i = 0; i < tokens.length; ++i) {
             address token = tokens[i];
@@ -82,6 +88,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         _unlocked = 0;
         _;
         _unlocked = 1;
+        _update();
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -221,7 +228,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         uint amountIn, 
         address to, 
         address payback
-    ) external payable override returns (
+    ) external payable override check returns (
         uint amountOut, 
         uint mined
     ) {
@@ -242,6 +249,31 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         mined = _cofiMint(token0) + _cofiMint(token1);
 
         amountOut = amountOut * (1 ether - THETA) / 1 ether;
+
+        console.log('------------------------------------------------------------');
+        console.log('CoFiXAnchorPool-swap src->dest:', src, '->', dest);
+        console.log('CoFiXAnchorPool-swap amountIn->amountOut:', amountIn, '->', amountOut);
+        console.log('CoFiXAnchorPool-swap to:', to);
+    }
+
+    mapping(address=>uint) _balances;
+
+    function _update() private {
+        for(uint i = 0; i < _tokens.length; ++i) {
+            uint balance;
+            TokenInfo memory ti = _tokens[i];
+            if (ti.tokenAddress == address(0)) {
+                balance = address(this).balance;
+            } else {
+                balance = IERC20(ti.tokenAddress).balanceOf(address(this));
+            }
+            if (balance > _balances[ti.tokenAddress]) {
+                console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, balance - _balances[ti.tokenAddress]);
+            } else {
+                console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, '-', _balances[ti.tokenAddress] - balance);
+            }
+            _balances[ti.tokenAddress] = balance;
+        }
     }
 
     // 计算CoFi交易挖矿相关的变量并更新对应状态

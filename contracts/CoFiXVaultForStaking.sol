@@ -46,13 +46,6 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         mapping(address=>Account) accounts;
     }
     
-    // Address of CoFiToken
-    address immutable COFI_TOKEN_ADDRESS;
-    // Address of CoFiNode
-    address immutable CNODE_TOKEN_ADDRESS;
-    // TODO: 确定CoFi创世区块号
-    // Genesis block number of CoFi
-    uint constant COFI_GENESIS_BLOCK = 0;
     // 总出矿速度权重
     uint constant TOTAL_COFI_WEIGHT = 100000;
 
@@ -64,11 +57,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     mapping(address=>StakeChannel) _channels;
     
     /// @dev Create CoFiXVaultForStaking
-    /// @param cofiToken CoFi TOKEN
-    /// @param cnodeToken CNode TOKEN
-    constructor (address cofiToken, address cnodeToken) {
-        COFI_TOKEN_ADDRESS = cofiToken;
-        CNODE_TOKEN_ADDRESS = cnodeToken;
+    constructor () {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -96,17 +85,17 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         return _config;
     }
 
-    // function batchSetPoolWeight(address[] memory pools, uint256[] memory weights) external override onlyGovernance {
-    //     uint256 cnt = pools.length;
-    //     require(cnt == weights.length, "CVaultForLP: mismatch len");
-    //     for (uint256 i = 0; i < cnt; i++) {
-    //         require(pools[i] != address(0), "CVaultForTrader: invalid pool");
-    //         require(weights[i] <= WEIGHT_BASE, "CVaultForLP: invalid weight");
-    //         require(poolInfo[pools[i]].state == POOL_STATE.ENABLED, "CVaultForLP: pool not enabled"); // only set weight if pool is enabled
-    //         poolInfo[pools[i]].weight = weights[i];
-    //     }
-    //     // governance should ensure total weights equal to WEIGHT_BASE
-    // }
+    /// @dev 初始化出矿权重
+    /// @param xtokens 份额代币地址数组
+    /// @param weights 出矿权重数组
+    function batchSetPoolWeight(address[] memory xtokens, uint[] memory weights) external override onlyGovernance {
+        uint cnt = xtokens.length;
+        require(cnt == weights.length, "CoFiXVaultForStaking: mismatch len");
+        for (uint i = 0; i < cnt; ++i) {
+            require(xtokens[i] != address(0), "CoFiXVaultForStaking: invalid xtoken");
+            _channels[xtokens[i]].cofiWeight = weights[i];
+        }
+    }
 
     /// @dev 初始化锁仓参数
     /// @param pair 目标交易对

@@ -203,7 +203,7 @@
         uint deadline
     ) external payable returns (uint[] memory amounts);
 ```
-    Note: 多级路由兑换，path可以通过registerRouterPath()查询，也可以前端缓存交易对数据，自行生成。
+    Note: 多级路由兑换，path可以通过getRouterPath()查询，也可以前端缓存交易对数据，自行生成。
 
 ### 2.13. 获取目标pair的交易挖矿分成
 

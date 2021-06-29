@@ -5,36 +5,17 @@ pragma solidity ^0.8.4;
 /// @dev This interface defines methods for CoFiXRouter
 interface ICoFiXRouter {
 
-    /// @dev CoFiXRouter configuration structure
-    struct Config {
-        // CoFi交易挖矿给CNode的分成比例，万分制。1000
-        uint16 cnodeRewardRate;
-    }
-
-    /// @dev Modify configuration
-    /// @param config Configuration object
-    function setConfig(Config memory config) external;
-
-    /// @dev Get configuration
-    /// @return Configuration object
-    function getConfig() external view returns (Config memory);
-
-    /// @dev 添加交易对映射。token=>pair
-    /// @param token token地址
-    /// @param pair pair地址
-    function addPair(address token, address pair) external;
-    
     /// @dev 注册交易对
     /// @param token0 交易对token0。（0地址表示eth）
     /// @param token1 交易对token1。（0地址表示eth）
     /// @param pair 交易对资金池
     function registerPair(address token0, address token1, address pair) external;
 
-    /// @dev 根据token地址获取交易对
+    /// @dev 根据token地址对获取交易资金池
     /// @param token0 交易对token0。（0地址表示eth）
     /// @param token1 交易对token1。（0地址表示eth）
-    /// @return pair pair地址
-    function pairFor(address token0, address token1) external view returns (address pair);
+    /// @return pool 交易资金池
+    function pairFor(address token0, address token1) external view returns (address pool);
 
     /// @dev 注册路由路径
     /// @param src 源token地址
@@ -45,7 +26,7 @@ interface ICoFiXRouter {
     /// @dev 查找从源token地址到目标token地址的路由路径
     /// @param src 源token地址
     /// @param dest 目标token地址
-    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。如果没有找到，返回空数组
+    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。
     function getRouterPath(address src, address dest) external view returns (address[] memory path);
 
     /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
@@ -113,8 +94,7 @@ interface ICoFiXRouter {
     /// @param  to The target address receiving the Token
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
-    /// @return amountIn_ The real amount of ETH transferred into pool
-    /// @return amountOut_ The real amount of Token transferred out of pool
+    /// @return amountOut The real amount of Token transferred out of pool
     function swapExactETHForTokens(
         address token,
         uint amountIn,
@@ -122,7 +102,7 @@ interface ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint amountIn_, uint amountOut_);
+    ) external payable returns (uint amountOut);
 
     /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
     /// @param  token The address of ERC20 Token
@@ -131,8 +111,7 @@ interface ICoFiXRouter {
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
-    /// @return amountIn_ The real amount of Token transferred into pool
-    /// @return amountOut_ The real amount of ETH transferred out of pool
+    /// @return amountOut The real amount of ETH transferred out of pool
     function swapExactTokensForETH(
         address token,
         uint amountIn,
@@ -140,7 +119,7 @@ interface ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint amountIn_, uint amountOut_);
+    ) external payable returns (uint amountOut);
 
     /// @dev 多级路由兑换
     /// @param  path 路由路径

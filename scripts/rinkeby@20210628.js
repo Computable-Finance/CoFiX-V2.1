@@ -71,15 +71,15 @@ exports.deploy = async function () {
     const nestPair = await CoFiXPair.attach('0xeDE17c63CA92608eD8864A7ef730994C80c27517');
     console.log('nestPair: ' + nestPair.address);
     
-    const cofixGovernance = await CoFiXGovernance.deploy();
-    //const cofixGovernance = await CoFiXGovernance.attach('0x615c7448ED870aD41a24FE7e96016b2d9406C169');
+    //const cofixGovernance = await CoFiXGovernance.deploy();
+    const cofixGovernance = await CoFiXGovernance.attach('0xb485aefBc9726d723EcDa8f3764Ab0a25144f3da');
     console.log('cofixGovernance: ' + cofixGovernance.address);
     
-    const cofixDAO = await CoFiXDAO.deploy(cofi.address);
-    //const cofixDAO = await CoFiXDAO.attach('0x9338C665A487714143B079b36Bb4446bC06aeBd8');
+    //const cofixDAO = await CoFiXDAO.deploy();
+    const cofixDAO = await CoFiXDAO.attach('0x9338C665A487714143B079b36Bb4446bC06aeBd8');
     console.log('cofixDAO: ' + cofixDAO.address);
     
-    //const cofixRouter = await CoFiXRouter.deploy(cofi.address, cnode.address);
+    //const cofixRouter = await CoFiXRouter.deploy();
     const cofixRouter = await CoFiXRouter.attach('0xfCf2FF43915E655029517735846a22d245F707C7');
     console.log('cofixRouter: ' + cofixRouter.address);
     
@@ -87,7 +87,7 @@ exports.deploy = async function () {
     const cofixController = await CoFiXController.attach('0xE6C743CF3ffc2126cFdc3b3D802235981F3d9227');
     console.log('cofixController: ' + cofixController.address);
     
-    //const cofixVaultForStaking = await CoFiXVaultForStaking.deploy(cofi.address, cnode.address);
+    //const cofixVaultForStaking = await CoFiXVaultForStaking.deploy();
     const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0x8d5c87F6ec179Ab29c8698001B5ec9e372281EA3');
     console.log('cofixVaultForStaking: ' + cofixVaultForStaking.address);
     

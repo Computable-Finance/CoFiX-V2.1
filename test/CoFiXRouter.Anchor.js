@@ -4,8 +4,10 @@ const deployer = require("../scripts/deploy.js");
 describe("CoFiXRouter", function() {
     it("test1", async function() {
 
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        
+        var [owner, addr1, addr2] = await ethers.getSigners();
+        //console.log('owner: ' + owner.address);
+        //addr1 = owner;
+
         // 部署合约
         const {
             cofi,
@@ -105,7 +107,7 @@ describe("CoFiXRouter", function() {
                 usdAnchor: await getAccountInfo(usdAnchor),
                 owner: await getAccountInfo(owner),
                 addr1: await getAccountInfo(addr1),
-                dao: await getAccountInfo(cofixDAO)
+                dao: await getAccountInfo(cofixDAO),
                 //addr2: await getAccountInfo(addr2)
             };
         }
@@ -119,6 +121,7 @@ describe("CoFiXRouter", function() {
         let status;
         let p;
 
+        if (true) {
         await dai.transfer(addr1.address, toBigInt(10000000));
         await dai.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
 
@@ -130,6 +133,7 @@ describe("CoFiXRouter", function() {
         await pusd.approve(cofixRouter.address, toBigInt(10000000));
         await dai.transfer(owner.address, toBigInt(10000000));
         await dai.approve(cofixRouter.address, toBigInt(10000000));
+        }
 
         if (true) {
             console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
@@ -228,6 +232,11 @@ describe("CoFiXRouter", function() {
             console.log('6. 使用路由 dai->usdt->eth->nest兑换1000usdt');
             let path = await cofixRouter.getRouterPath(dai.address, nest.address);
             console.log(path);
+            console.log('usdtPair: ' + usdtPair.address);
+            console.log('nestPair: ' + nestPair.address);
+            console.log('usdAnchor: ' + usdAnchor.address);
+            console.log('cofixRouter: ' + cofixRouter.address);
+            console.log('addr1: ' + addr1.address);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,
                 toBigInt(10),

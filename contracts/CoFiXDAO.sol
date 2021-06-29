@@ -19,9 +19,6 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         uint96 exchange;
     }
 
-    // Address of CoFiToken
-    address immutable COFI_TOKEN_ADDRESS;
-
     // Configuration
     Config _config;
 
@@ -37,9 +34,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     mapping(address=>TokenPriceExchange) _tokenExchanges;
 
     /// @dev Create CoFiXDAO
-    /// @param cofiToken CoFi TOKEN
-    constructor(address cofiToken) {
-        COFI_TOKEN_ADDRESS = cofiToken;
+    constructor() {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 

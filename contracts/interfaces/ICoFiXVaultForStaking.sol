@@ -19,6 +19,11 @@ interface ICoFiXVaultForStaking {
     /// @return Configuration object
     function getConfig() external view returns (Config memory);
 
+    /// @dev 初始化出矿权重
+    /// @param xtokens 份额代币地址数组
+    /// @param weights 出矿权重数组
+    function batchSetPoolWeight(address[] memory xtokens, uint[] memory weights) external;
+
     /// @dev 初始化锁仓参数
     /// @param pair 目标交易对
     /// @param cofiWeight CoFi出矿速度权重
