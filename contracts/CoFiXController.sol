@@ -146,7 +146,9 @@ contract CoFiXController is ICoFiXController {
             gama = 1.5 ether;
         }
         // k = (K_ALPHA.mul(_T   ).mul(1e18).add(K_BETA.mul(     vola)).mul(gamma).div(K_GAMMA_BASE).div(1e18));
+        //k = (0.00002 ether * (block.number - bn) * 14 + 40 ether * sigma) * gama / 1 ether / 1 ether;
         k = (0.00001 ether * (block.number - bn) * 14 + 10 ether * sigma) * gama / 1 ether / 1 ether;
+        k = 0;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

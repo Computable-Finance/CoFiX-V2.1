@@ -251,6 +251,12 @@ exports.deploy = async function () {
     console.log('52. cofixVaultForStaking.initStakingChannel(xdai.address, 20000)');
     await cofixVaultForStaking.initStakingChannel(xdai.address, 20000);
 
+    console.log('53. setConfig');
+    await usdtPair.setConfig(20, 1, 1000);
+    await nestPair.setConfig(20, 100, 1000);
+    await ethAnchor.setConfig(20, 0, 1000);
+    await usdAnchor.setConfig(20, 0, 1000);
+
     const contracts = {
         cofi: cofi,
         cnode: cnode,

@@ -18,6 +18,9 @@ import "hardhat/console.sol";
 /// @dev 锚定份额币
 contract CoFiXAnchorToken is CoFiXERC20 {
 
+    // it's negligible because we calc liquidity in ETH
+    uint constant MINIMUM_LIQUIDITY = 1e9; 
+
     // ERC20 - name
     string public name;
     
@@ -45,8 +48,16 @@ contract CoFiXAnchorToken is CoFiXERC20 {
     function mint(
         address to, 
         uint amount
-    ) external check {
+    ) external check returns (uint) {
+        if (totalSupply == 0) {
+            // TODO: 确定基础份额的逻辑
+            // permanently lock the first MINIMUM_LIQUIDITY tokens
+            // 当发行量为0时，有一个基础份额
+            amount -= MINIMUM_LIQUIDITY;
+            _mint(address(0), MINIMUM_LIQUIDITY);
+        }
         _mint(to, amount);
+        return amount;
     }
 
     function burn(

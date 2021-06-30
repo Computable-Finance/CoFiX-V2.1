@@ -5,7 +5,16 @@
 
 ## 2. Method Description
 
-### 2.1. 计算净值
+### 2.1. 获取初始资产比例
+
+```javascript
+    /// @dev 获取初始资产比例
+    /// @param initToken0Amount 初始资产比例 - ETH
+    /// @param initToken1Amount 初始资产比例 - TOKEN
+    function getInitialAssetRatio() external view returns (uint initToken0Amount, uint initToken1Amount);
+```
+
+### 2.2. 计算净值
 
 ```javascript
     /// @dev 计算净值
@@ -22,7 +31,7 @@
     ) external view returns (uint navps);
 ```
 
-### 2.2. 计算买入eth的冲击成本
+### 2.3. 计算买入eth的冲击成本
 
 ```javascript
     /// @dev 计算买入eth的冲击成本
@@ -31,7 +40,7 @@
     function impactCostForBuyInETH(uint vol) external view returns (uint impactCost);
 ```
 
-### 2.3. 计算卖出eth的冲击成本
+### 2.4. 计算卖出eth的冲击成本
 
 ```javascript
     /// @dev 计算卖出eth的冲击成本

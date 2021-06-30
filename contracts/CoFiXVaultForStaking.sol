@@ -196,7 +196,6 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
         // 更新总锁仓量
         channel.totalStaked -= amount;
-        // TODO: _getReward()方法中已经有一次写入，考虑合并优化
         // 更新用户锁仓量
         account.balance = uint128(uint(account.balance) - amount);
         channel.accounts[msg.sender] = account;

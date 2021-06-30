@@ -7,6 +7,20 @@ import "./ICoFiXPool.sol";
 /// @dev 二元资金池: eth/token
 interface ICoFiXPair is ICoFiXPool {
 
+    // struct Config {
+    //     // 手续费，万分制。20
+    //     uint16 theta;
+    //     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。万分制。 10000
+    //     uint16 nt;
+    //     // 冲击成本系数。
+    //     uint16 gama;
+    //     // // 冲击成本基数。
+    //     // uint16 VOL_BASE;
+    //     // // 冲击成本α。
+    //     // uint64 C_BUYIN_ALPHA;
+    //     // uint64 C_BUYIN_ALPHA;
+    // }
+
     /// @dev 用eth兑换token事件
     /// @param amountIn 兑换的eth数量
     /// @param to 兑换资金接收地址
@@ -20,6 +34,14 @@ interface ICoFiXPair is ICoFiXPool {
     /// @param amountETHOut 兑换到的token数量
     /// @param mined 出矿量
     event SwapForETH(uint amountIn, address to, uint amountETHOut, uint mined);
+
+    // /// @dev Modify configuration
+    // /// @param config Configuration object
+    // function setConfig(Config memory config) external;
+
+    // /// @dev Get configuration
+    // /// @return Configuration object
+    // function getConfig() external view returns (Config memory);
 
     /// @dev 获取初始资产比例
     /// @param initToken0Amount 初始资产比例 - ETH

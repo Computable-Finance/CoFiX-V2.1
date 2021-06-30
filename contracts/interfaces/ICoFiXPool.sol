@@ -26,6 +26,18 @@ interface ICoFiXPool {
     /// @param amountETHOut 获得的eth数量
     event Burn(address token, address to, uint liquidity, uint amountTokenOut, uint amountETHOut);
 
+    /// @dev 设置参数
+    /// @param theta 手续费，万分制。20
+    /// @param gama 冲击成本系数。
+    /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    function setConfig(uint16 theta, uint16 gama, uint32 nt) external;
+
+    /// @dev 获取参数
+    /// @return theta 手续费，万分制。20
+    /// @return gama 冲击成本系数。
+    /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    function getConfig() external view returns (uint16 theta, uint16 gama, uint32 nt);
+
     /// @dev 添加流动性并增发份额
     /// @param token 目标token地址
     /// @param to 份额接收地址
@@ -81,5 +93,8 @@ interface ICoFiXPool {
         uint mined
     );
 
+    /// @dev 获取指定token做市获得的份额代币地址
+    /// @param token 目标token
+    /// @return 如果资金池支持指定的token，返回做市份额代币地址
     function getXToken(address token) external view returns (address);
 }

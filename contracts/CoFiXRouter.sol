@@ -268,11 +268,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
 
         // 3. 交易挖矿
-        // uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
-        // // 交易者可以获得的数量
-        // CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
-        // // CNode分成
-        // _cnodeReward += cnodeReward;
         _mint(mined, rewardTo);
     }
 
@@ -307,11 +302,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         require(amountOut >= amountOutMin);
 
         // 3. 交易挖矿
-        // uint cnodeReward = mined * uint(_config.cnodeRewardRate) / 10000;
-        // // 交易者可以获得的数量
-        // CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
-        // // CNode分成
-        // _cnodeReward += cnodeReward;
         _mint(mined, rewardTo);
     }
 
@@ -331,40 +321,23 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable override ensure(deadline) returns (uint[] memory amounts) {
-        // 1. 转入资金
-        // 获取token0
-        address token = path[0];
-        // token0不为0表示token，需要转入
-        // if (token != address(0)) {
-        //     TransferHelper.safeTransferFrom(token, msg.sender, address(this), amountIn);
-        // }
-
-        // 2. 执行兑换交易
+        // 1. 执行兑换交易
         // 记录总出矿量
         uint totalMined = 0;
         // 进行兑换交易
         (amounts, totalMined) = _swap(path, amountIn, to);
-
-        // 3. 资金转给to地址
-        // 获取最后的token
-        token = path[path.length - 1];
         // 最后兑换的获取数量
-        uint amountOut = amounts[amounts.length - 1];
-        // 资金转到to地址
-        if (token == address(0)) {
-            payable(to).transfer(address(this).balance);
-        } 
-        // else {
-        //     //TransferHelper.safeTransfer(token, to, amountOut);
-        // }
-        require(amountOut >= amountOutMin, "CoFiXRouter: got less than expected");
+        require(amounts[path.length - 1] >= amountOutMin, "CoFiXRouter: got less than expected");
 
-        // 4. 交易挖矿
-        // uint cnodeReward = totalMined * uint(_config.cnodeRewardRate) / 10000;
-        // // 交易者可以获得的数量
-        // CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, totalMined - cnodeReward);
-        // // CNode分成
-        // _cnodeReward += cnodeReward;
+        // 2. 资金转给to地址
+        // 获取最后的token
+        // 资金转到to地址
+        uint balance = address(this).balance;
+        if (balance > 0) {
+            payable(to).transfer(balance);
+        } 
+
+        // 3. 交易挖矿
         _mint(totalMined, rewardTo);
     }
 
@@ -377,42 +350,57 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint[] memory amounts, 
         uint totalMined
     ) {
-        // 出矿量
-        uint mined;
-        // 每次兑换获得的资金量数组
+        // 初始化
         amounts = new uint[](path.length);
         amounts[0] = amountIn;
         totalMined = 0;
         
+        // 定位第一个交易对
         address token0 = path[0];
         address token1 = path[1];
         address pair = _pairFor(token0, token1);
+        // 将资金转入第一个交易对
         if (token0 != address(0)) {
+            console.log('_swap-token0:', token0);
+            console.log('_swap-to:', to);
+            console.log('_swap-pair:', pair);
+            console.log('_swap-amountIn:', amountIn);
             TransferHelper.safeTransferFrom(token0, to, pair, amountIn);
         }
+
+        uint mined;
+        // 遍历，按照路由路径执行兑换交易
         for (uint i = 1; ; ) {
-            address next = to;
-            address token;
+            // 本次交易，资金接收地址
+            address recv = to;
+
+            // 下一个token地址
+            address next = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
             if (++i < path.length) {
-                token = path[i];
-                next = _pairFor(token1, token);
+                next = path[i];
+                // 当下一个token地址还存在时，资金接收地址是下一个交易对
+                recv = _pairFor(token1, next);
             }
-            // 执行兑换交易
+
+            // 执行兑换交易，如果token1是eth，则资金接收地址是address(this)
             (amountIn, mined) = ICoFiXPool(pair).swap {
                 value: address(this).balance
-            } (token0, token1, amountIn, token1 == address(0) ? address(this) : next, address(this));
+            } (token0, token1, amountIn, token1 == address(0) ? address(this) : recv, address(this));
 
-            // 汇总交易结果
+            // 累计出矿量
             totalMined += mined;
+            // 记录本次兑换到的资金数量
             amounts[i - 1] = amountIn;
 
-            if (i == path.length) {
+            // next为0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF地址表示兑换路径已经执行完成，兑换路径已经执行完成
+            if (next == 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF) {
                 break;
             }
 
+            // 切换到路由路径中的下一个交易对
             token0 = token1;
-            token1 = token;
-            pair = next;
+            token1 = next;
+            pair = recv;
         }
     }
 
@@ -425,6 +413,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             _cnodeReward += cnodeReward;
         }
     }
+
     /// @dev 获取目标pair的交易挖矿分成
     /// @param pair 目标pair地址
     /// @return 目标pair的交易挖矿分成

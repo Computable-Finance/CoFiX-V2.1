@@ -20,21 +20,24 @@ import "hardhat/console.sol";
 contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
 
     struct TokenInfo {
+        // token地址
         address tokenAddress;
+        // token单位（等于10^decimals）。
         uint96 base;
+        // 对应的xtoken地址
         address xtokenAddress;
-        uint96 initAmount;
+
         uint112 _Y;
         uint112 _D;
         uint32 _LASTBLOCK;
     }
 
     // it's negligible because we calc liquidity in ETH
-    uint constant MINIMUM_LIQUIDITY = 1e9; 
-    uint constant public THETA = 0.002 ether;
+    //uint constant MINIMUM_LIQUIDITY = 1e9; 
+    //uint constant public THETA = 0.002 ether;
 
     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000
-    uint constant nt = 1000;
+    //uint constant nt = 1000;
 
     // Configration
     //Config _config;
@@ -45,10 +48,17 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
     // Address of CoFiXRouter
     address _cofixRouter;
 
+    // 手续费，万分制。20
+    uint16 _theta;
+    
+    // 冲击成本系数。
+    uint16 _gama;
+
+    // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    uint32 _nt;
+
     // Lock flag
     uint8 _unlocked = 1;
-
-    uint _totalFee;
 
     TokenInfo[] _tokens;
     mapping(address=>uint) _tokenMapping;
@@ -62,23 +72,26 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         address governance,
         uint index,
         address[] memory tokens,
-        uint[] memory bases
+        uint96[] memory bases
     ) external {
         super.initialize(governance);
         string memory si = getAddressStr(index);
+        // 遍历token，初始化对应的数据
         for (uint i = 0; i < tokens.length; ++i) {
+            // 创建TokenInfo
             address token = tokens[i];
             _tokenMapping[token] = _tokens.length;
-            TokenInfo storage ti = _tokens.push();
-            
+            TokenInfo storage tokenInfo = _tokens.push();
+
+            // 生成xtoken的name和symbol            
             string memory idx = getAddressStr(i);
             string memory name = strConcat(strConcat(strConcat('XToken-', si), '-'), idx);
             string memory symbol = strConcat(strConcat(strConcat('XT-', si), '-'), idx);
-            address xtokenAddress = address(new CoFiXAnchorToken(name, symbol, address(this)));
-            ti.tokenAddress = token;
-            ti.base = uint96(bases[i]);
-            ti.xtokenAddress = xtokenAddress;
-            ti.initAmount = uint96(0);
+
+            tokenInfo.tokenAddress = token;
+            // 创建xtoken代币
+            tokenInfo.xtokenAddress = address(new CoFiXAnchorToken(name, symbol, address(this)));
+            tokenInfo.base = bases[i];
         }
     }
 
@@ -88,7 +101,28 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         _unlocked = 0;
         _;
         _unlocked = 1;
-        _update();
+        //_update();
+    }
+
+    /// @dev 设置参数
+    /// @param theta 手续费，万分制。20
+    /// @param gama 冲击成本系数。
+    /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    function setConfig(uint16 theta, uint16 gama, uint32 nt) external override onlyGovernance {
+        // 手续费，万分制。20
+        _theta = theta;
+        // 冲击成本系数。
+        _gama = gama;
+        // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+        _nt = nt;
+    }
+
+    /// @dev 获取参数
+    /// @return theta 手续费，万分制。20
+    /// @return gama 冲击成本系数。
+    /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    function getConfig() external override view returns (uint16 theta, uint16 gama, uint32 nt) {
+        return (_theta, _gama, _nt);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -106,6 +140,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
     }
 
+    // 给目标地址转账，token为0地址表示转eth
     function _transfer(address token, address to, uint value) private {
         if (value > 0) {
             if (token == address(0)) {
@@ -137,38 +172,23 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         // 1. 验证资金的正确性
         require(amountETH == 0, "CPair: invalid asset ratio");
 
-        // 2. 调用预言机
-        // 计算K值
-        // 计算θ
+        // 2. 退回多余的eth
+        // token为0，代表转入的是eth，需要将超过amountToken的部分退回
         if (token == address(0)) {
             _transfer(address(0), payback, msg.value - amountToken);
-        } else if (msg.value > 0) {
+        } 
+        // token不为0，代表转入的是token，需要将转入的eth全部退回
+        else if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
 
-        // 3. 计算净值和份额
-        TokenInfo storage ti = _tokens[_tokenMapping[token]];
-        uint base = ti.base;
-        xtoken = ti.xtokenAddress;
-        //uint navps = 1 ether;
-        uint total = CoFiXAnchorToken(xtoken).totalSupply();
-        liquidity = amountToken * 1 ether / base;
-        if (total > 0) {
-            // 当发行量不为0时，正常发行份额
-            //liquidity = _calcLiquidity(amountETH, navps);
-        } else {
-            // TODO: 确定基础份额的逻辑
-            liquidity -= MINIMUM_LIQUIDITY;
-            // permanently lock the first MINIMUM_LIQUIDITY tokens
-            // 当发行量为0时，有一个基础份额
-            CoFiXAnchorToken(xtoken).mint(address(0), MINIMUM_LIQUIDITY); 
-        }
+        // 3. 加载token对应的结构数据
+        TokenInfo storage tokenInfo = _tokens[_tokenMapping[token]];
+        xtoken = tokenInfo.xtokenAddress;
 
-        // // 份额必须大于0
-        // require(liquidity > 0, "CPair: SHORT_LIQUIDITY_MINTED");
-
-        // 5. 增发份额
-        CoFiXAnchorToken(xtoken).mint(to, liquidity);
+        // 4. 增发份额
+        //liquidity = amountToken * 1 ether / uint(tokenInfo.base);
+        liquidity = CoFiXAnchorToken(xtoken).mint(to, amountToken * 1 ether / uint(tokenInfo.base));
         emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
@@ -190,28 +210,68 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         uint amountTokenOut, 
         uint amountETHOut
     ) { 
-        // 1. 调用预言机
+        // 1. 退回多余的eth
         if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
 
-        // 2. 计算净值，根据净值计算等比资金
-        // 计算净值
-        uint navps = 1 ether;
         // TODO: 赎回时需要计算冲击成本
         // TODO: 确定赎回的时候是否有手续费逻辑
-        amountTokenOut = navps * liquidity / 1 ether;
+
+        // 2. 加载token对应的结构数据
+        TokenInfo storage tokenInfo = _tokens[_tokenMapping[token]];
+        uint base = uint(tokenInfo.base);
+
+        // 计算净值，根据净值计算等比资金
+        amountTokenOut = liquidity * 1 ether / base;
+        amountETHOut = 0;
 
         // 3. 销毁份额
-        CoFiXAnchorToken(_tokens[_tokenMapping[token]].xtokenAddress).burn(address(this), liquidity);
-
-        // 4. TODO: 根据资金池剩余情况进行调整
-
-        // 5. 资金转入用户指定地址
-        //TransferHelper.safeTransfer(token, to, amountTokenOut);
-        _transfer(token, to, amountTokenOut);
-
+        CoFiXAnchorToken(tokenInfo.xtokenAddress).burn(address(this), liquidity);
         emit Burn(token, to, liquidity, amountTokenOut, amountETHOut);
+
+        // 4. 根据资金池剩余情况进行调整
+        uint balance = IERC20(token).balanceOf(address(this));
+        while (liquidity > 0) {
+            // 需要给用户支付的token数量
+            uint need = liquidity * base / 1 ether;
+            // 余额足够，直接将token转给用户，并结束
+            if (need <= balance) {
+                _transfer(token, to, need);
+                break;
+            }
+
+            // 余额不够，将余额全部转给用户
+            _transfer(token, to, balance);
+            // 扣除已转token后，剩余份额
+            liquidity -= balance * 1 ether / base;
+
+            // 遍历token，找到余额最大的资金
+            uint max = 0;
+            uint length = _tokens.length;
+            for (uint i = 0; i < length; ++i) {
+                // 加载token
+                tokenInfo = _tokens[i];
+                address ta = tokenInfo.tokenAddress;
+                // token和刚才处理的token不能相同
+                if (ta != token) {
+                    // 找到token的余额最大的，更新
+                    uint b = IERC20(ta).balanceOf(address(this));
+                    if (max < b) {
+                        // 更新base
+                        base = uint(tokenInfo.base);
+                        // 更新balance
+                        balance = b;
+                        // 更新max
+                        max = b * 1 ether / base;
+                        // 更新token地址
+                        token = ta;
+                        // 更新token信息
+                        //tokenInfo = ti;
+                    }
+                }
+            }
+        }
     }
 
     /// @dev 执行兑换交易
@@ -232,32 +292,50 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
         uint amountOut, 
         uint mined
     ) {
+        // 1. 退回多余的eth
+        // src为0，代表转入的是eth，需要将超过amountToken的部分退回
         if (src == address(0)) {
             _transfer(address(0), payback, msg.value - amountIn);
-        } else if (msg.value > 0) {
+        } 
+        // src不为0，代表转入的是token，需要将转入的eth全部退回
+        else if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
         
-        TokenInfo storage token0 = _tokens[_tokenMapping[src]];
-        TokenInfo storage token1 = _tokens[_tokenMapping[dest]];
-        amountOut = amountIn * token1.base / token0.base;
-        uint fee = amountOut * THETA / 1 ether;
+        // 2. 加载token对应的结构数据
+        TokenInfo storage tokenInfo0 = _tokens[_tokenMapping[src]];
+        TokenInfo storage tokenInfo1 = _tokens[_tokenMapping[dest]];
+        uint base0 = uint(tokenInfo0.base);
+        uint base1 = uint(tokenInfo1.base);
 
-        _transfer(dest, to, amountOut - fee);
+        // 3. 计算兑换的token数量和手续费
+        amountOut = amountIn * base1 / base0;
+        uint fee = amountOut * uint(_theta) / 10000;
+        amountOut = amountOut - fee;
+
+        // 4. 转换得的token和手续费
+        _transfer(dest, to, amountOut);
         _transfer(dest, _cofixDAO, fee);
 
-        mined = _cofiMint(token0) + _cofiMint(token1);
+        // 5. 挖矿逻辑
+        mined = _cofiMint(tokenInfo0, base0) + _cofiMint(tokenInfo1, base1);
 
-        amountOut = amountOut * (1 ether - THETA) / 1 ether;
-
-        console.log('------------------------------------------------------------');
-        console.log('CoFiXAnchorPool-swap src->dest:', src, '->', dest);
-        console.log('CoFiXAnchorPool-swap amountIn->amountOut:', amountIn, '->', amountOut);
-        console.log('CoFiXAnchorPool-swap to:', to);
+        // console.log('------------------------------------------------------------');
+        // console.log('CoFiXPair-swap src:', src);
+        // console.log('CoFiXPair-swap dest:', dest);
+        // console.log('CoFiXPair-swap src->dest:', _tokenName(src), '->', _tokenName(dest));
+        // console.log('CoFiXAnchorPool-swap amountIn->amountOut:', amountIn, '->', amountOut);
+        // console.log('CoFiXAnchorPool-swap to:', to);
+        // console.log('CoFiXAnchorPool-swap mined:', mined);
     }
 
+    function _tokenName(address token) private view returns (string memory) {
+        if (token == address(0)) {
+            return 'eth';
+        }
+        return ERC20(token).name();
+    }
     mapping(address=>uint) _balances;
-
     function _update() private {
         for(uint i = 0; i < _tokens.length; ++i) {
             uint balance;
@@ -277,32 +355,33 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
     }
 
     // 计算CoFi交易挖矿相关的变量并更新对应状态
-    function _cofiMint(TokenInfo storage ti) private returns (uint mined) {
+    function _cofiMint(TokenInfo storage tokenInfo, uint base) private returns (uint mined) {
 
-        uint D1;
-        {
-            uint L = ti.initAmount;
-            
-            // TODO: 有人故意往资金池注入资金的攻击的可能
-            uint x = IERC20(ti.tokenAddress).balanceOf(address(this));
-            
-            D1 = L > x ? L - x : x - L;
-        }
+        // 1. 获取份额数
+        uint L = IERC20(tokenInfo.xtokenAddress).totalSupply();
 
+        // 2. 获取当前token余额并转换成对应的份额数量
+        // TODO: 分析有人故意往资金池注入资金的攻击的可能
+        uint x = IERC20(tokenInfo.tokenAddress).balanceOf(address(this)) * 1 ether / base;
+        
+        // 3. 计算调整规模
+        uint D1 = L > x ? L - x : x - L;
+
+        // 4. 根据交易前后的调整规模计算出矿数据
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
-        uint D0 = uint(ti._D);
-
+        uint D0 = uint(tokenInfo._D);
         // D0 < D1时，也需要更新Y值
-        uint Y = uint(ti._Y) + D0 * nt * (block.number + 1 - uint(ti._LASTBLOCK)) / 10000;
+        uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number + 1 - uint(tokenInfo._LASTBLOCK)) / 10000;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
         }
 
-        ti._Y = uint112(Y);
-        ti._D = uint112(D1);
-        ti._LASTBLOCK = uint32(block.number);
+        // 5. 更新出矿参数
+        tokenInfo._Y = uint112(Y);
+        tokenInfo._D = uint112(D1);
+        tokenInfo._LASTBLOCK = uint32(block.number);
     }
 
     // // use it in this contract, for optimized gas usage
@@ -310,6 +389,9 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXPool {
     //     liquidity = amount0 * 1 ether / navps;
     // }
 
+    /// @dev 获取指定token做市获得的份额代币地址
+    /// @param token 目标token
+    /// @return 如果资金池支持指定的token，返回做市份额代币地址
     function getXToken(address token) external view override returns (address) {
         return _tokens[_tokenMapping[token]].xtokenAddress;
     }

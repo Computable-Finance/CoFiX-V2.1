@@ -122,17 +122,17 @@ describe("CoFiXRouter", function() {
         let p;
 
         if (true) {
-        await dai.transfer(addr1.address, toBigInt(10000000));
-        await dai.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
+            await dai.transfer(addr1.address, toBigInt(10000000));
+            await dai.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
 
-        await usdt.transfer(owner.address, toBigInt(10000000, 6));
-        await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
-        await nest.transfer(owner.address, toBigInt(10000000));
-        await nest.approve(cofixRouter.address, toBigInt(10000000));
-        await pusd.transfer(owner.address, toBigInt(10000000));
-        await pusd.approve(cofixRouter.address, toBigInt(10000000));
-        await dai.transfer(owner.address, toBigInt(10000000));
-        await dai.approve(cofixRouter.address, toBigInt(10000000));
+            await usdt.transfer(owner.address, toBigInt(10000000, 6));
+            await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
+            await nest.transfer(owner.address, toBigInt(10000000));
+            await nest.approve(cofixRouter.address, toBigInt(10000000));
+            await pusd.transfer(owner.address, toBigInt(10000000));
+            await pusd.approve(cofixRouter.address, toBigInt(10000000));
+            await dai.transfer(owner.address, toBigInt(10000000));
+            await dai.approve(cofixRouter.address, toBigInt(10000000));
         }
 
         if (true) {
@@ -229,7 +229,7 @@ describe("CoFiXRouter", function() {
 
         if (true) {
 
-            console.log('6. 使用路由 dai->usdt->eth->nest兑换1000usdt');
+            console.log('6. 使用路由dai->usdt->eth->nest兑换1000usdt');
             let path = await cofixRouter.getRouterPath(dai.address, nest.address);
             console.log(path);
             console.log('usdtPair: ' + usdtPair.address);
@@ -240,6 +240,27 @@ describe("CoFiXRouter", function() {
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,
                 toBigInt(10),
+                toBigInt(0),
+                //[usdt.address, '0x0000000000000000000000000000000000000000', nest.address],
+                addr1.address,
+                addr1.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('20000000000000000')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            await nest.connect(addr1).approve(cofixRouter.address, toBigInt(930));
+            console.log('7. 使用路由nest->eth->usdt->dai兑换930nest');
+            let path = await cofixRouter.getRouterPath(nest.address, dai.address);
+            console.log(path);
+            let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
+                path,
+                toBigInt(930),
                 toBigInt(0),
                 //[usdt.address, '0x0000000000000000000000000000000000000000', nest.address],
                 addr1.address,
