@@ -8,79 +8,49 @@ import "hardhat/console.sol";
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
 
-    struct Price {
-        uint price;
-        uint dbn;
+    address immutable NEST_PRICE_FADADE;
+
+    constructor(address nestPriceFacade) {
+        NEST_PRICE_FADADE = nestPriceFacade;
     }
 
-    mapping(address=>Price) _prices;
-
-    function setPrice(address token, uint price, uint dbn) external {
-        _prices[token] = Price(price, dbn);
-    }
-
-    /// @dev Get the latest effective price
-    /// @param tokenAddress Destination token address
-    /// @return blockNumber The block number of price
-    /// @return price The token price. (1eth equivalent to (price) token)
-    function latestPriceView(address tokenAddress) public view returns (uint blockNumber, uint price) {
-        // TODO:
-        //require(tokenAddress != address(0));
-        //return (block.number - 1, 2700 * 1000000);
-
-        Price memory p = _prices[tokenAddress];
-        if (p.price == 0) {
-            p = Price(2700 * 1000000, 1);
-        }
-
-        return (block.number - p.dbn, p.price);
-    }
-
-    /// @dev Get the latest effective price
-    /// @param tokenAddress Destination token address
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
-    /// @return blockNumber The block number of price
-    /// @return price The token price. (1eth equivalent to (price) token)
-    function latestPrice(address tokenAddress, address payback) public payable override returns (uint blockNumber, uint price) {
-        if (msg.value > 0.01 ether) {
-            payable(payback).transfer(msg.value - 0.01 ether);
-        } else {
-            require(msg.value == 0.01 ether, "CoFiXController: Error fee");
-        }
-        return latestPriceView(tokenAddress);
-    }
-
-    /// @dev Returns the results of latestPrice() and triggeredPriceInfo()
-    /// @param tokenAddress Destination token address
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
-    /// @return latestPriceBlockNumber The block number of latest price
-    /// @return latestPriceValue The token latest price. (1eth equivalent to (price) token)
-    /// @return triggeredPriceBlockNumber The block number of triggered price
-    /// @return triggeredPriceValue The token triggered price. (1eth equivalent to (price) token)
-    /// @return triggeredAvgPrice Average price
-    /// @return triggeredSigmaSQ The square of the volatility (18 decimal places). The current implementation assumes that 
-    ///         the volatility cannot exceed 1. Correspondingly, when the return value is equal to 999999999999996447,
-    ///         it means that the volatility has exceeded the range that can be expressed
-    function latestPriceAndTriggeredPriceInfo(address tokenAddress, address payback) 
+    /// @dev 查询最新价格信息
+    /// @param tokenAddress token地址
+    /// @param payback 退回的手续费接收地址
+    /// @return blockNumber 价格所在区块号
+    /// @return priceEthAmount 预言机价格-eth数量
+    /// @return priceTokenAmount 预言机价格-token数量
+    /// @return avgPriceEthAmount 平均价格-eth数量
+    /// @return avgPriceTokenAmount 平均价格-token数量
+    /// @return sigmaSQ 波动率的平方（18位小数）
+    function latestPriceInfo(address tokenAddress, address payback) 
     public 
     payable 
     override
     returns (
-        uint latestPriceBlockNumber, 
-        uint latestPriceValue,
-        uint triggeredPriceBlockNumber,
-        uint triggeredPriceValue,
-        uint triggeredAvgPrice,
-        uint triggeredSigmaSQ
+        uint blockNumber, 
+        uint priceEthAmount,
+        uint priceTokenAmount,
+        uint avgPriceEthAmount,
+        uint avgPriceTokenAmount,
+        uint sigmaSQ
     ) {
-        if (msg.value > 0.01 ether) {
-            payable(payback).transfer(msg.value - 0.01 ether);
-        } else {
-            require(msg.value == 0.01 ether, "CoFiXController: Error fee");
-        }
-
-        (uint bn, uint price) = latestPriceView(tokenAddress);
-        return (block.number - bn, price, block.number - bn, price, price * 95 / 100, 10853469234);
+        // (uint bn, uint price) = INestPriceFacade(NEST_PRICE_FADADE).latestPrice { 
+        //     value: msg.value 
+        // } (tokenAddress, payback);
+        // return (block.number - bn, 1 ether, price, 1 ether, price * 95 / 100, 10853469234);
+        (
+            blockNumber, 
+            priceTokenAmount,
+            ,//uint triggeredPriceBlockNumber,
+            ,//uint triggeredPriceValue,
+            avgPriceTokenAmount,
+            sigmaSQ
+        ) = INestPriceFacade(NEST_PRICE_FADADE).latestPriceAndTriggeredPriceInfo { 
+            value: msg.value 
+        } (tokenAddress, payback);
+        priceEthAmount = 1 ether;
+        avgPriceEthAmount = 1 ether;
     }
 
     // Calc variance of price and K in CoFiX is very expensive
@@ -95,7 +65,9 @@ contract CoFiXController is ICoFiXController {
         uint tokenAmount, 
         uint blockNum
     ) {
-        (blockNum, tokenAmount) = latestPrice(tokenAddress, payback);
+        (blockNum, tokenAmount) = INestPriceFacade(NEST_PRICE_FADADE).latestPrice { 
+            value: msg.value 
+        } (tokenAddress, payback);
         ethAmount = 1 ether;
     }
 
@@ -110,23 +82,35 @@ contract CoFiXController is ICoFiXController {
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum//, 
+        uint blockNumber//, 
         //uint theta
     ) {
+        // (
+        //     uint latestPriceBlockNumber, 
+        //     uint latestPriceValue,
+        //     ,//uint triggeredPriceBlockNumber,
+        //     ,//uint triggeredPriceValue,
+        //     ,//uint triggeredAvgPrice,
+        //     uint triggeredSigmaSQ
+        // ) = INestPriceFacade(NEST_PRICE_FADADE).latestPriceAndTriggeredPriceInfo { 
+        //     value: msg.value 
+        // } (tokenAddress, payback);
+
+        uint sigmaSQ;
         (
-            uint latestPriceBlockNumber, 
-            uint latestPriceValue,
-            ,//uint triggeredPriceBlockNumber,
-            ,//uint triggeredPriceValue,
-            ,//uint triggeredAvgPrice,
-            uint triggeredSigmaSQ
-        ) = latestPriceAndTriggeredPriceInfo(tokenAddress, payback);
+            blockNumber, 
+            ethAmount,
+            tokenAmount,
+            ,//uint avgPriceEthAmount,
+            ,//uint avgPriceTokenAmount,
+            sigmaSQ
+        ) = latestPriceInfo(tokenAddress, payback);
 
-        ethAmount = 1 ether;
-        tokenAmount = latestPriceValue;
-        blockNum = latestPriceBlockNumber;
+        //ethAmount = 1 ether;
+        //tokenAmount = latestPriceValue;
+        //blockNum = latestPriceBlockNumber;
 
-        k = calcK(triggeredSigmaSQ, blockNum);
+        k = calcK(sigmaSQ, blockNumber);
     }
 
     // TODO: 注意K值是18位小数
@@ -139,16 +123,15 @@ contract CoFiXController is ICoFiXController {
     function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
         // TODO: 修改算法为配置
         uint sigma = sqrt(sigmaSQ / 1e4) * 1e11;
-        uint gama = 1 ether;
+        uint gamma = 1 ether;
         if (sigma > 0.0005 ether) {
-            gama = 2 ether;
+            gamma = 2 ether;
         } else if (sigma > 0.0003 ether) {
-            gama = 1.5 ether;
+            gamma = 1.5 ether;
         }
         // k = (K_ALPHA.mul(_T   ).mul(1e18).add(K_BETA.mul(     vola)).mul(gamma).div(K_GAMMA_BASE).div(1e18));
-        //k = (0.00002 ether * (block.number - bn) * 14 + 40 ether * sigma) * gama / 1 ether / 1 ether;
-        k = (0.00001 ether * (block.number - bn) * 14 + 10 ether * sigma) * gama / 1 ether / 1 ether;
-        k = 0;
+        //k = (0.00002 ether * (block.number - bn) * 14 + 40 ether * sigma) * gamma / 1 ether / 1 ether;
+        k = (0.00001 ether * (block.number - bn) * 14 + 10 ether * sigma) * gamma / 1 ether / 1 ether;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

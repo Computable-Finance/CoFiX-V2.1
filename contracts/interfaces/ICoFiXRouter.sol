@@ -120,6 +120,25 @@ interface ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable returns (uint amountOut);
+    
+    /// @dev 执行兑换交易
+    /// @param  src 源资产token地址
+    /// @param  dest 目标资产token地址
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
+    /// @param  rewardTo The target address receiving the CoFi Token as rewards
+    /// @param  deadline The dealine of this request
+    /// @return amountOut The real amount of ETH transferred out of pool
+    function swap(
+        address src, 
+        address dest, 
+        uint amountIn,
+        uint amountOutMin,
+        address to,
+        address rewardTo,
+        uint deadline
+    ) external payable returns (uint amountOut);
 
     /// @dev 多级路由兑换
     /// @param  path 路由路径

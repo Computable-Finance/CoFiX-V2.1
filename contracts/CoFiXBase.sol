@@ -32,18 +32,18 @@ contract CoFiXBase {
     uint constant COFI_GENESIS_BLOCK = 0;
 
     /// @dev To support open-zeppelin/upgrades
-    /// @param governance INestGovernance implementation contract address
+    /// @param governance ICoFiXGovernance implementation contract address
     function initialize(address governance) virtual public {
         require(_governance == address(0), 'NEST:!initialize');
         _governance = governance;
     }
 
-    /// @dev INestGovernance implementation contract address
+    /// @dev ICoFiXGovernance implementation contract address
     address public _governance;
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public virtual {
 
         address governance = _governance;

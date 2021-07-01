@@ -13,7 +13,7 @@ interface ICoFiXPair is ICoFiXPool {
     //     // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。万分制。 10000
     //     uint16 nt;
     //     // 冲击成本系数。
-    //     uint16 gama;
+    //     uint16 gamma;
     //     // // 冲击成本基数。
     //     // uint16 VOL_BASE;
     //     // // 冲击成本α。
@@ -78,6 +78,19 @@ interface ICoFiXPair is ICoFiXPool {
     //     uint mined
     // );
 
+    /// @dev 预估出矿量
+    /// @param newBalance0 新的eth余额
+    /// @param newBalance1 新的token余额
+    /// @param ethAmount 预言机价格-eth数量
+    /// @param tokenAmount 预言机价格-token数量
+    /// @return mined 预计出矿量
+    function estimate(
+        uint newBalance0, 
+        uint newBalance1, 
+        uint ethAmount, 
+        uint tokenAmount
+    ) external view returns (uint mined);
+    
     /// @dev 计算净值
     /// @param ethBalance 资金池eth余额
     /// @param tokenBalance 资金池token余额

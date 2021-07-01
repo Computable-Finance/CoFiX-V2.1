@@ -39,7 +39,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
         _cofixController = ICoFiXGovernance(newGovernance).getCoFiXControllerAddress();
@@ -153,35 +153,38 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         Config memory config = _config;
 
         // 2. Check redeeming stat
-        require(uint(config.RepurchaseStatus) == 1, "CoFiXDAO: Repurchase status error");
+        require(uint(config.status) == 1, "CoFiXDAO: Repurchase status error");
 
         // 3. Query price
         (
-            /* uint latestPriceBlockNumber */, 
-            uint latestPriceValue,
-            /* uint triggeredPriceBlockNumber */,
-            /* uint triggeredPriceValue */,
-            uint triggeredAvgPrice,
-            /* uint triggeredSigma */
-        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
+            ,//uint blockNumber, 
+            uint priceEthAmount,
+            uint priceTokenAmount,
+            uint avgPriceEthAmount,
+            uint avgPriceTokenAmount,
+            //uint sigmaSQ
+        ) = ICoFiXController(_cofixController).latestPriceInfo {
             value: msg.value
         } (COFI_TOKEN_ADDRESS, payback);
-
-        // 4. Calculate the number of eth that can be exchanged for redeem
-        uint value = amount * 1 ether / latestPriceValue;
-
-        // 5. Calculate redeem quota
-        (uint quota, uint scale) = _quotaOf(config, _redeemed);
-        _redeemed = scale - (quota - amount);
+        priceTokenAmount = priceTokenAmount * 1 ether / priceEthAmount;
+        avgPriceTokenAmount = avgPriceTokenAmount * 1 ether / avgPriceEthAmount;
 
         // TODO: 检查价格偏差
-        // 6. Check the redeeming amount and price deviation
+        // 4. Check the redeeming amount and price deviation
         require(
-            latestPriceValue * 10000 <= triggeredAvgPrice * (10000 + uint(config.priceDeviationLimit)) && 
-            latestPriceValue * 10000 >= triggeredAvgPrice * (10000 - uint(config.priceDeviationLimit)), 
+            priceTokenAmount * 10000 <= avgPriceTokenAmount * (10000 + uint(config.priceDeviationLimit)) && 
+            priceTokenAmount * 10000 >= avgPriceTokenAmount * (10000 - uint(config.priceDeviationLimit)), 
             "CoFiXDAO:!price"
         );
 
+        // 5. Calculate the number of eth that can be exchanged for redeem
+        uint value = amount * 1 ether / priceTokenAmount;
+
+        // 6. Calculate redeem quota
+        (uint quota, uint scale) = _quotaOf(config, _redeemed);
+        _redeemed = scale - (quota - amount);
+
+        TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         payable(msg.sender).transfer(value);
     }
 
@@ -196,54 +199,63 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         Config memory config = _config;
 
         // 2. Check redeeming stat
-        require(uint(config.RepurchaseStatus) == 1, "CoFiXDAO: Repurchase status error");
+        require(uint(config.status) == 1, "CoFiXDAO: Repurchase status error");
 
         TokenPriceExchange memory exchange = _tokenExchanges[token];
         require(exchange.target != address(0), "CoFiXDAO: Token not allowed");
 
-        // 3. Query price
-        (
-            /* uint latestPriceBlockNumber */, 
-            uint cofiLatestPriceValue,
-            /* uint triggeredPriceBlockNumber */,
-            /* uint triggeredPriceValue */,
-            uint cofiTriggeredAvgPrice,
-            /* uint triggeredSigma */
-        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
-            value: msg.value >> 1
-        } (COFI_TOKEN_ADDRESS, payback);
+        uint value;
+        {
+            // 3. Query price
+            (
+                ,//uint blockNumber, 
+                uint cofiPriceEthAmount,
+                uint cofiPriceTokenAmount,
+                uint cofiAvgPriceEthAmount,
+                uint cofiAvgPriceTokenAmount,
+                //uint sigmaSQ
+            ) = ICoFiXController(_cofixController).latestPriceInfo {
+                value: msg.value >> 1
+            } (COFI_TOKEN_ADDRESS, payback);
 
-        (
-            /* uint latestPriceBlockNumber */, 
-            uint tokenLatestPriceValue,
-            /* uint triggeredPriceBlockNumber */,
-            /* uint triggeredPriceValue */,
-            uint tokenTriggeredAvgPrice,
-            /* uint triggeredSigma */
-        ) = ICoFiXController(_cofixController).latestPriceAndTriggeredPriceInfo {
-            value: msg.value >> 1
-        } (exchange.target, payback);
+            (
+                ,//uint blockNumber, 
+                uint tokenPriceEthAmount,
+                uint tokenPriceTokenAmount,
+                uint tokenAvgPriceEthAmount,
+                uint tokenAvgPriceTokenAmount,
+                //uint sigmaSQ
+            ) = ICoFiXController(_cofixController).latestPriceInfo {
+                value: msg.value >> 1
+            } (exchange.target, payback);
 
-        tokenLatestPriceValue = tokenLatestPriceValue * 1 ether / uint(exchange.exchange);
-        tokenTriggeredAvgPrice = tokenTriggeredAvgPrice * 1 ether / uint(exchange.exchange);
+            cofiPriceTokenAmount = cofiPriceTokenAmount * 1 ether / cofiPriceEthAmount;
+            cofiAvgPriceTokenAmount = cofiAvgPriceTokenAmount * 1 ether / cofiAvgPriceEthAmount;
+            tokenPriceTokenAmount = tokenPriceTokenAmount * 1 ether / tokenPriceEthAmount;
+            tokenAvgPriceTokenAmount = tokenAvgPriceTokenAmount * 1 ether / tokenAvgPriceEthAmount;
 
-        // 4. Calculate the number of eth that can be exchanged for redeem
-        uint value = amount * tokenLatestPriceValue / cofiLatestPriceValue;
+            tokenPriceTokenAmount = tokenPriceTokenAmount * 1 ether / uint(exchange.exchange);
+            tokenAvgPriceTokenAmount = tokenAvgPriceTokenAmount * 1 ether / uint(exchange.exchange);
 
-        // 5. Calculate redeem quota
-        (uint quota, uint scale) = _quotaOf(config, _redeemed);
-        _redeemed = scale - (quota - amount);
+            // TODO: 检查价格偏差
+            // 4. Check the redeeming amount and price deviation
+            require(
+                cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
+                    <= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 + uint(config.priceDeviationLimit)) && 
+                cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
+                    >= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 - uint(config.priceDeviationLimit)), 
+                "CoFiXDAO:!price"
+            );
 
-        // TODO: 检查价格偏差
-        // 6. Check the redeeming amount and price deviation
-        require(
-            cofiLatestPriceValue * tokenTriggeredAvgPrice * 10000 
-                <= cofiTriggeredAvgPrice * tokenLatestPriceValue * (10000 + uint(config.priceDeviationLimit)) && 
-            cofiLatestPriceValue * tokenTriggeredAvgPrice * 10000 
-                >= cofiTriggeredAvgPrice * tokenLatestPriceValue * (10000 - uint(config.priceDeviationLimit)), 
-            "CoFiXDAO:!price"
-        );
+            // 5. Calculate the number of eth that can be exchanged for redeem
+            value = amount * tokenPriceTokenAmount / cofiPriceTokenAmount;
 
+            // 6. Calculate redeem quota
+            (uint quota, uint scale) = _quotaOf(config, _redeemed);
+            _redeemed = scale - (quota - amount);
+        }
+
+        TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         TransferHelper.safeTransfer(token, msg.sender, value);
     }
 
@@ -254,7 +266,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         Config memory config = _config;
 
         // 2. Check redeem state
-        if (uint(config.RepurchaseStatus) != 1) {
+        if (uint(config.status) != 1) {
             return 0;
         }
 

@@ -62,7 +62,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
         _cofixRouter = ICoFiXGovernance(newGovernance).getCoFiXRouterAddress();

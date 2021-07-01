@@ -2,32 +2,22 @@
 
 pragma solidity ^0.8.4;
 
-import "./libs/IERC20.sol";
-import "./libs/TransferHelper.sol";
-
-import "./interfaces/ICoFiXPool.sol";
-import "./interfaces/ICoFiXController.sol";
-import "./interfaces/ICoFiXDAO.sol";
-
-import "./CoFiXBase.sol";
-import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
-import "hardhat/console.sol";
-
-/// @dev 锚定份额币
+/// @dev 锚定份额代币
 contract CoFiXAnchorToken is CoFiXERC20 {
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
+
+    // 锚定池地址
+    address immutable POOL;
 
     // ERC20 - name
     string public name;
     
     // ERC20 - symbol
     string public symbol;
-
-    address _pool;
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor (
@@ -37,14 +27,17 @@ contract CoFiXAnchorToken is CoFiXERC20 {
     ) {
         name = name_;
         symbol = symbol_;
-        _pool = pool;
+        POOL = pool;
     }
 
     modifier check() {
-        require(msg.sender == _pool, "CoFiXAnchorToken: Only for CoFiXAnchorToken");
+        require(msg.sender == POOL, "CoFiXAnchorToken: Only for CoFiXAnchorToken");
         _;
     }
 
+    /// @dev 发行份额代币
+    /// @param to 份额接收地址
+    /// @param amount 份额数量
     function mint(
         address to, 
         uint amount
@@ -60,10 +53,11 @@ contract CoFiXAnchorToken is CoFiXERC20 {
         return amount;
     }
 
+    /// @dev 销毁份额代币
+    /// @param amount 份额数量
     function burn(
-        address to, 
         uint amount
-    ) external check { 
-        _burn(to, amount);
+    ) external { 
+        _burn(msg.sender, amount);
     }
 }

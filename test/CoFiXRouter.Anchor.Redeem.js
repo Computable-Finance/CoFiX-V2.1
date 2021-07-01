@@ -18,7 +18,7 @@ describe("CoFiXRouter", function() {
             cofixVaultForStaking,
             cofixGovernance,
             nestPriceFacade,
-            
+
             usdt,
             nest,
             peth,
@@ -117,6 +117,7 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('0. 设置价格');
             await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
+            await nestPriceFacade.setPrice(cofi.address, toBigInt('2051', 18), 1);
             await nestPriceFacade.setPrice(nest.address, toBigInt('192307'), 1);
         }
 
@@ -212,12 +213,12 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('5. anchorPool做市30000dai');
+            console.log('5. anchorPool做市50000dai');
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
                 dai.address,
                 0,
-                toBigInt(30000),
+                toBigInt(50000),
                 0,
                 owner.address,
                 BigInt('1800000000000'), {
@@ -271,6 +272,91 @@ describe("CoFiXRouter", function() {
                     value: BigInt('20000000000000000')
                 }
             );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('8. owner使用22000usdt兑换xdai');
+            await usdt.approve(cofixRouter.address, toBigInt(22000, 6));
+            let receipt = await cofixRouter.swap(
+                usdt.address, 
+                dai.address, 
+                toBigInt(22000, 6),
+                toBigInt(0),
+                owner.address,
+                owner.address,
+                // 截止时间
+                BigInt('1800000000000'), {
+                    value: BigInt('0')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('9. owner使用18000pusd兑换xdai');
+            await pusd.approve(cofixRouter.address, toBigInt(18000));
+            let receipt = await cofixRouter.swap(
+                pusd.address, 
+                dai.address, 
+                toBigInt(18000),
+                toBigInt(0),
+                owner.address,
+                owner.address,
+                // 截止时间
+                BigInt('1800000000000'), {
+                    value: BigInt('0')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('10. owner赎回29999 xdai份额');
+            await xdai.approve(cofixRouter.address, toBigInt('29999'));
+            let receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
+                usdAnchor.address,
+                // 要移除的token对
+                dai.address,
+                // 移除的额度
+                toBigInt('29999'),
+                // 预期最少可以获得的eth数量
+                toBigInt(0),
+                // 接收地址
+                owner.address,
+                // 截止时间
+                BigInt('1800000000000'), {
+                    value: BigInt('20000000000000000')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('11. addr1回购0.02个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.02));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(usdt.address, toBigInt(0.02), addr1.address, {
+                value: BigInt('20000000000000000')
+            });
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('12. addr1回购5个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(5));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(5), addr1.address, {
+                value: BigInt('20000000000000000')
+            });
             await showReceipt(receipt);
             status = await getStatus();
             console.log(status);

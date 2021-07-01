@@ -15,6 +15,8 @@ describe("CoFiXRouter", function() {
             cofixController,
             cofixVaultForStaking,
             cofixGovernance,
+            nestPriceFacade,
+            
             usdt,
             usdtPair
         } = await deployer.deploy();
@@ -66,7 +68,7 @@ describe("CoFiXRouter", function() {
         }
         const getStatus = async function() {
             let pairStatus = await getAccountInfo(usdtPair);
-            let p = await cofixController.latestPriceView(usdt.address);
+            let p = await nestPriceFacade.latestPriceView(usdt.address);
             let navps = toDecimal(await usdtPair.calcNAVPerShare(
                 await ethers.provider.getBalance(usdtPair.address),
                 //toBigInt(pairStatus.eth), 

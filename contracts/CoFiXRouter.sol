@@ -42,7 +42,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
         _cofixVaultForStaking = ICoFiXGovernance(newGovernance).getCoFiXVaultForStakingAddress();
@@ -305,6 +305,46 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         _mint(mined, rewardTo);
     }
 
+    /// @dev 执行兑换交易
+    /// @param  src 源资产token地址
+    /// @param  dest 目标资产token地址
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
+    /// @param  rewardTo The target address receiving the CoFi Token as rewards
+    /// @param  deadline The dealine of this request
+    /// @return amountOut The real amount of ETH transferred out of pool
+    function swap(
+        address src, 
+        address dest, 
+        uint amountIn,
+        uint amountOutMin,
+        address to,
+        address rewardTo,
+        uint deadline
+    ) external override payable ensure(deadline) returns (uint amountOut)
+    {
+        // 0. 找到交易对
+        address pair = _pairFor(src, dest);
+
+        // 1. 转入token并执行交易
+        if (src != address(0)) {
+            TransferHelper.safeTransferFrom(src, msg.sender, pair, amountIn);
+        }
+
+        // 2. 执行兑换交易
+        uint mined;
+        (amountOut, mined) = ICoFiXPool(pair).swap {
+            value: msg.value
+        } (src, dest, amountIn, to, msg.sender);
+
+        // 3. 得到的eth数量不能少于期望值
+        require(amountOut >= amountOutMin);
+
+        // 3. 交易挖矿
+        _mint(mined, rewardTo);
+    }
+
     /// @dev 多级路由兑换
     /// @param  path 路由路径
     /// @param  amountIn The exact amount of Token a trader want to swap into pool
@@ -361,10 +401,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address pair = _pairFor(token0, token1);
         // 将资金转入第一个交易对
         if (token0 != address(0)) {
-            console.log('_swap-token0:', token0);
-            console.log('_swap-to:', to);
-            console.log('_swap-pair:', pair);
-            console.log('_swap-amountIn:', amountIn);
             TransferHelper.safeTransferFrom(token0, to, pair, amountIn);
         }
 
@@ -374,7 +410,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // 本次交易，资金接收地址
             address recv = to;
 
-            // 下一个token地址
+            // 下一个token地址。0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF标记为空地址
             address next = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
             if (++i < path.length) {
                 next = path[i];
@@ -382,6 +418,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
                 recv = _pairFor(token1, next);
             }
 
+            // TODO: 可能存在使用openzeeplin的可升级方案后导致不能接收eth转账的问题，需要验证并解决
             // 执行兑换交易，如果token1是eth，则资金接收地址是address(this)
             (amountIn, mined) = ICoFiXPool(pair).swap {
                 value: address(this).balance

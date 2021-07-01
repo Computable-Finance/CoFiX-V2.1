@@ -41,7 +41,7 @@ The contract relationship is shown in the figure above. The green contract is th
         uint96 initAmount;
         uint112 _Y;
         uint112 _D;
-        uint32 _LASTBLOCK;
+        uint32 _lastblock;
     }
 ```
 

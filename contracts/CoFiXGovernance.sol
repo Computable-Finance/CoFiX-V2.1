@@ -9,7 +9,7 @@ import "./CoFiXMapping.sol";
 contract CoFiXGovernance is CoFiXMapping, ICoFiXGovernance {
 
     /// @dev To support open-zeppelin/upgrades
-    /// @param governance INestGovernance implementation contract address
+    /// @param governance ICoFiXGovernance implementation contract address
     function initialize(address governance) public override {
 
         // While initialize NestGovernance, nestGovernanceAddress is address(this),

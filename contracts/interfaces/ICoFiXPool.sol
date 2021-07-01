@@ -28,15 +28,15 @@ interface ICoFiXPool {
 
     /// @dev 设置参数
     /// @param theta 手续费，万分制。20
-    /// @param gama 冲击成本系数。
+    /// @param gamma 冲击成本系数。
     /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function setConfig(uint16 theta, uint16 gama, uint32 nt) external;
+    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external;
 
     /// @dev 获取参数
     /// @return theta 手续费，万分制。20
-    /// @return gama 冲击成本系数。
+    /// @return gamma 冲击成本系数。
     /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function getConfig() external view returns (uint16 theta, uint16 gama, uint32 nt);
+    function getConfig() external view returns (uint16 theta, uint16 gamma, uint32 nt);
 
     /// @dev 添加流动性并增发份额
     /// @param token 目标token地址

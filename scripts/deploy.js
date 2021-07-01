@@ -18,6 +18,7 @@ exports.deploy = async function () {
     const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
     const CoFiXAnchorPool = await ethers.getContractFactory("CoFiXAnchorPool");
     const CoFiXAnchorToken = await ethers.getContractFactory("CoFiXAnchorToken");
+    const NestPriceFacade = await ethers.getContractFactory("NestPriceFacade");
 
     // cnode: 0x2dC52e1FcD06a43285c5D7f5E833131b1c411852
     // usdt: 0xd5798C4DbC5AC13DbE4809d2914b5fd5e5030948
@@ -30,6 +31,10 @@ exports.deploy = async function () {
     // usdtPair: 0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52
 
     console.log('** 开始部署合约 **');
+    
+    const nestPriceFacade = await NestPriceFacade.deploy();
+    //const nestPriceFacade = await NestPriceFacade.attach('0x0000000000000000000000000000000000000000');
+    console.log('nestPriceFacade: ' + nestPriceFacade.address);
     
     let cnode = await TestERC20.deploy('CNode', 'CNode', 0);
     //const cnode = await TestERC20.attach('0x2dC52e1FcD06a43285c5D7f5E833131b1c411852');
@@ -68,7 +73,7 @@ exports.deploy = async function () {
     //const cofixRouter = await CoFiXRouter.attach('0x537A8955B0E0466A487F8a417717551ac05bB580');
     console.log('cofixRouter: ' + cofixRouter.address);
     
-    const cofixController = await CoFiXController.deploy();
+    const cofixController = await CoFiXController.deploy(nestPriceFacade.address);
     //const cofixController = await CoFiXController.attach('0xA1e38e9DECB554b6AaC4b9B58f74Af1eb33CE291');
     console.log('cofixController: ' + cofixController.address);
     
@@ -257,6 +262,24 @@ exports.deploy = async function () {
     await ethAnchor.setConfig(20, 0, 1000);
     await usdAnchor.setConfig(20, 0, 1000);
 
+    console.log('56. setConfig');
+    await cofixDAO.setConfig({
+        // Redeem activate threshold, when the circulation of token exceeds this threshold, 
+        // 回购状态, 1表示启动
+        status: 1,
+
+        // The number of CoFi redeem per block. 100
+        cofiPerBlock: 100,
+
+        // The maximum number of CoFi in a single redeem. 30000
+        cofiLimit: 30000,
+
+        // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
+        priceDeviationLimit: 1000
+    });
+    await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+
     const contracts = {
         cofi: cofi,
         cnode: cnode,
@@ -265,6 +288,7 @@ exports.deploy = async function () {
         cofixController: cofixController,
         cofixVaultForStaking: cofixVaultForStaking,
         cofixGovernance: cofixGovernance,
+        nestPriceFacade: nestPriceFacade,
 
         usdt: usdt,
         nest: nest,

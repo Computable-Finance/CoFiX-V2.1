@@ -56,7 +56,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     uint16 _theta;
     
     // 冲击成本系数。
-    uint16 _gama;
+    uint16 _gamma;
 
     // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
     uint32 _nt;
@@ -68,10 +68,14 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     // Address of CoFiXController
     address _cofixController;
 
-    //uint _totalFee;
+    // 累计出矿量
     uint112 _Y;
+
+    // 调整到平衡的交易规模
     uint112 _D;
-    uint32 _LASTBLOCK;
+
+    // 最后更新区块
+    uint32 _lastblock;
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor() {
@@ -96,7 +100,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
-        require(_unlocked == 1, "CPair: LOCKED");
+        require(_unlocked == 1, "CoFiXPair: LOCKED");
         _unlocked = 0;
         _;
         _unlocked = 1;
@@ -105,35 +109,38 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     /// @dev 设置参数
     /// @param theta 手续费，万分制。20
-    /// @param gama 冲击成本系数。
+    /// @param gamma 冲击成本系数。
     /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function setConfig(uint16 theta, uint16 gama, uint32 nt) external override onlyGovernance {
+    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external override onlyGovernance {
         // 手续费，万分制。20
         _theta = theta;
         // 冲击成本系数。
-        _gama = gama;
+        _gamma = gamma;
         // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
         _nt = nt;
     }
 
     /// @dev 获取参数
     /// @return theta 手续费，万分制。20
-    /// @return gama 冲击成本系数。
+    /// @return gamma 冲击成本系数。
     /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function getConfig() external override view returns (uint16 theta, uint16 gama, uint32 nt) {
-        return (_theta, _gama, _nt);
+    function getConfig() external override view returns (uint16 theta, uint16 gamma, uint32 nt) {
+        return (_theta, _gamma, _nt);
     }
 
     /// @dev 获取初始资产比例
     /// @param initToken0Amount 初始资产比例 - ETH
     /// @param initToken1Amount 初始资产比例 - TOKEN
-    function getInitialAssetRatio() public override view returns (uint initToken0Amount, uint initToken1Amount) {
+    function getInitialAssetRatio() public override view returns (
+        uint initToken0Amount, 
+        uint initToken1Amount
+    ) {
         return (uint(INIT_TOKEN0_AMOUNT), uint(INIT_TOKEN1_AMOUNT));
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
         (
@@ -171,7 +178,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         //uint initToken1Amount = uint(INIT_TOKEN1_AMOUNT);
         require(
             amountETH * uint(INIT_TOKEN1_AMOUNT) == amountToken * uint(INIT_TOKEN0_AMOUNT), 
-            "CPair: invalid asset ratio"
+            "CoFiXPair: invalid asset ratio"
         );
 
         // 2. 计算净值和份额
@@ -232,7 +239,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         }
 
         // // 份额必须大于0
-        // require(liquidity > 0, "CPair: SHORT_LIQUIDITY_MINTED");
+        // require(liquidity > 0, "CoFiXPair: SHORT_LIQUIDITY_MINTED");
 
         // 5. 增发份额
         _mint(to, liquidity);
@@ -412,24 +419,26 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2. 计算兑换结果
         // 2.1. K值计算
         // 2.2. 冲击成本计算
-        uint C = impactCostForSellOutETH(amountIn);
         uint fee = amountIn * uint(_theta) / 10000;
-        amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (1 ether + k + C);
+        amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
+            1 ether + k + _impactCostForSellOutETH(amountIn, uint(_gamma))
+        );
 
         // 3. 扣除交易手续费
         _collect(fee);
 
-        // 4. 挖矿逻辑
+        // 4. 转token给用户
+        TransferHelper.safeTransfer(token, to, amountTokenOut);
+
+        // 5. 挖矿逻辑
         // 【注意】Pt此处没有引入K值，后续需要引入
         mined = _cofiMint(_calcD(
             address(this).balance, 
-            IERC20(token).balanceOf(address(this)) - amountTokenOut, 
+            IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
-        ));
+        ), uint(_nt));
 
-        // 5. 转token给用户
-        TransferHelper.safeTransfer(token, to, amountTokenOut);
         emit SwapForToken(amountIn, to, amountTokenOut, mined);
     }
 
@@ -466,8 +475,10 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // 2.1. K值计算
         // 2.2. 冲击成本计算
         amountETHOut = amountIn * ethAmount / tokenAmount;
-        uint C = impactCostForBuyInETH(amountETHOut);
-        amountETHOut = amountETHOut * 1 ether / (1 ether + k + C); 
+        //uint C = impactCostForBuyInETH(amountETHOut);
+        amountETHOut = amountETHOut * 1 ether / (
+            1 ether + k + _impactCostForBuyInETH(amountETHOut, uint(_gamma))
+        ); 
         uint fee = amountETHOut * uint(_theta) / 10000;
         amountETHOut = amountETHOut - fee;
 
@@ -475,17 +486,18 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         //uint fee = amountETHOut * THETA / (1 ether - THETA);
         _collect(fee);
 
-        // 4. 挖矿逻辑
+        // 4. 转token给用户
+        payable(to).transfer(amountETHOut);
+
+        // 5. 挖矿逻辑
         // 【注意】Pt此处没有引入K值，后续需要引入
         mined = _cofiMint(_calcD(
-            address(this).balance - amountETHOut, 
+            address(this).balance, 
             IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
-        ));
+        ), uint(_nt));
 
-        // 5. 转token给用户
-        payable(to).transfer(amountETHOut);
         emit SwapForETH(amountIn, to, amountETHOut, mined);
     }
 
@@ -509,16 +521,18 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             numerator = right - left;
         }
         
-        return numerator * ethAmount / (ethAmount * initToken1Amount + tokenAmount * initToken0Amount);
+        return numerator * ethAmount / (
+            ethAmount * initToken1Amount + tokenAmount * initToken0Amount
+        );
     }
 
     // 计算CoFi交易挖矿相关的变量并更新对应状态
-    function _cofiMint(uint D1) private returns (uint mined) {
+    function _cofiMint(uint D1, uint nt) private returns (uint mined) {
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         // D0 < D1时，也需要更新Y值
-        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number + 1 - uint(_LASTBLOCK)) / 10000;
+        uint Y = uint(_Y) + D0 * nt * (block.number + 1 - uint(_lastblock)) / 10000;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -526,7 +540,30 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
         _Y = uint112(Y);
         _D = uint112(D1);
-        _LASTBLOCK = uint32(block.number);
+        _lastblock = uint32(block.number);
+    }
+
+    /// @dev 预估出矿量
+    /// @param newBalance0 新的eth余额
+    /// @param newBalance1 新的token余额
+    /// @param ethAmount 预言机价格-eth数量
+    /// @param tokenAmount 预言机价格-token数量
+    /// @return mined 预计出矿量
+    function estimate(
+        uint newBalance0, 
+        uint newBalance1, 
+        uint ethAmount, 
+        uint tokenAmount
+    ) external view override returns (uint mined) {
+        uint D1 = _calcD(newBalance0, newBalance1, ethAmount, tokenAmount);
+        // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
+        // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
+        uint D0 = uint(_D);
+        if (D0 > D1) {
+            // D0 < D1时，也需要更新Y值
+            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number + 1 - uint(_lastblock)) / 10000;
+            mined = Y * (D0 - D1) / D0;
+        }
     }
 
     // 批量存入手续费
@@ -624,8 +661,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     // // - C = (α + β * VOL) * γ, if VOL >= 500 / γ
 
     // α=0，β=2e-06
-    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
-        uint gamma = uint(_gama); //CGammaMap[token];
+    function _impactCostForBuyInETH(uint vol, uint gamma) private pure returns (uint impactCost) {
+        //uint gamma = uint(_gamma); //CGammaMap[token];
         if (vol * gamma < VOL_BASE) {
             return 0;
         }
@@ -634,13 +671,23 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     }
 
     // α=0，β=2e-06
-    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
-        uint gamma = uint(_gama); //CGammaMap[token];
+    function _impactCostForSellOutETH(uint vol, uint gamma) private pure returns (uint impactCost) {
+        //uint gamma = uint(_gamma); //CGammaMap[token];
         if (vol * gamma < VOL_BASE) {
             return 0;
         }
         // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
         return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
+    }
+
+    // α=0，β=2e-06
+    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
+        return _impactCostForBuyInETH(vol, uint(_gamma));
+    }
+
+    // α=0，β=2e-06
+    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
+        return _impactCostForSellOutETH(vol, uint(_gamma));
     }
 
     /// @dev 获取指定token做市获得的份额代币地址

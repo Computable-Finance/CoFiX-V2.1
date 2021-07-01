@@ -14,7 +14,7 @@ interface ICoFiXDAO {
     struct Config {
         // Redeem activate threshold, when the circulation of token exceeds this threshold, 
         // 回购状态, 1表示启动
-        uint8 RepurchaseStatus;
+        uint8 status;
 
         // The number of CoFi redeem per block. 100
         uint16 cofiPerBlock;

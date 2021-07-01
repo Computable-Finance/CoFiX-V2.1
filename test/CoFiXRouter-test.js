@@ -14,6 +14,8 @@ describe("CoFiXRouter", function() {
             cofixController,
             cofixVaultForStaking,
             cofixGovernance,
+            nestPriceFacade,
+            
             usdt,
             usdtPair
         } = await deployer.deploy();
