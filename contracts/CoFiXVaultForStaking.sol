@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./libs/IERC20.sol";
 import "./libs/TransferHelper.sol";
@@ -61,7 +61,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
     /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
@@ -318,7 +318,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     // CoFi ore drawing attenuation interval. 2400000 blocks, about one year
     uint constant COFI_REDUCTION_SPAN = 2400000;
     // The decay limit of CoFi ore drawing becomes stable after exceeding this interval. 24 million blocks, about 4 years
-    uint constant COFI_REDUCTION_LIMIT = 9600000; // NEST_REDUCTION_SPAN * 4;
+    uint constant COFI_REDUCTION_LIMIT = 9600000; // COFI_REDUCTION_SPAN * 4;
     // Attenuation gradient array, each attenuation step value occupies 16 bits. The attenuation value is an integer
     uint constant COFI_REDUCTION_STEPS = 0x280035004300530068008300A300CC010001400190;
         // 0

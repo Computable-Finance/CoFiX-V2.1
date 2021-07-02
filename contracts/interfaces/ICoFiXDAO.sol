@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 /// @dev This interface defines the DAO methods
 interface ICoFiXDAO {
@@ -44,13 +44,19 @@ interface ICoFiXDAO {
     /// @return Authorization flag, 1 means authorization, 0 means cancel authorization
     function checkApplication(address addr) external view returns (uint);
 
+    /// @dev 设置token和锚定目标币价格的兑换关系。
+    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token 目标token
+    /// @param target 目标锚定币
+    /// @param exchange token和锚定目标币价格的兑换比例
     function setTokenExchange(address token, address target, uint exchange) external;
 
+    /// @dev 获取token和锚定目标币价格的兑换关系。
+    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token 目标token
+    /// @return target 目标锚定币
+    /// @return exchange token和锚定目标币价格的兑换比例
     function getTokenExchange(address token) external view returns (address target, uint exchange);
-
-    /// @dev Carve reward
-    /// @param pair Destination pair
-    function carveETHReward(address pair) external payable;
 
     /// @dev Add reward
     /// @param pair Destination pair

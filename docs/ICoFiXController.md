@@ -13,14 +13,14 @@
     /// @param payback 手续费退回接收地址
     /// @return ethAmount 价格-eth数量
     /// @return tokenAmount 价格-token数量
-    /// @return blockNum 价格所在区块
+    /// @return blockNumber 价格所在区块
     function queryPrice(
         address tokenAddress,
         address payback
     ) external payable returns (
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum
+        uint blockNumber
     );
 ```
 
@@ -36,7 +36,7 @@
     /// @return k The K value(18 decimal places).
     /// @return ethAmount 价格-eth数量
     /// @return tokenAmount 价格-token数量
-    /// @return blockNum 价格所在区块
+    /// @return blockNumber 价格所在区块
     function queryOracle(
         address tokenAddress,
         address payback
@@ -44,7 +44,7 @@
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum
+        uint blockNumber
     );
 ```
 
@@ -56,4 +56,29 @@
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value(18 decimal places).
     function calcK(uint sigmaSQ, uint bn) external view returns (uint k);
+```
+
+### 2.4. 查询最新价格信息
+
+```javascript
+    /// @dev 查询最新价格信息
+    /// @param tokenAddress token地址
+    /// @param payback 退回的手续费接收地址
+    /// @return blockNumber 价格所在区块号
+    /// @return priceEthAmount 预言机价格-eth数量
+    /// @return priceTokenAmount 预言机价格-token数量
+    /// @return avgPriceEthAmount 平均价格-eth数量
+    /// @return avgPriceTokenAmount 平均价格-token数量
+    /// @return sigmaSQ 波动率的平方（18位小数）
+    function latestPriceInfo(address tokenAddress, address payback) 
+    external 
+    payable 
+    returns (
+        uint blockNumber, 
+        uint priceEthAmount,
+        uint priceTokenAmount,
+        uint avgPriceEthAmount,
+        uint avgPriceTokenAmount,
+        uint sigmaSQ
+    );
 ```

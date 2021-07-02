@@ -1,19 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./INestPriceFacade.sol";
 
 /// @dev This interface defines the methods for price call entry
 interface ICoFiXController {
 
-    struct Config {
-        uint32 alpha;
-        uint32 beta;
-        uint32 gamaR1;
-        uint32 gamaR2;
-    }
-    
     // Calc variance of price and K in CoFiX is very expensive
     // We use expected value of K based on statistical calculations here to save gas
     // In the near future, NEST could provide the variance of price directly. We will adopt it then.
@@ -24,14 +17,14 @@ interface ICoFiXController {
     /// @param payback 手续费退回接收地址
     /// @return ethAmount 价格-eth数量
     /// @return tokenAmount 价格-token数量
-    /// @return blockNum 价格所在区块
+    /// @return blockNumber 价格所在区块
     function queryPrice(
         address tokenAddress,
         address payback
     ) external payable returns (
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum
+        uint blockNumber
     );
 
     /// @dev Calc variance of price and K in CoFiX is very expensive
@@ -43,7 +36,7 @@ interface ICoFiXController {
     /// @return k The K value(18 decimal places).
     /// @return ethAmount 价格-eth数量
     /// @return tokenAmount 价格-token数量
-    /// @return blockNum 价格所在区块
+    /// @return blockNumber 价格所在区块
     function queryOracle(
         address tokenAddress,
         address payback
@@ -51,7 +44,7 @@ interface ICoFiXController {
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
-        uint blockNum
+        uint blockNumber
     );
 
     /// @notice Calc K value

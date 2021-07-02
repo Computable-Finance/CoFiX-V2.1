@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./libs/IERC20.sol";
 import "./libs/TransferHelper.sol";
@@ -41,7 +41,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
     /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
@@ -463,6 +463,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     receive() external payable {
-
+        //console.log('CoFiXRouter-receive-msg.sender:', msg.sender);
     }
 }

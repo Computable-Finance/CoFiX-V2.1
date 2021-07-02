@@ -7,6 +7,10 @@ const { ethers } = require("hardhat");
 
 exports.deploy = async function () {
     
+    if (network.name != 'rinkeby') {
+        console.log('当前不是rinkeby网络，退出');
+        return;
+    }
     const eth = { address: '0x0000000000000000000000000000000000000000' };
     const TestERC20 = await ethers.getContractFactory("TestERC20");
     const CoFiToken = await ethers.getContractFactory("CoFiToken");
@@ -44,7 +48,7 @@ exports.deploy = async function () {
     // xpusd: 0x4Eae4727BF3164cffdC2185F30A708CfdC6C20D2
     // xdai: 0x802615556bE65f05C587C548eDF622726Bce7a63
 
-    console.log('** 开始部署合约 **');
+    console.log('** 开始部署合约 rinkeby@20210628.js **');
     
     //let cnode = await TestERC20.deploy('CNode', 'CNode', 0);
     const cnode = await TestERC20.attach('0x5F22b973c29d739a12a0d20CEf99fa10b3A558df');
@@ -247,19 +251,19 @@ exports.deploy = async function () {
     // console.log('25. usdAnchor.update(cofixGovernance.address)');
     // await usdAnchor.update(cofixGovernance.address);
 
-    // let xeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(eth.address));
-    // console.log('xeth: ' + xeth.address);
-    // let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
-    // console.log('xpeth: ' + xpeth.address);
-    // let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
-    // console.log('xweth: ' + xweth.address);
+    let xeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(eth.address));
+    console.log('xeth: ' + xeth.address);
+    let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
+    console.log('xpeth: ' + xpeth.address);
+    let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
+    console.log('xweth: ' + xweth.address);
 
-    // let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
-    // console.log('xusdt: ' + xusdt.address);
-    // let xpusd = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(pusd.address));
-    // console.log('xpusd: ' + xpusd.address);
-    // let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
-    // console.log('xdai: ' + xdai.address);
+    let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
+    console.log('xusdt: ' + xusdt.address);
+    let xpusd = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(pusd.address));
+    console.log('xpusd: ' + xpusd.address);
+    let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
+    console.log('xdai: ' + xdai.address);
 
     // console.log('26. cofixVaultForStaking.initStakingChannel(xeth.address, 20000)');
     // await cofixVaultForStaking.initStakingChannel(xeth.address, 20000);

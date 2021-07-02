@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
-/// @dev Router contract to interact with each CoFiXPair
+/// @dev 此接口定义了资金池的方法和事件
 interface ICoFiXPool {
 
     /*

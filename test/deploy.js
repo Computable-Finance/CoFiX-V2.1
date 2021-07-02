@@ -15,9 +15,15 @@ describe("CoFiXRouter", function() {
             cofixController,
             cofixVaultForStaking,
             cofixGovernance,
+
+            nest,
             usdt,
-            pair
+            usdtPair,
+            nestPair,
+            usdAnchor,
+            ethAnchor,
         } = await deployer.deploy();
+        return;
 
         // await usdt.transfer(owner.address, BigInt('10000000000000'));
         // await usdt.approve(cofixRouter.address, BigInt('10000000000000'));
@@ -44,18 +50,9 @@ describe("CoFiXRouter", function() {
         //     expect(await cofixVaultForStaking.balanceOf(pair.address, owner.address)).to.equal('0');
         // }
         
-        // if (true) {
-        //     // 2. 添加2eth的流动性并存入收益池，预期获得2000000000000000000份额
-        //     let receipt = await cofixRouter.addLiquidityAndStake(
-        //         usdt.address,
-        //         BigInt('2000000000000000000'),
-        //         BigInt('6000000000'),
-        //         BigInt('900000000000000000'),
-        //         owner.address,
-        //         BigInt('1723207627371'), {
-        //             value: BigInt('2010000000000000000')
-        //         }
-        //     );
+        if (true) {
+
+        }
 
         //     console.log((await receipt.wait()).gasUsed.toString());
         //     let liquidity = await pair.balanceOf(owner.address);

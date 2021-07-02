@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./libs/IERC20.sol";
 import "./libs/ERC20.sol";
@@ -50,7 +50,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     uint32 _nt;
 
     // Lock flag
-    uint8 _unlocked = 1;
+    uint8 _unlocked;
 
     TokenInfo[] _tokens;
     mapping(address=>uint) _tokenMapping;
@@ -72,6 +72,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         uint96[] memory bases
     ) external {
         super.initialize(governance);
+        _unlocked = 1;
         string memory si = getAddressStr(index);
         // 遍历token，初始化对应的数据
         for (uint i = 0; i < tokens.length; ++i) {
@@ -124,7 +125,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
     /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
@@ -374,30 +375,30 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // console.log('CoFiXAnchorPool-swap mined:', mined);
     }
 
-    function _tokenName(address token) private view returns (string memory) {
-        if (token == address(0)) {
-            return 'eth';
-        }
-        return ERC20(token).name();
-    }
-    mapping(address=>uint) _balances;
-    function _update() private {
-        for(uint i = 0; i < _tokens.length; ++i) {
-            uint balance;
-            TokenInfo memory ti = _tokens[i];
-            if (ti.tokenAddress == address(0)) {
-                balance = address(this).balance;
-            } else {
-                balance = IERC20(ti.tokenAddress).balanceOf(address(this));
-            }
-            if (balance > _balances[ti.tokenAddress]) {
-                console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, balance - _balances[ti.tokenAddress]);
-            } else {
-                console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, '-', _balances[ti.tokenAddress] - balance);
-            }
-            _balances[ti.tokenAddress] = balance;
-        }
-    }
+    // function _tokenName(address token) private view returns (string memory) {
+    //     if (token == address(0)) {
+    //         return 'eth';
+    //     }
+    //     return ERC20(token).name();
+    // }
+    // mapping(address=>uint) _balances;
+    // function _update() private {
+    //     for(uint i = 0; i < _tokens.length; ++i) {
+    //         uint balance;
+    //         TokenInfo memory ti = _tokens[i];
+    //         if (ti.tokenAddress == address(0)) {
+    //             balance = address(this).balance;
+    //         } else {
+    //             balance = IERC20(ti.tokenAddress).balanceOf(address(this));
+    //         }
+    //         if (balance > _balances[ti.tokenAddress]) {
+    //             console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, balance - _balances[ti.tokenAddress]);
+    //         } else {
+    //             console.log('CoFiXAnchorPool-swap D', ti.tokenAddress, '-', _balances[ti.tokenAddress] - balance);
+    //         }
+    //         _balances[ti.tokenAddress] = balance;
+    //     }
+    // }
 
     // 计算CoFi交易挖矿相关的变量并更新对应状态
     function _cofiMint(TokenInfo storage tokenInfo, uint base, uint nt) private returns (uint mined) {
@@ -467,7 +468,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         return _tokens[_tokenMapping[token]].xtokenAddress;
     }
 
-    /// @dev from NESTv3.0
+    // from NEST v3.0
     function strConcat(string memory _a, string memory _b) private pure returns (string memory)
     {
         bytes memory _ba = bytes(_a);
@@ -484,7 +485,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         return string(ret);
     } 
     
-    /// @dev Convert number into a string, if less than 4 digits, make up 0 in front, from NestV3.0
+    // Convert number into a string, if less than 4 digits, make up 0 in front, from NEST v3.0
     function getAddressStr(uint iv) private pure returns (string memory) 
     {
         bytes memory buf = new bytes(64);

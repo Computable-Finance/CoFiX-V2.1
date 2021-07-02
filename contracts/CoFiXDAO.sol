@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./libs/IERC20.sol";
 import "./libs/TransferHelper.sol";
@@ -14,6 +14,7 @@ import "hardhat/console.sol";
 /// @dev CoFiX公共资金的管理
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
+    /// @dev 锚定币兑换的价格转换信息
     struct TokenPriceExchange {
         address target;
         uint96 exchange;
@@ -31,6 +32,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     // DAO applications
     mapping(address=>uint) _applications;
 
+    // token和锚定币兑换的价格转换信息
     mapping(address=>TokenPriceExchange) _tokenExchanges;
 
     /// @dev Create CoFiXDAO
@@ -38,7 +40,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
     /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
@@ -72,20 +74,24 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         return _applications[addr];
     }
 
+    /// @dev 设置token和锚定目标币价格的兑换关系。
+    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token 目标token
+    /// @param target 目标锚定币
+    /// @param exchange token和锚定目标币价格的兑换比例
     function setTokenExchange(address token, address target, uint exchange) external override {
         require(exchange <= 0xFFFFFFFFFFFFFFFFFFFFFFFF, "CoFiXDAO: exchange value overflow");
         _tokenExchanges[token] = TokenPriceExchange(target, uint96(exchange));
     }
 
+    /// @dev 获取token和锚定目标币价格的兑换关系。
+    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token 目标token
+    /// @return target 目标锚定币
+    /// @return exchange token和锚定目标币价格的兑换比例
     function getTokenExchange(address token) external view override returns (address target, uint exchange) {
         TokenPriceExchange memory e = _tokenExchanges[token];
         return (e.target, uint(e.exchange));
-    }
-
-    /// @dev Carve reward
-    /// @param pair Destination pair
-    function carveETHReward(address pair) external payable override {
-
     }
 
     /// @dev Add reward
@@ -108,7 +114,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     /// @param value Amount to receive
     function pay(address pair, address tokenAddress, address to, uint value) external override {
         require(pair != address(0));
-        require(_applications[msg.sender] == 1, "NestLedger:!app");
+        require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
 
         // Pay eth from ledger
         if (tokenAddress == address(0)) {
@@ -129,7 +135,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     /// @param value Amount to receive
     function settle(address pair, address tokenAddress, address to, uint value) external payable override {
         require(pair != address(0));
-        require(_applications[msg.sender] == 1, "NestLedger:!app");
+        require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
 
         // Pay eth from ledger
         if (tokenAddress == address(0)) {
@@ -184,6 +190,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         (uint quota, uint scale) = _quotaOf(config, _redeemed);
         _redeemed = scale - (quota - amount);
 
+        // 7. 转入CoFi并转出eth
         TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         payable(msg.sender).transfer(value);
     }
@@ -255,6 +262,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
             _redeemed = scale - (quota - amount);
         }
 
+        // 7. 转入CoFi并转出etoken
         TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         TransferHelper.safeTransfer(token, msg.sender, value);
     }

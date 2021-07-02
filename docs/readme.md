@@ -9,9 +9,9 @@ CoFiX v2.1添加了锚定池逻辑和其他一些功能性修改，并对合约�
 
 The contract relationship is shown in the figure above. The green contract is the contract that needs to be actually deployed, and the others are interface definitions or abstract contracts. The main points are as follows:
 
-1. The contracts of the nest system all inherit the CoFiXBase contract. The CoFiXBase contract mainly implements the logic that the contracts belonging to the nest governance system which need to cooperate with the governance.
+1. The contracts of the CoFiX system all inherit the CoFiXBase contract. The CoFiXBase contract mainly implements the logic that the contracts belonging to the CoFiX governance system which need to cooperate with the governance.
 
-2. CoFiXGovernance is a nest governance contract, which includes governance-related functions and realizes the mapping management of the built-in contract address in the nest system.
+2. CoFiXGovernance is a CoFiX governance contract, which includes governance-related functions and realizes the mapping management of the built-in contract address in the CoFiX system.
 
 3. CoFiXController合约用于处理和价格相关的逻辑。
 

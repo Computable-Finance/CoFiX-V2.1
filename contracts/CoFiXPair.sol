@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./libs/IERC20.sol";
 import "./libs/ERC20.sol";
@@ -17,19 +17,13 @@ import "./CoFiXERC20.sol";
 import "hardhat/console.sol";
 
 /// @dev 二元资金池: eth/token
-contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
+contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
-    //uint constant public THETA = 0.002 ether;
-
-    // n_t为每一单位ETH标准出矿量为，当前n_t=0.1。BASE: 10000
-    //uint constant nt = 1000;
     uint constant VOL_BASE = 50 ether;
     uint256 constant C_BUYIN_ALPHA = 0; // α=0
     uint256 constant C_BUYIN_BETA = 20000000000000; // β=2e-05*1e18
-    //uint256 constant C_SELLOUT_ALPHA = 0; // α=0
-    //uint256 constant C_SELLOUT_BETA = 20000000000000; // β=2e-05*1e18
 
     // 目标代币地址
     address public TOKEN_ADDRESS; 
@@ -62,7 +56,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     uint32 _nt;
 
     // Lock flag
-    uint8 _unlocked = 1;
+    uint8 _unlocked;
 
     // TODO: 将CoFiXController合并到CoFiXRouter中
     // Address of CoFiXController
@@ -82,6 +76,13 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     }
 
+    /// @dev init 初始化
+    /// @param governance ICoFiXGovernance implementation contract address
+    /// @param name_ 份额代币名称
+    /// @param symbol_ 份额代币代号
+    /// @param tokenAddress 资金池代币地址
+    /// @param initToken0Amount 初始资产比例 - ETH
+    /// @param initToken1Amount 初始资产比例 - TOKEN
     function init(
         address governance,
         string memory name_, 
@@ -93,6 +94,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         super.initialize(governance);
         name = name_;
         symbol = symbol_;
+        _unlocked = 1;
         TOKEN_ADDRESS = tokenAddress;
         INIT_TOKEN0_AMOUNT = initToken0Amount;
         INIT_TOKEN1_AMOUNT = initToken1Amount;
@@ -129,8 +131,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     }
 
     /// @dev 获取初始资产比例
-    /// @param initToken0Amount 初始资产比例 - ETH
-    /// @param initToken1Amount 初始资产比例 - TOKEN
+    /// @return initToken0Amount 初始资产比例 - ETH
+    /// @return initToken1Amount 初始资产比例 - TOKEN
     function getInitialAssetRatio() public override view returns (
         uint initToken0Amount, 
         uint initToken1Amount
@@ -139,7 +141,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
     /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
@@ -190,7 +192,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             (
                 uint ethAmount, 
                 uint tokenAmount, 
-                //uint blockNum, 
+                //uint blockNumber, 
             ) = ICoFiXController(_cofixController).queryPrice { 
                 // 多余的部分，都作为预言机调用费用
                 value: msg.value - amountETH
@@ -200,20 +202,6 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             );
 
             // TODO: Pt此处没有引入K值，后续需要引入
-            // uint navps = _calcTotalValue(
-            //     // 当前eth余额，减去amountETH等于交易前eth余额
-            //     address(this).balance - amountETH, 
-            //     // 当前token余额，减去amountToken等于交易前token余额
-            //     IERC20(token).balanceOf(address(this)) - amountToken,
-            //     // 价格 - eth数量 
-            //     ethAmount, 
-            //     // 价格 - token数量
-            //     tokenAmount,
-            //     uint(INIT_TOKEN0_AMOUNT),
-            //     uint(INIT_TOKEN1_AMOUNT)
-            // ) * 1 ether / total;
-            // liquidity = amountETH * 1 ether / navps;
-
             // 做市没有冲击成本
             // 当发行量不为0时，正常发行份额
             liquidity = amountETH * total / _calcTotalValue(
@@ -238,17 +226,12 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             _mint(address(0), MINIMUM_LIQUIDITY); 
         }
 
-        // // 份额必须大于0
-        // require(liquidity > 0, "CoFiXPair: SHORT_LIQUIDITY_MINTED");
-
         // 5. 增发份额
         _mint(to, liquidity);
         xtoken = address(this);
         emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
-    // 销毁流动性
-    // this low-level function should be called from a contract which performs important safety checks
     /// @dev 移除流动性并销毁
     /// @param token 目标token地址
     /// @param to 资金接收地址
@@ -270,7 +253,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         (
             uint ethAmount, 
             uint tokenAmount, 
-            //uint blockNum, 
+            //uint blockNumber, 
         ) = ICoFiXController(_cofixController).queryPrice { 
             value: msg.value 
         } (
@@ -361,30 +344,30 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         // console.log('CoFiXPair-swap mined:', mined);
     }
 
-    function _tokenName(address token) private view returns (string memory) {
-        if (token == address(0)) {
-            return 'eth';
-        }
-        return ERC20(token).name();
-    }
-    uint _ethBalance;
-    uint _tokenBalance;
-    function _update() private {
-        uint ethBalance = address(this).balance;
-        uint tokenBalance = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
-        if(ethBalance > _ethBalance) {
-            console.log('CoFiXPair-swap D-eth:', ethBalance - _ethBalance);
-        } else {
-            console.log('CoFiXPair-swap D-eth:-', _ethBalance - ethBalance);
-        }
-        if (tokenBalance > _tokenBalance) {
-            console.log('CoFiXPair-swap D-token:', tokenBalance - _tokenBalance);
-        } else {
-            console.log('CoFiXPair-swap D-token:-', _tokenBalance - tokenBalance);
-        }
-        _ethBalance = ethBalance;
-        _tokenBalance = tokenBalance;
-    }
+    // function _tokenName(address token) private view returns (string memory) {
+    //     if (token == address(0)) {
+    //         return 'eth';
+    //     }
+    //     return ERC20(token).name();
+    // }
+    // uint _ethBalance;
+    // uint _tokenBalance;
+    // function _update() private {
+    //     uint ethBalance = address(this).balance;
+    //     uint tokenBalance = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
+    //     if(ethBalance > _ethBalance) {
+    //         console.log('CoFiXPair-swap D-eth:', ethBalance - _ethBalance);
+    //     } else {
+    //         console.log('CoFiXPair-swap D-eth:-', _ethBalance - ethBalance);
+    //     }
+    //     if (tokenBalance > _tokenBalance) {
+    //         console.log('CoFiXPair-swap D-token:', tokenBalance - _tokenBalance);
+    //     } else {
+    //         console.log('CoFiXPair-swap D-token:-', _tokenBalance - tokenBalance);
+    //     }
+    //     _ethBalance = ethBalance;
+    //     _tokenBalance = tokenBalance;
+    // }
 
     /// @dev 用eth兑换token
     /// @param amountIn 兑换的eth数量
@@ -406,8 +389,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             uint k, 
             uint ethAmount, 
             uint tokenAmount, 
-            //uint blockNum, 
-            //uint theta
+            //uint blockNumber, 
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value  - amountIn
         } (
@@ -462,8 +444,7 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
             uint k, 
             uint ethAmount, 
             uint tokenAmount, 
-            //uint blockNum, 
-            //uint theta
+            //uint blockNumber, 
         ) = ICoFiXController(_cofixController).queryOracle { 
             value: msg.value
         } (
@@ -503,8 +484,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // 计算调整为𝑘0时所需要的ETH交易规模
     function _calcD(
-        uint ethBalance, 
-        uint tokenBalance, 
+        uint balance0, 
+        uint balance1, 
         uint ethAmount, 
         uint tokenAmount
     ) private view returns (uint) {
@@ -512,8 +493,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
         uint initToken1Amount = uint(INIT_TOKEN1_AMOUNT);
 
         // D_t=|(E_t 〖*k〗_0 〖-U〗_t)/(k_0+P_t )|
-        uint left = ethBalance * initToken1Amount;
-        uint right = tokenBalance * initToken0Amount;
+        uint left = balance0 * initToken1Amount;
+        uint right = balance1 * initToken0Amount;
         uint numerator;
         if (left > right) {
             numerator = left - right;
@@ -584,20 +565,20 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
     // use it in this contract, for optimized gas usage
 
     /// @dev 计算净值
-    /// @param ethBalance 资金池eth余额
-    /// @param tokenBalance 资金池token余额
+    /// @param balance0 资金池eth余额
+    /// @param balance1 资金池token余额
     /// @param ethAmount 预言机价格-eth数量
     /// @param tokenAmount 预言机价格-token数量
     /// @return navps 净值
     function calcNAVPerShare(
-        uint ethBalance, 
-        uint tokenBalance, 
+        uint balance0, 
+        uint balance1, 
         uint ethAmount, 
         uint tokenAmount
     ) external view override returns (uint navps) {
         return _calcTotalValue(
-            ethBalance, 
-            tokenBalance, 
+            balance0, 
+            balance1, 
             ethAmount, 
             tokenAmount,
             INIT_TOKEN0_AMOUNT,
@@ -625,8 +606,8 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
     // 计算资产余额总价值
     function _calcTotalValue(
-        uint ethBalance, 
-        uint tokenBalance, 
+        uint balance0, 
+        uint balance1, 
         uint ethAmount, 
         uint tokenAmount,
         uint initToken0Amount,
@@ -642,19 +623,14 @@ contract CoFiXPair is CoFiXBase, ICoFiXPair, CoFiXERC20 {
 
         // NV=(E_t+U_t/P_t)/((1+k_0/P_t ))
         totalValue = (
-            ethBalance * tokenAmount 
-            + tokenBalance * ethAmount
+            balance0 * tokenAmount 
+            + balance1 * ethAmount
         ) * uint(initToken0Amount)
         / (
             uint(initToken0Amount) * tokenAmount 
             + initToken1Amount * ethAmount
         );
     }
-
-    // // use it in this contract, for optimized gas usage
-    // function _calcLiquidity(uint amount0, uint navps) private pure returns (uint liquidity) {
-    //     liquidity = amount0 * 1 ether / navps;
-    // }
 
     // // impact cost
     // // - C = 0, if VOL < 500 / γ
