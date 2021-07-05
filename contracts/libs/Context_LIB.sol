@@ -12,7 +12,7 @@ pragma solidity ^0.8.6;
  *
  * This contract is only required for intermediate, library-like contracts.
  */
-abstract contract Context {
+abstract contract Context_LIB {
     function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }

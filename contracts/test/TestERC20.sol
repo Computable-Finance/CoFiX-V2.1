@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.3;
 
-import "../libs/ERC20.sol";
+import "../libs/ERC20_LIB.sol";
 
-contract TestERC20 is ERC20 {
+contract TestERC20 is ERC20_LIB {
     //event Approval(address indexed owner, address indexed spender, uint value);
     //event Transfer(address indexed from, address indexed to, uint value);
 
@@ -16,7 +16,7 @@ contract TestERC20 is ERC20 {
     //mapping(address=>uint) _balances;
     //mapping(address=>mapping(address=>uint)) _allowance;
 
-    constructor (string memory name, string memory symbol, uint8 decimals) ERC20(name, symbol) {
+    constructor (string memory name, string memory symbol, uint8 decimals) ERC20_LIB (name, symbol) {
         //_name = name;
         //_symbol = symbol;
         //_decimals = decimals;

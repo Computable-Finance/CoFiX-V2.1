@@ -275,5 +275,9 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
         }
+
+        console.log('cofi.decimals() = ' + await cofi.decimals());
+        console.log('nest.decimals() = ' + await nest.decimals());
+        console.log('usdt.decimals() = ' + await usdt.decimals());
     });
 });

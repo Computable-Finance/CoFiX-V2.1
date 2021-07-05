@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.6;
 
-import "./IERC20.sol";
-import "./Context.sol";
+import "./IERC20_LIB.sol";
+import "./Context_LIB.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -29,7 +29,7 @@ import "./Context.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20 is Context, IERC20 {
+contract ERC20_LIB is Context_LIB, IERC20_LIB {
     mapping (address => uint) private _balances;
 
     mapping (address => mapping (address => uint)) private _allowances;

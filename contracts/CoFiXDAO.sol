@@ -2,13 +2,16 @@
 
 pragma solidity ^0.8.6;
 
-import "./libs/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXDAO.sol";
 import "./interfaces/ICoFiXController.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
+
 import "hardhat/console.sol";
 
 /// @dev CoFiX公共资金的管理
@@ -286,12 +289,12 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     // Calculate redeem quota
     function _quotaOf(Config memory config, uint redeemed) private view returns (uint quota, uint scale) {
         // Load cofiLimit
-        uint quotaLimit = uint(config.cofiLimit);
+        uint quotaLimit = uint(config.cofiLimit) * 1 ether;
         // Calculate
         scale = block.number * uint(config.cofiPerBlock) * 1 ether;
         quota = scale - redeemed;
-        if (quota > quotaLimit * 1 ether) {
-            quota = quotaLimit * 1 ether;
+        if (quota > quotaLimit) {
+            quota = quotaLimit;
         }
     }
 }

@@ -3,10 +3,15 @@
 pragma solidity ^0.8.6;
 
 import "./interfaces/ICoFiXController.sol";
+
 import "hardhat/console.sol";
 
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
+
+    uint constant K_ALPHA = 0.00001 ether;
+    uint constant K_BETA = 10 ether;
+    uint constant BLOCK_TIME = 14;
 
     // nest价格调用合约地址
     address immutable NEST_PRICE_FADADE;
@@ -119,7 +124,8 @@ contract CoFiXController is ICoFiXController {
         }
         // k = (K_ALPHA.mul(_T   ).mul(1e18).add(K_BETA.mul(     vola)).mul(gamma).div(K_GAMMA_BASE).div(1e18));
         //k = (0.00002 ether * (block.number - bn) * 14 + 40 ether * sigma) * gamma / 1 ether / 1 ether;
-        k = (0.00001 ether * (block.number - bn) * 14 + 10 ether * sigma) * gamma / 1 ether / 1 ether;
+        //k = (K_ALPHA * (block.number - bn) * 14 + K_BETA * sigma) * gamma / 1 ether / 1 ether;
+        k = (K_ALPHA * (block.number - bn) * 14 + K_BETA * sigma) * gamma / 1e36;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

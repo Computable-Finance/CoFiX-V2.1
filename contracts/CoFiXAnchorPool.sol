@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.6;
 
-import "./libs/IERC20.sol";
-import "./libs/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXAnchorPool.sol";
@@ -21,7 +21,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     struct TokenInfo {
         // token地址
         address tokenAddress;
-        // token单位（等于10^decimals）。
+        // token单位（等于10^decimals）
         uint96 base;
         // 对应的xtoken地址
         address xtokenAddress;
@@ -52,7 +52,10 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     // Lock flag
     uint8 _unlocked;
 
+    // 锚定池token信息数组
     TokenInfo[] _tokens;
+
+    // 锚定池token信息映射
     mapping(address=>uint) _tokenMapping;
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现

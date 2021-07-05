@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.6;
 
-import "./libs/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXDAO.sol";
 import "./interfaces/ICoFiXGovernance.sol";
+
 import "hardhat/console.sol";
 
 // Router contract to interact with each CoFiXPair, no owner or governance
@@ -31,15 +33,15 @@ contract CoFiXBase {
     // TODO: 确定CoFi创世区块号
     uint constant COFI_GENESIS_BLOCK = 0;
 
+    /// @dev ICoFiXGovernance implementation contract address
+    address public _governance;
+
     /// @dev To support open-zeppelin/upgrades
     /// @param governance ICoFiXGovernance implementation contract address
     function initialize(address governance) virtual public {
         require(_governance == address(0), 'CoFiX:!initialize');
         _governance = governance;
     }
-
-    /// @dev ICoFiXGovernance implementation contract address
-    address public _governance;
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
     ///      super.update(newGovernance) when overriding, and override method without onlyGovernance

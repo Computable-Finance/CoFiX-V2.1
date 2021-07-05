@@ -2,19 +2,21 @@
 
 pragma solidity ^0.8.6;
 
-import "./libs/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXVaultForStaking.sol";
 import "./interfaces/ICoFiXRouter.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
+
 import "hardhat/console.sol";
 
 /// @dev 存入做市份额或者CNode，领取CoFi出矿
 contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
-    // 账户信息
+    /// @dev 账户信息
     struct Account {
         // 账户锁仓余额
         uint128 balance;
@@ -22,7 +24,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         uint128 rewardCursor;
     }
     
-    // Stake通道信息
+    /// @dev Stake通道信息
     struct StakeChannel{
 
         // 配置

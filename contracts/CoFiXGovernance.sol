@@ -3,6 +3,7 @@
 pragma solidity ^0.8.6;
 
 import "./interfaces/ICoFiXGovernance.sol";
+
 import "./CoFiXMapping.sol";
 
 /// @dev CoFiX governance contract

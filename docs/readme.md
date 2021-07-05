@@ -31,24 +31,31 @@ The contract relationship is shown in the figure above. The green contract is th
 
 ## 4. Data Structure
 
-### 4.1. 交易出矿变量
+### 4.1. 锚定池代币信息
 
 ```javascript
+    /// @dev 锚定池代币信息
     struct TokenInfo {
+        // token地址
         address tokenAddress;
+        // token单位（等于10^decimals）
         uint96 base;
+        // 对应的xtoken地址
         address xtokenAddress;
-        uint96 initAmount;
+
+        // 累计出矿量
         uint112 _Y;
+        // 调整到平衡的交易规模
         uint112 _D;
+        // 最后更新区块
         uint32 _lastblock;
     }
 ```
 
-### 4.2. 分红标记变量
+### 4.2. Stake通道信息
 
 ```javascript
-    // Stake通道信息
+    /// @dev Stake通道信息
     struct StakeChannel{
 
         // 配置
