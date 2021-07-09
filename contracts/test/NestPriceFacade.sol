@@ -42,7 +42,10 @@ contract NestPriceFacade is INestPriceFacade {
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
     /// @return blockNumber The block number of price
     /// @return price The token price. (1eth equivalent to (price) token)
-    function latestPrice(address tokenAddress, address payback) public payable override returns (uint blockNumber, uint price) {
+    function latestPrice(
+        address tokenAddress, 
+        address payback
+    ) public payable override returns (uint blockNumber, uint price) {
         if (msg.value > 0.01 ether) {
             payable(payback).transfer(msg.value - 0.01 ether);
         } else {
@@ -82,6 +85,9 @@ contract NestPriceFacade is INestPriceFacade {
         }
 
         (uint bn, uint price) = latestPriceView(tokenAddress);
-        return (block.number - bn, price, block.number - bn, price, price * 95 / 100, 10853469234);
+        if (tokenAddress == 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9) {
+            return (bn, price, bn, price, price * 10000 / 10000, 10853469234);
+        }
+        return (bn, price, bn, price, price * 9500 / 10000, 10853469234);
     }
 }

@@ -98,46 +98,46 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Add reward
-    /// @param pair Destination pair
-    function addETHReward(address pair) external payable override {
-        require(pair != address(0));
+    /// @param pool Destination pool
+    function addETHReward(address pool) external payable override {
+        //require(pool != address(0));
     }
 
     /// @dev The function returns eth rewards of specified ntoken
-    /// @param pair Destination pair
-    function totalETHRewards(address pair) external view override returns (uint) {
-        require(pair != address(0));
+    /// @param pool Destination pool
+    function totalETHRewards(address pool) external view override returns (uint) {
+        //require(pool != address(0));
         return address(this).balance;
     }
 
-    /// @dev Pay
-    /// @param pair Destination pair. Indicates which ntoken to pay with
-    /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    /// @param to Address to receive
-    /// @param value Amount to receive
-    function pay(address pair, address tokenAddress, address to, uint value) external override {
-        require(pair != address(0));
-        require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
+    // /// @dev Pay
+    // /// @param pool Destination pool. Indicates which ntoken to pay with
+    // /// @param tokenAddress Token address of receiving funds (0 means ETH)
+    // /// @param to Address to receive
+    // /// @param value Amount to receive
+    // function pay(address pool, address tokenAddress, address to, uint value) external override {
+    //     //require(pool != address(0));
+    //     require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
 
-        // Pay eth from ledger
-        if (tokenAddress == address(0)) {
-            // pay
-            payable(to).transfer(value);
-        }
-        // Pay token
-        else {
-            // pay
-            TransferHelper.safeTransfer(tokenAddress, to, value);
-        }
-    }
+    //     // Pay eth from ledger
+    //     if (tokenAddress == address(0)) {
+    //         // pay
+    //         payable(to).transfer(value);
+    //     }
+    //     // Pay token
+    //     else {
+    //         // pay
+    //         TransferHelper.safeTransfer(tokenAddress, to, value);
+    //     }
+    // }
 
     /// @dev Settlement
-    /// @param pair Destination pair. Indicates which ntoken to pay with
+    /// @param pool Destination pool. Indicates which ntoken to pay with
     /// @param tokenAddress Token address of receiving funds (0 means ETH)
     /// @param to Address to receive
     /// @param value Amount to receive
-    function settle(address pair, address tokenAddress, address to, uint value) external payable override {
-        require(pair != address(0));
+    function settle(address pool, address tokenAddress, address to, uint value) external payable override {
+        //require(pool != address(0));
         require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
 
         // Pay eth from ledger
@@ -165,18 +165,23 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         require(uint(config.status) == 1, "CoFiXDAO: Repurchase status error");
 
         // 3. Query price
+        // (
+        //     ,//uint blockNumber, 
+        //     uint priceEthAmount,
+        //     uint priceTokenAmount,
+        //     uint avgPriceEthAmount,
+        //     uint avgPriceTokenAmount,
+        //     //uint sigmaSQ
+        // ) = ICoFiXController(_cofixController).latestPriceInfo {
+        //     value: msg.value
+        // } (COFI_TOKEN_ADDRESS, payback);
+        // priceTokenAmount = priceTokenAmount * 1 ether / priceEthAmount;
+        // avgPriceTokenAmount = avgPriceTokenAmount * 1 ether / avgPriceEthAmount;
+
         (
-            ,//uint blockNumber, 
-            uint priceEthAmount,
-            uint priceTokenAmount,
-            uint avgPriceEthAmount,
-            uint avgPriceTokenAmount,
-            //uint sigmaSQ
-        ) = ICoFiXController(_cofixController).latestPriceInfo {
-            value: msg.value
-        } (COFI_TOKEN_ADDRESS, payback);
-        priceTokenAmount = priceTokenAmount * 1 ether / priceEthAmount;
-        avgPriceTokenAmount = avgPriceTokenAmount * 1 ether / avgPriceEthAmount;
+            uint priceTokenAmount, 
+            uint avgPriceTokenAmount
+        ) = _queryPrice(_cofixController, COFI_TOKEN_ADDRESS, msg.value, payback);
 
         // TODO: 检查价格偏差
         // 4. Check the redeeming amount and price deviation
@@ -212,62 +217,74 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         require(uint(config.status) == 1, "CoFiXDAO: Repurchase status error");
 
         TokenPriceExchange memory exchange = _tokenExchanges[token];
-        require(exchange.target != address(0), "CoFiXDAO: Token not allowed");
+        require(exchange.exchange > 0, "CoFiXDAO: Token not allowed");
 
-        uint value;
+        // eth的价格是1:1
+        uint fee = msg.value;
+        uint tokenPriceTokenAmount = 1 ether;
+        uint tokenAvgPriceTokenAmount = 1 ether;
+        address cofixController = _cofixController;
+        if (exchange.target != address(0)) {
+            (
+                tokenPriceTokenAmount, 
+                tokenAvgPriceTokenAmount
+            ) = _queryPrice(cofixController, exchange.target, fee >> 1, payback);
+            fee = fee >> 1;
+        }
+        tokenPriceTokenAmount = tokenPriceTokenAmount * 1 ether / uint(exchange.exchange);
+        tokenAvgPriceTokenAmount = tokenAvgPriceTokenAmount * 1 ether / uint(exchange.exchange);
+        (
+            uint cofiPriceTokenAmount, 
+            uint cofiAvgPriceTokenAmount
+        ) = _queryPrice(cofixController, COFI_TOKEN_ADDRESS, fee, payback);
+
+        // TODO: 检查价格偏差
+        // 4. Check the redeeming amount and price deviation
+        require(
+            cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
+                <= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 + uint(config.priceDeviationLimit)) && 
+            cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
+                >= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 - uint(config.priceDeviationLimit)), 
+            "CoFiXDAO:!price"
+        );
+
+        // 6. Calculate redeem quota
         {
-            // 3. Query price
-            (
-                ,//uint blockNumber, 
-                uint cofiPriceEthAmount,
-                uint cofiPriceTokenAmount,
-                uint cofiAvgPriceEthAmount,
-                uint cofiAvgPriceTokenAmount,
-                //uint sigmaSQ
-            ) = ICoFiXController(_cofixController).latestPriceInfo {
-                value: msg.value >> 1
-            } (COFI_TOKEN_ADDRESS, payback);
-
-            (
-                ,//uint blockNumber, 
-                uint tokenPriceEthAmount,
-                uint tokenPriceTokenAmount,
-                uint tokenAvgPriceEthAmount,
-                uint tokenAvgPriceTokenAmount,
-                //uint sigmaSQ
-            ) = ICoFiXController(_cofixController).latestPriceInfo {
-                value: msg.value >> 1
-            } (exchange.target, payback);
-
-            cofiPriceTokenAmount = cofiPriceTokenAmount * 1 ether / cofiPriceEthAmount;
-            cofiAvgPriceTokenAmount = cofiAvgPriceTokenAmount * 1 ether / cofiAvgPriceEthAmount;
-            tokenPriceTokenAmount = tokenPriceTokenAmount * 1 ether / tokenPriceEthAmount;
-            tokenAvgPriceTokenAmount = tokenAvgPriceTokenAmount * 1 ether / tokenAvgPriceEthAmount;
-
-            tokenPriceTokenAmount = tokenPriceTokenAmount * 1 ether / uint(exchange.exchange);
-            tokenAvgPriceTokenAmount = tokenAvgPriceTokenAmount * 1 ether / uint(exchange.exchange);
-
-            // TODO: 检查价格偏差
-            // 4. Check the redeeming amount and price deviation
-            require(
-                cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
-                    <= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 + uint(config.priceDeviationLimit)) && 
-                cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
-                    >= cofiAvgPriceTokenAmount * tokenPriceTokenAmount * (10000 - uint(config.priceDeviationLimit)), 
-                "CoFiXDAO:!price"
-            );
-
-            // 5. Calculate the number of eth that can be exchanged for redeem
-            value = amount * tokenPriceTokenAmount / cofiPriceTokenAmount;
-
-            // 6. Calculate redeem quota
             (uint quota, uint scale) = _quotaOf(config, _redeemed);
             _redeemed = scale - (quota - amount);
         }
 
+        // 5. Calculate the number of eth that can be exchanged for redeem
+        uint value = amount * tokenPriceTokenAmount / cofiPriceTokenAmount;
+
         // 7. 转入CoFi并转出etoken
         TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         TransferHelper.safeTransfer(token, msg.sender, value);
+    }
+
+    // 查询价格并按照标准价格返回（相对于1 ether的价格）
+    function _queryPrice(
+        address cofixController, 
+        address tokenAddress, 
+        uint fee, 
+        address payback
+    ) private returns (
+        uint price,
+        uint avgPrice
+    ) {
+        (
+            ,//uint blockNumber, 
+            uint priceEthAmount,
+            uint priceTokenAmount,
+            uint avgPriceEthAmount,
+            uint avgPriceTokenAmount,
+            //uint sigmaSQ
+        ) = ICoFiXController(cofixController).latestPriceInfo {
+            value: fee
+        } (tokenAddress, payback);
+
+        price = priceTokenAmount * 1 ether / priceEthAmount;
+        avgPrice = avgPriceTokenAmount * 1 ether / avgPriceEthAmount;
     }
 
     /// @dev Get the current amount available for repurchase

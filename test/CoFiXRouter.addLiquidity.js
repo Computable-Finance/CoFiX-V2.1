@@ -18,6 +18,7 @@ describe("CoFiXRouter", function() {
             nestPriceFacade,
 
             usdt,
+            nest,
             usdtPair
         } = await deployer.deploy();
 
@@ -216,11 +217,11 @@ describe("CoFiXRouter", function() {
             
             expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691797838'));
-            console.log('6. addr2使用2691.795687兑换eth');
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
+            console.log('6. addr2使用2691.421431兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
                 usdt.address,
-                BigInt('2691797838'),
+                BigInt('2691421431'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址
@@ -242,6 +243,9 @@ describe("CoFiXRouter", function() {
             console.log(status);
 
             console.log('8. 取回流动性');
+            console.log({
+                nvps: (await usdtPair.getNAVPerShare(toBigInt(1), toBigInt(2700, 6))).toString()
+            });
             await usdtPair.approve(cofixRouter.address, toBigInt('10000000'));
             receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
                 usdtPair.address,
@@ -288,5 +292,25 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
         }
+
+        if (true) {
+            await usdt.approve(cofixRouter.address, toBigInt(1000000));
+            let receipt = await cofixRouter.addLiquidity(
+                usdtPair.address,
+                usdt.address,
+                toBigInt(2),
+                toBigInt(6000, 6),
+                toBigInt(0.9),
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('2010000000000000000')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        //console.log(await cofixRouter.getRouterPath(usdt.address, cofi.address));
     });
 });

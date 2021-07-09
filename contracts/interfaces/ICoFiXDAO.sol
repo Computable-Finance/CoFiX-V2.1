@@ -59,26 +59,26 @@ interface ICoFiXDAO {
     function getTokenExchange(address token) external view returns (address target, uint exchange);
 
     /// @dev Add reward
-    /// @param pair Destination pair
-    function addETHReward(address pair) external payable;
+    /// @param pool Destination pool
+    function addETHReward(address pool) external payable;
 
     /// @dev The function returns eth rewards of specified ntoken
-    /// @param pair Destination pair
-    function totalETHRewards(address pair) external view returns (uint);
+    /// @param pool Destination pool
+    function totalETHRewards(address pool) external view returns (uint);
 
-    /// @dev Pay
-    /// @param pair Destination pair. Indicates which ntoken to pay with
-    /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    /// @param to Address to receive
-    /// @param value Amount to receive
-    function pay(address pair, address tokenAddress, address to, uint value) external;
+    // /// @dev Pay
+    // /// @param pool Destination pool. Indicates which ntoken to pay with
+    // /// @param tokenAddress Token address of receiving funds (0 means ETH)
+    // /// @param to Address to receive
+    // /// @param value Amount to receive
+    // function pay(address pool, address tokenAddress, address to, uint value) external;
 
     /// @dev Settlement
-    /// @param pair Destination pair. Indicates which ntoken to pay with
+    /// @param pool Destination pool. Indicates which ntoken to pay with
     /// @param tokenAddress Token address of receiving funds (0 means ETH)
     /// @param to Address to receive
     /// @param value Amount to receive
-    function settle(address pair, address tokenAddress, address to, uint value) external payable;
+    function settle(address pool, address tokenAddress, address to, uint value) external payable;
 
     /// @dev Redeem CoFi for ethers
     /// @notice Ethfee will be charged

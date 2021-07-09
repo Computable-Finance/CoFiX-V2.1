@@ -257,13 +257,13 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            await nest.connect(addr1).approve(cofixRouter.address, toBigInt(930));
-            console.log('7. 使用路由nest->eth->usdt->dai兑换930nest');
+            await nest.connect(addr1).approve(cofixRouter.address, toBigInt(900));
+            console.log('7. 使用路由nest->eth->usdt->dai兑换900nest');
             let path = await cofixRouter.getRouterPath(nest.address, dai.address);
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,
-                toBigInt(930),
+                toBigInt(900),
                 toBigInt(0),
                 //[usdt.address, '0x0000000000000000000000000000000000000000', nest.address],
                 addr1.address,
@@ -338,6 +338,7 @@ describe("CoFiXRouter", function() {
             await showReceipt(receipt);
             status = await getStatus();
             console.log(status);
+            console.log('quotaOf: ' + await cofixDAO.quotaOf());
         }
 
         if (true) {
@@ -360,6 +361,86 @@ describe("CoFiXRouter", function() {
             await showReceipt(receipt);
             status = await getStatus();
             console.log(status);
+        }
+
+        if (true) {
+            await dai.transfer(usdAnchor.address, toBigInt(30000));
+            await pusd.transfer(usdAnchor.address, toBigInt(10000));
+            console.log('13. addr1.skim()');
+            let receipt = await usdAnchor.connect(addr1).skim();
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('14. addr1.redeem()');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.1'));
+            await cofixDAO.connect(addr1).redeem(toBigInt('0.01'), addr1.address, { value: toBigInt('0.1')});
+            status = await getStatus();
+            console.log(status);
+            console.log('quotaOf: ' + await cofixDAO.quotaOf());
+        }
+
+        // for(var i = 0; i < 200; ++i) {
+        //     await dai.transfer(usdAnchor.address, toBigInt(0));
+        //     console.log('quotaOf: ' + await cofixDAO.quotaOf());
+        // }
+        console.log('totalETHRewards: ' + await cofixDAO.totalETHRewards('0x0000000000000000000000000000000000000000'));
+
+        if (true) {
+            console.log('15. migrate')
+            console.log('addr1 gov: ' + await cofixGovernance.getGovernance(addr1.address));
+            console.log('addr1 gov check: ' + await cofixGovernance.checkGovernance(addr1.address, 0));
+            await cofixGovernance.setGovernance(addr1.address, 1);
+            await usdtPair.connect(addr1).migrate('0x0000000000000000000000000000000000000000', toBigInt(1));
+            await nestPair.connect(addr1).migrate(nest.address, toBigInt(20000));
+            status = await getStatus();
+            console.log(status);
+            console.log('addr1 gov: ' + await cofixGovernance.getGovernance(addr1.address));
+            console.log('addr1 gov check: ' + await cofixGovernance.checkGovernance(addr1.address, 0));
+        }
+
+        if (true) {
+            console.log('16. getBuiltinAddress');
+            console.log(await cofixGovernance.getBuiltinAddress());
+
+            expect(await cofixGovernance.getCoFiTokenAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofiToken);
+            expect(await cofixGovernance.getCoFiNodeAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofiNode);
+            expect(await cofixGovernance.getCoFiXDAOAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixDAO);
+            expect(await cofixGovernance.getCoFiXRouterAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixRouter);
+            expect(await cofixGovernance.getCoFiXControllerAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixController);
+            expect(await cofixGovernance.getCoFiXVaultForStakingAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixVaultForStaking);
+
+            await cofixGovernance.setBuiltinAddress(
+                cofi.address,
+                cnode.address,
+                cofixDAO.address,
+                '0x1234567812345678123456781234567812345678',
+                cofixController.address,
+                cofixVaultForStaking.address
+            );
+            console.log(await cofixGovernance.getBuiltinAddress());
+
+            expect(await cofixGovernance.getCoFiTokenAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofiToken);
+            expect(await cofixGovernance.getCoFiNodeAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofiNode);
+            expect(await cofixGovernance.getCoFiXDAOAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixDAO);
+            expect(await cofixGovernance.getCoFiXRouterAddress()).to.equal('0x1234567812345678123456781234567812345678');
+            expect(await cofixGovernance.getCoFiXControllerAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixController);
+            expect(await cofixGovernance.getCoFiXVaultForStakingAddress()).to.equal((await cofixGovernance.getBuiltinAddress()).cofixVaultForStaking);
+
+            console.log('cofix.empty: ' + await cofixGovernance.checkAddress('cofix.empty'));
+            await cofixGovernance.registerAddress('cofix.empty', '0x1234567812345678123456781234567812345678');
+            console.log('cofix.empty: ' + await cofixGovernance.checkAddress('cofix.empty'));
+
+            console.log('usdt.exchange: ' + await cofixDAO.getTokenExchange(usdt.address));
+            console.log('pusd.exchange: ' + await cofixDAO.getTokenExchange(pusd.address));
+            console.log('dai.exchange: ' + await cofixDAO.getTokenExchange(dai.address));
+
+            console.log('eth.exchange: ' + await cofixDAO.getTokenExchange('0x0000000000000000000000000000000000000000'));
+            console.log('peth.exchange: ' + await cofixDAO.getTokenExchange(peth.address));
+            console.log('weth.exchange: ' + await cofixDAO.getTokenExchange(weth.address));
+
         }
     });
 });

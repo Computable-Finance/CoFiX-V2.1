@@ -15,6 +15,7 @@ describe("CoFiXRouter", function() {
             cofixController,
             cofixVaultForStaking,
             cofixGovernance,
+            nestPriceFacade,
 
             nest,
             usdt,
@@ -22,8 +23,50 @@ describe("CoFiXRouter", function() {
             nestPair,
             usdAnchor,
             ethAnchor,
+
+            pusd,
+            dai,
+            weth
         } = await deployer.deploy();
+
+        const toBigInt = function(val, decimals) {
+            decimals = decimals || 18;
+            val = parseFloat(val.toString());
+            val = val * 1000000;
+            decimals -= 6;
+            let bi = BigInt(val.toString());
+            let BASE = BigInt('10');
+            while (decimals > 0) {
+                bi *= BASE;
+                --decimals;
+            }
+
+            return bi;
+        }
+
+        // if (true) {
+        //     console.log('0. 设置价格');
+        //     await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
+        //     await nestPriceFacade.setPrice(nest.address, toBigInt('192307'), 1);
+        //     await nestPriceFacade.setPrice(cofi.address, toBigInt('3000'), 1);
+        // }
+
+        // let pi = await nestPriceFacade.latestPriceView(nest.address);
+        // console.log({
+        //     blockNumber: pi.blockNumber.toString(),
+        //     price: pi.price.toString()
+        // });
+
+        // let navps = await nestPair.getNAVPerShare('1000000000000000000', pi.price);
+        // console.log('navps: ' + navps); 
+
         return;
+
+        console.log('xusdt: ' + await usdAnchor.getXToken(usdt.address));
+        console.log('xpusd: ' + await usdAnchor.getXToken(pusd.address));
+        console.log('xdai: ' + await usdAnchor.getXToken(dai.address));
+        console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
+        
 
         // await usdt.transfer(owner.address, BigInt('10000000000000'));
         // await usdt.approve(cofixRouter.address, BigInt('10000000000000'));

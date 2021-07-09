@@ -277,8 +277,14 @@ exports.deploy = async function () {
         // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
         priceDeviationLimit: 1000
     });
+
     await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt('1000000'));
     await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+
+    await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
 
     const contracts = {
         cofi: cofi,

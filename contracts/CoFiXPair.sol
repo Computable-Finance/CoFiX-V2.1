@@ -72,7 +72,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor() {
-
     }
 
     /// @dev init 初始化
@@ -304,7 +303,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(token, to, amountTokenOut);
 
-        emit Burn(token, to, liquidity, amountTokenOut, amountETHOut);
+        emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
     }
 
     /// @dev 执行兑换交易
@@ -333,40 +332,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         } else {
             revert("CoFiXPair: pair error");
         }
-
-        // console.log('------------------------------------------------------------');
-        // console.log('CoFiXPair-swap src:', src);
-        // console.log('CoFiXPair-swap dest:', dest);
-        // console.log('CoFiXPair-swap src->dest:', _tokenName(src), '->', _tokenName(dest));
-        // console.log('CoFiXPair-swap amountIn->amountOut:', amountIn, '->', amountOut);
-        // console.log('CoFiXPair-swap to:', to);
-        // console.log('CoFiXPair-swap mined:', mined);
     }
-
-    // function _tokenName(address token) private view returns (string memory) {
-    //     if (token == address(0)) {
-    //         return 'eth';
-    //     }
-    //     return ERC20(token).name();
-    // }
-    // uint _ethBalance;
-    // uint _tokenBalance;
-    // function _update() private {
-    //     uint ethBalance = address(this).balance;
-    //     uint tokenBalance = IERC20(TOKEN_ADDRESS).balanceOf(address(this));
-    //     if(ethBalance > _ethBalance) {
-    //         console.log('CoFiXPair-swap D-eth:', ethBalance - _ethBalance);
-    //     } else {
-    //         console.log('CoFiXPair-swap D-eth:-', _ethBalance - ethBalance);
-    //     }
-    //     if (tokenBalance > _tokenBalance) {
-    //         console.log('CoFiXPair-swap D-token:', tokenBalance - _tokenBalance);
-    //     } else {
-    //         console.log('CoFiXPair-swap D-token:-', _tokenBalance - tokenBalance);
-    //     }
-    //     _ethBalance = ethBalance;
-    //     _tokenBalance = tokenBalance;
-    // }
 
     /// @dev 用eth兑换token
     /// @param amountIn 兑换的eth数量
@@ -575,14 +541,18 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint ethAmount, 
         uint tokenAmount
     ) external view override returns (uint navps) {
-        return _calcTotalValue(
-            balance0, 
-            balance1, 
-            ethAmount, 
-            tokenAmount,
-            INIT_TOKEN0_AMOUNT,
-            INIT_TOKEN1_AMOUNT
-        ) * 1 ether / totalSupply;
+        uint total = totalSupply;
+        if (total > 0) {
+            return _calcTotalValue(
+                balance0, 
+                balance1, 
+                ethAmount, 
+                tokenAmount,
+                INIT_TOKEN0_AMOUNT,
+                INIT_TOKEN1_AMOUNT
+            ) * 1 ether / totalSupply;
+        }
+        return 1 ether;
     }
 
     /// @dev 获取净值
@@ -593,14 +563,18 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint ethAmount, 
         uint tokenAmount
     ) external view override returns (uint navps) {
-        return _calcTotalValue(
-            address(this).balance, 
-            IERC20(TOKEN_ADDRESS).balanceOf(address(this)), 
-            ethAmount, 
-            tokenAmount,
-            INIT_TOKEN0_AMOUNT,
-            INIT_TOKEN1_AMOUNT
-        ) * 1 ether / totalSupply;
+        uint total = totalSupply;
+        if (total > 0) {
+            return _calcTotalValue(
+                address(this).balance, 
+                IERC20(TOKEN_ADDRESS).balanceOf(address(this)), 
+                ethAmount, 
+                tokenAmount,
+                INIT_TOKEN0_AMOUNT,
+                INIT_TOKEN1_AMOUNT
+            ) * 1 ether / totalSupply;
+        }
+        return 1 ether;
     }
 
     // 计算资产余额总价值

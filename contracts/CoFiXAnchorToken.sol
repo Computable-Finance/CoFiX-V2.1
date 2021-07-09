@@ -19,7 +19,6 @@ contract CoFiXAnchorToken is CoFiXERC20 {
     // ERC20 - symbol
     string public symbol;
 
-    // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
     constructor (
         string memory name_, 
         string memory symbol_,

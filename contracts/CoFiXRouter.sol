@@ -31,7 +31,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     /// @dev Create CoFiXRouter
     constructor () {
-
     }
 
     // 验证时间没有超过截止时间
@@ -85,6 +84,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         path = _paths[_getKey(src, dest)];
         uint j = path.length;
         // 如果是反向路径，则将路径反向
+        require(j > 0, 'CoFiXRouter: path not exist');
         if (src == path[--j] && dest == path[0]) {
             for (uint i = 0; i < j;) {
                 address tmp = path[i];
@@ -418,8 +418,11 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
                 recv = _pairFor(token1, next);
             }
 
-            // TODO: 可能存在使用openzeeplin的可升级方案后导致不能接收eth转账的问题，需要验证并解决
             // 执行兑换交易，如果token1是eth，则资金接收地址是address(this)
+            // Q: 可能存在使用openzeeplin的可升级方案后导致不能接收eth转账的问题，需要验证并解决。
+            // A: 由于执行入口在CoFiXRouter，CoFiXRouter的代理地址已经被读取，这会让后续的读取gas消耗降低
+            // 因此后面通过receive()转账到CoFiXRouter的gas消耗会降低而不至于出错，因此此时openzeeplin
+            // 的可升级方案不会导致从资金池转eth到CoFiXRouter失败的问题。
             (amountIn, mined) = ICoFiXPool(pair).swap {
                 value: address(this).balance
             } (token0, token1, amountIn, token1 == address(0) ? address(this) : recv, address(this));
@@ -463,6 +466,5 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     }
 
     receive() external payable {
-        //console.log('CoFiXRouter-receive-msg.sender:', msg.sender);
     }
 }

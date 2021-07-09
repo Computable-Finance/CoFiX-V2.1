@@ -3,10 +3,7 @@ const deployer = require("../scripts/deploy.js");
 
 describe("CoFiXRouter", function() {
     it("test1", async function() {
-
         const [owner, addr1, addr2] = await ethers.getSigners();
-        
-        // 部署合约
         const {
             cofi,
             cnode,
@@ -26,7 +23,7 @@ describe("CoFiXRouter", function() {
         }
 
         const toDecimal = function(bi, decimals) {
-            decimals = decimals || 18;
+            decimals = typeof(decimals) == 'undefined' ? 18 : decimals;
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
             let BASE = BigInt('10');
@@ -42,7 +39,7 @@ describe("CoFiXRouter", function() {
             return r;
         }
         const toBigInt = function(val, decimals) {
-            decimals = decimals || 18;
+            decimals = typeof(decimals) == 'undefined' ? 18 : decimals;
             val = parseFloat(val.toString());
             val = val * 1000000;
             decimals -= 6;
@@ -62,20 +59,24 @@ describe("CoFiXRouter", function() {
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 xtoken: toDecimal(await usdtPair.balanceOf(account)),
-                staked: toDecimal(await cofixVaultForStaking.balanceOf(usdtPair.address, account)),
-                earned: toDecimal(await cofixVaultForStaking.earned(usdtPair.address, account))
+                cnode: toDecimal(await cnode.balanceOf(account), 0),
+                staked: toDecimal(await cofixVaultForStaking.balanceOf(cnode.address, account), 0),
+                earned: toDecimal(await cofixVaultForStaking.earned(cnode.address, account))
             };
         }
         const getStatus = async function() {
             let pairStatus = await getAccountInfo(usdtPair);
+            let navps = 0;
+            if (pairStatus.eth != '0.000000000000000000' || pairStatus.usdt != '0.000000') {
             let p = await nestPriceFacade.latestPriceView(usdt.address);
-            let navps = toDecimal(await usdtPair.calcNAVPerShare(
-                await ethers.provider.getBalance(usdtPair.address),
-                //toBigInt(pairStatus.eth), 
-                toBigInt(pairStatus.usdt, 6), 
-                toBigInt(1), 
-                p.price
-            ));
+                navps = toDecimal(await usdtPair.calcNAVPerShare(
+                    await ethers.provider.getBalance(usdtPair.address),
+                    //toBigInt(pairStatus.eth), 
+                    toBigInt(pairStatus.usdt, 6), 
+                    toBigInt(1), 
+                    p.price
+                ));
+            }
             return {
                 height: await ethers.provider.getBlockNumber(),
                 navps: navps,
@@ -86,11 +87,36 @@ describe("CoFiXRouter", function() {
             };
         }
 
-        await cofixVaultForStaking.setConfig({ cofiRate: '2000000000000000000' });
-        //await cofixVaultForStaking.initStakingChannel(usdtPair.address, 10000);
-        await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [10000]);
         let status;
         let p;
+
+        await cnode.transfer(owner.address, 100);
+        await cnode.transfer(addr1.address, 20);
+
+        if (true) {
+            console.log('1. owner存入80cnode');
+            await cnode.approve(cofixVaultForStaking.address, 100);
+            await cofixVaultForStaking.stake(cnode.address, 80);
+            status = await getStatus();
+            console.log(status);
+
+            console.log('2. 等待一个区块后');
+            await usdt.transfer(owner.address, 0);
+            status = await getStatus();
+            console.log(status);
+
+            console.log('3. addr1存入20cnode');
+            await cnode.connect(addr1).approve(cofixVaultForStaking.address, 30);
+            await cofixVaultForStaking.connect(addr1).stake(cnode.address,20);
+            status = await getStatus();
+            console.log(status);
+
+            console.log('4. 等待一个区块后');
+            await usdt.transfer(owner.address, 0);
+            status = await getStatus();
+            console.log(status);
+        }
+
         await usdt.transfer(owner.address, toBigInt(10000000, 6));
         await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
         if (true) {
@@ -115,7 +141,7 @@ describe("CoFiXRouter", function() {
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('2.000000000000000000'));
             expect(status.usdtPair.usdt).to.equal('6000.000000');
-            expect(status.owner.staked).to.equal('0.000000000000000000');
+            //expect(status.owner.staked).to.equal('0.000000000000000000');
             expect(status.owner.usdt).to.equal('9994000.000000');
         }
         
@@ -141,7 +167,6 @@ describe("CoFiXRouter", function() {
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
             expect(status.usdtPair.usdt).to.equal('12000.000000');
-            expect(status.owner.staked).to.equal('2.000000000000000000');
             expect(status.owner.usdt).to.equal('9988000.000000');
 
             console.log('等待一个区块后');
@@ -152,9 +177,9 @@ describe("CoFiXRouter", function() {
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
             expect(status.usdtPair.usdt).to.equal('12000.000000');
-            expect(status.owner.staked).to.equal('2.000000000000000000');
+            //expect(status.owner.staked).to.equal('2.000000000000000000');
             expect(status.owner.usdt).to.equal('9988000.000000');
-            expect(status.owner.earned).to.equal('0.200000000000000000');
+            expect(status.owner.earned).to.equal('1.560000000000000000');
         }
 
         await usdt.transfer(addr1.address, toBigInt('5000000', 6));
@@ -179,14 +204,13 @@ describe("CoFiXRouter", function() {
             expect(status.usdtPair.eth).to.equal(('6.000000000000000000'));
             expect(status.usdtPair.usdt).to.equal('18000.000000');
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
-            expect(status.owner.staked).to.equal('2.000000000000000000');
+            expect(status.owner.staked).to.equal('80.');
             expect(status.owner.usdt).to.equal('4988000.000000');
-            expect(status.owner.earned).to.equal('0.800000000000000000');
+            expect(status.owner.earned).to.equal('2.040000000000000000');
 
             expect(status.addr1.xtoken).to.equal('0.000000000000000000');
-            //expect(status.addr1.eth).to.equal('6000000000000000000');
             expect(status.addr1.usdt).to.equal('4994000.000000');
-            expect(status.addr1.staked).to.equal('2.000000000000000000');
+            expect(status.addr1.staked).to.equal('20.');
         }
 
         if (true) {
@@ -218,7 +242,7 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
             
-            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
+            //expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
             // 1. 第一次交易
             // Et = 7
             // k0 = 3000
@@ -244,7 +268,6 @@ describe("CoFiXRouter", function() {
 
             status = await getStatus();
             console.log(status);
-            console.log('reward: ' + await cofixVaultForStaking.calcReward(usdtPair.address));
             // 2. 第二次交易
             // Et = 6.006068035345306275
             // k0 = 3000
@@ -302,7 +325,7 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
             
-            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
+            //expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
             // 3. 第三次交易
             // Et = 7.006068035345306275
             // k0 = 3000
@@ -362,8 +385,19 @@ describe("CoFiXRouter", function() {
             // 
             // cnodeReward = 0.030083142055283285
             // fw = 0.015041571027641643
+        }
 
-            console.log('k: ' + await cofixController.calcK('9988776', 20));
+        if (true) {
+            console.log('11. owner取回cnode');
+            await cofixVaultForStaking.withdraw(cnode.address, 40);
+            status = await getStatus();
+            console.log(status);
+
+            console.log('12. 等待一个区块后')
+            await usdt.transfer(owner.address, 0);
+            status = await getStatus();
+            console.log(status);
         }
     });
 });
+ 

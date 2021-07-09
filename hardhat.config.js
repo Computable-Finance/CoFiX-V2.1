@@ -47,6 +47,9 @@ module.exports = {
       gasPrice:1e9,
       timeout: 2000000000
     },
+    hardhat: {
+      gasPrice: 0
+    }
   },
   mocha: {
     timeout: 200000000

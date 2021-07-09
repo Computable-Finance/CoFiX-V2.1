@@ -66,6 +66,7 @@ exports.deploy = async function () {
     console.log('nestPair: ' + nestPair.address);
 
     const cofixDAO = await upgrades.deployProxy(CoFiXDAO, [cofixGovernance.address], { initializer: 'initialize' });
+    //const cofixDAO = await CoFiXDAO.deploy();
     //const cofixDAO = await CoFiXDAO.attach('0x7D3d375759Dce4D8609EcA61fCe5898e5Dd52E09');
     console.log('cofixDAO: ' + cofixDAO.address);
     
@@ -191,6 +192,7 @@ exports.deploy = async function () {
     await cofixRouter.registerPair(usdt.address, dai.address, usdAnchor.address);
     console.log('29. registerPair(pusd.address, dai.address, usdAnchor.address)');
     await cofixRouter.registerPair(pusd.address, dai.address, usdAnchor.address);
+
     // 注册路由路径
     console.log('30. registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address])');
     await cofixRouter.registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address]);
@@ -287,8 +289,14 @@ exports.deploy = async function () {
         // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
         priceDeviationLimit: 1000
     });
+
     await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt('1000000'));
     await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+
+    await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
+    await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
 
     const contracts = {
         cofi: cofi,

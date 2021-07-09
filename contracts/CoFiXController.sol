@@ -122,14 +122,12 @@ contract CoFiXController is ICoFiXController {
         } else if (sigma > 0.0003 ether) {
             gamma = 1.5 ether;
         }
-        // k = (K_ALPHA.mul(_T   ).mul(1e18).add(K_BETA.mul(     vola)).mul(gamma).div(K_GAMMA_BASE).div(1e18));
-        //k = (0.00002 ether * (block.number - bn) * 14 + 40 ether * sigma) * gamma / 1 ether / 1 ether;
-        //k = (K_ALPHA * (block.number - bn) * 14 + K_BETA * sigma) * gamma / 1 ether / 1 ether;
-        k = (K_ALPHA * (block.number - bn) * 14 + K_BETA * sigma) * gamma / 1e36;
+
+        k = (K_ALPHA * (block.number - bn) * 14 ether + K_BETA * sigma) * gamma / 1e36;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    function sqrt(uint y) public pure returns (uint z) {
+    function sqrt(uint y) private pure returns (uint z) {
         if (y > 3) {
             z = y;
             uint x = (y >> 1) + 1;

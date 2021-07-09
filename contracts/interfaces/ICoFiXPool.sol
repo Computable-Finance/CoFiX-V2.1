@@ -22,9 +22,9 @@ interface ICoFiXPool {
     /// @param token 目标token地址
     /// @param to 资金接收地址
     /// @param liquidity 需要移除的流动性份额
-    /// @param amountTokenOut 获得的token数量
     /// @param amountETHOut 获得的eth数量
-    event Burn(address token, address to, uint liquidity, uint amountTokenOut, uint amountETHOut);
+    /// @param amountTokenOut 获得的token数量
+    event Burn(address token, address to, uint liquidity, uint amountETHOut, uint amountTokenOut);
 
     /// @dev 设置参数
     /// @param theta 手续费，万分制。20
