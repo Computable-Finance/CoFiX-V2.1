@@ -15,8 +15,11 @@ describe("CoFiXRouter", function() {
             cofixController,
             cofixVaultForStaking,
             cofixGovernance,
+            nestPriceFacade,
+
             usdt,
-            pair
+            nest,
+            usdtPair
         } = await deployer.deploy();
 
         const showReceipt = async function(receipt) {
@@ -59,16 +62,16 @@ describe("CoFiXRouter", function() {
                 eth: toDecimal(await ethers.provider.getBalance(account)),
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 cofi: toDecimal(await cofi.balanceOf(account)),
-                xtoken: toDecimal(await pair.balanceOf(account)),
-                staked: toDecimal(await cofixVaultForStaking.balanceOf(pair.address, account)),
-                earned: toDecimal(await cofixVaultForStaking.earned(pair.address, account))
+                xtoken: toDecimal(await usdtPair.balanceOf(account)),
+                staked: toDecimal(await cofixVaultForStaking.balanceOf(usdtPair.address, account)),
+                earned: toDecimal(await cofixVaultForStaking.earned(usdtPair.address, account))
             };
         }
         const getStatus = async function() {
-            let pairStatus = await getAccountInfo(pair);
-            let p = await cofixController.latestPriceView(usdt.address);
-            let navps = toDecimal(await pair.calcNAVPerShare(
-                await ethers.provider.getBalance(pair.address),
+            let pairStatus = await getAccountInfo(usdtPair);
+            let p = await nestPriceFacade.latestPriceView(usdt.address);
+            let navps = toDecimal(await usdtPair.calcNAVPerShare(
+                await ethers.provider.getBalance(usdtPair.address),
                 //toBigInt(pairStatus.eth), 
                 toBigInt(pairStatus.usdt, 6), 
                 toBigInt(1), 
@@ -77,7 +80,7 @@ describe("CoFiXRouter", function() {
             return {
                 height: await ethers.provider.getBlockNumber(),
                 navps: navps,
-                pair: pairStatus,
+                usdtPair: pairStatus,
                 owner: await getAccountInfo(owner),
                 addr1: await getAccountInfo(addr1),
                 addr2: await getAccountInfo(addr2)
@@ -92,6 +95,7 @@ describe("CoFiXRouter", function() {
             console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
             // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
             let receipt = await cofixRouter.addLiquidity(
+                usdtPair.address,
                 usdt.address,
                 toBigInt(2),
                 toBigInt(6000, 6),
@@ -106,8 +110,8 @@ describe("CoFiXRouter", function() {
             console.log(status);
 
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
-            expect(status.pair.eth).to.equal(('2.000000000000000000'));
-            expect(status.pair.usdt).to.equal('6000.000000');
+            expect(status.usdtPair.eth).to.equal(('2.000000000000000000'));
+            expect(status.usdtPair.usdt).to.equal('6000.000000');
             expect(status.owner.staked).to.equal('0.000000000000000000');
             expect(status.owner.usdt).to.equal('9994000.000000');
         }
@@ -116,6 +120,7 @@ describe("CoFiXRouter", function() {
             console.log('2. 添加2eth的流动性并存入收益池，预期获得2.000000000000000000份额');
             // 2. 添加2eth的流动性并存入收益池，预期获得2.000000000000000000份额
             let receipt = await cofixRouter.addLiquidityAndStake(
+                usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
                 toBigInt('6000.000000', 6),
@@ -131,8 +136,8 @@ describe("CoFiXRouter", function() {
             console.log(status);
 
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
-            expect(status.pair.eth).to.equal(('4.000000000000000000'));
-            expect(status.pair.usdt).to.equal('12000.000000');
+            expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
+            expect(status.usdtPair.usdt).to.equal('12000.000000');
             expect(status.owner.staked).to.equal('2.000000000000000000');
             expect(status.owner.usdt).to.equal('9988000.000000');
 
@@ -142,8 +147,8 @@ describe("CoFiXRouter", function() {
             console.log(status);
             
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
-            expect(status.pair.eth).to.equal(('4.000000000000000000'));
-            expect(status.pair.usdt).to.equal('12000.000000');
+            expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
+            expect(status.usdtPair.usdt).to.equal('12000.000000');
             expect(status.owner.staked).to.equal('2.000000000000000000');
             expect(status.owner.usdt).to.equal('9988000.000000');
             expect(status.owner.earned).to.equal('0.200000000000000000');
@@ -154,6 +159,7 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('3. addr1添加2eth的流动性并存入收益池，预期获得2000000000000000000份额');
             let receipt = await cofixRouter.connect(addr1).addLiquidityAndStake(
+                usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
                 toBigInt('6000.000000', 6),
@@ -167,8 +173,8 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
 
-            expect(status.pair.eth).to.equal(('6.000000000000000000'));
-            expect(status.pair.usdt).to.equal('18000.000000');
+            expect(status.usdtPair.eth).to.equal(('6.000000000000000000'));
+            expect(status.usdtPair.usdt).to.equal('18000.000000');
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.owner.staked).to.equal('2.000000000000000000');
             expect(status.owner.usdt).to.equal('4988000.000000');
@@ -209,13 +215,13 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
             
-            expect(toDecimal(toBigInt(status.pair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
+            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691797838'));
-            console.log('6. addr2使用2691.795687兑换eth');
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
+            console.log('6. addr2使用2691.421431兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
                 usdt.address,
-                BigInt('2691797838'),
+                BigInt('2691421431'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址
@@ -232,13 +238,17 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('7. withdraw');
-            let receipt = await cofixVaultForStaking.withdraw(pair.address, toBigInt('2'));
+            let receipt = await cofixVaultForStaking.withdraw(usdtPair.address, toBigInt('2'));
             status = await getStatus();
             console.log(status);
 
             console.log('8. 取回流动性');
-            await pair.approve(cofixRouter.address, toBigInt('10000000'));
+            console.log({
+                nvps: (await usdtPair.getNAVPerShare(toBigInt(1), toBigInt(2700, 6))).toString()
+            });
+            await usdtPair.approve(cofixRouter.address, toBigInt('10000000'));
             receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
+                usdtPair.address,
                 // 要移除的token对
                 //address token,
                 usdt.address,
@@ -257,13 +267,14 @@ describe("CoFiXRouter", function() {
             console.log(status);
 
             console.log('8. addr1 withdraw');
-            receipt = await cofixVaultForStaking.connect(addr1).withdraw(pair.address, toBigInt('2'));
+            receipt = await cofixVaultForStaking.connect(addr1).withdraw(usdtPair.address, toBigInt('2'));
             status = await getStatus();
             console.log(status);
 
             console.log('9. addr1 取回流动性');
-            await pair.connect(addr1).approve(cofixRouter.address, toBigInt('10000000'));
+            await usdtPair.connect(addr1).approve(cofixRouter.address, toBigInt('10000000'));
             receipt = await cofixRouter.connect(addr1).removeLiquidityGetTokenAndETH(
+                usdtPair.address,
                 // 要移除的token对
                 //address token,
                 usdt.address,
@@ -281,5 +292,25 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
         }
+
+        if (true) {
+            await usdt.approve(cofixRouter.address, toBigInt(1000000));
+            let receipt = await cofixRouter.addLiquidity(
+                usdtPair.address,
+                usdt.address,
+                toBigInt(2),
+                toBigInt(6000, 6),
+                toBigInt(0.9),
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('2010000000000000000')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        //console.log(await cofixRouter.getRouterPath(usdt.address, cofi.address));
     });
 });

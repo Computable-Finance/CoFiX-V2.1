@@ -25,6 +25,8 @@ exports.deploy = async function () {
     // cofixVaultForStaking: 0x69E6CAae16Acf21134D839835C5f8bC9F2522680
     // pair: 0x9228A336bb91bFf6A1Ff54Ded0DE514D22dAED52
 
+    console.log('** 开始部署合约 ropsten@202106161.js **');
+
     //const cnode = await TestERC20.deploy('CNode', 'CNode', 18);
     const cnode = await TestERC20.attach('0x2dC52e1FcD06a43285c5D7f5E833131b1c411852');
     console.log('cnode: ' + cnode.address);

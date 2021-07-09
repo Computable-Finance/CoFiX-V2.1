@@ -1,17 +1,13 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+# ICoFiXController
 
-pragma solidity ^0.8.6;
+## 1. Interface Description
+    This interface defines the methods for price call entry
 
-import "./INestPriceFacade.sol";
+## 2. Method Description
 
-/// @dev This interface defines the methods for price call entry
-interface ICoFiXController {
+### 2.1. 查询价格
 
-    // Calc variance of price and K in CoFiX is very expensive
-    // We use expected value of K based on statistical calculations here to save gas
-    // In the near future, NEST could provide the variance of price directly. We will adopt it then.
-    // We can make use of `data` bytes in the future
-
+```javascript
     /// @dev 查询价格
     /// @param tokenAddress 目标token地址
     /// @param payback 手续费退回接收地址
@@ -26,7 +22,11 @@ interface ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     );
+```
 
+### 2.2. Calc variance of price and K
+
+```javascript
     /// @dev Calc variance of price and K in CoFiX is very expensive
     /// We use expected value of K based on statistical calculations here to save gas
     /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
@@ -46,13 +46,21 @@ interface ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     );
+```
 
+### 2.3. Calc K value
+
+```javascript
     /// @notice Calc K value
     /// @param sigmaSQ The square of the volatility (18 decimal places).
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value(18 decimal places).
     function calcK(uint sigmaSQ, uint bn) external view returns (uint k);
+```
 
+### 2.4. 查询最新价格信息
+
+```javascript
     /// @dev 查询最新价格信息
     /// @param tokenAddress token地址
     /// @param payback 退回的手续费接收地址
@@ -73,4 +81,4 @@ interface ICoFiXController {
         uint avgPriceTokenAmount,
         uint sigmaSQ
     );
-}
+```

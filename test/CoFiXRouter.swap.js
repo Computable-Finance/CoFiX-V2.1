@@ -16,9 +16,10 @@ describe("CoFiXRouter", function() {
             cofixVaultForStaking,
             cofixGovernance,
             nestPriceFacade,
-            
+
             usdt,
-            usdtPair
+            usdtPair,
+            nestPair
         } = await deployer.deploy();
 
         const showReceipt = async function(receipt) {
@@ -86,9 +87,6 @@ describe("CoFiXRouter", function() {
             };
         }
 
-        await cofixVaultForStaking.setConfig({ cofiRate: '2000000000000000000' });
-        //await cofixVaultForStaking.initStakingChannel(usdtPair.address, 10000);
-        await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [10000]);
         let status;
         let p;
         await usdt.transfer(owner.address, toBigInt(10000000, 6));
@@ -108,7 +106,6 @@ describe("CoFiXRouter", function() {
                 }
             );
             await showReceipt(receipt);
-
             status = await getStatus();
             console.log(status);
 
@@ -199,7 +196,8 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('5. addr2使用1eth兑换usdt');
 
-            let receipt = await cofixRouter.connect(addr2).swapExactETHForTokens(
+            let receipt = await cofixRouter.connect(addr2).swap(
+                '0x0000000000000000000000000000000000000000',
                 // 目标token地址
                 usdt.address,
                 // eth数量
@@ -219,18 +217,20 @@ describe("CoFiXRouter", function() {
             console.log(status);
             
             expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
-            // 1. 第一次交易
-            // Et = 7
-            // k0 = 3000
-            // Ut = 15308.204313
-            // Pt = 2700
-            // 
-            // D0 = (7* 3000 - 15308.204313) / (3000 + 2700) = 0.9985606468421052
 
             await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
+
+            let e = await usdtPair.estimate(
+                '6002353106758695759', 
+                '18000000000', 
+                '1000000000000000000', 
+                '2700000000'
+            );
             console.log('6. addr2使用2691.421431兑换eth');
-            receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
+            console.log('estimate: ' + e);
+            receipt = await cofixRouter.connect(addr2).swap(
                 usdt.address,
+                '0x0000000000000000000000000000000000000000',
                 BigInt('2691421431'),
                 BigInt('100'),
                 addr2.address,
@@ -244,126 +244,92 @@ describe("CoFiXRouter", function() {
 
             status = await getStatus();
             console.log(status);
-            console.log('reward: ' + await cofixVaultForStaking.calcReward(usdtPair.address));
-            // 2. 第二次交易
-            // Et = 6.006068035345306275
-            // k0 = 3000
-            // Ut = 18000.000000
-            // Pt = 2700
-            // 
-            // D1 = (6.006068035345306275* 3000 - 18000.000000) / (3000 + 2700) = 0.003193702813319728
-            // 
-            // vt = (0.9985606468421052 - 0.003193702813319728)/ 0.9985606468421052 = 0.9968016936943993
-            // 
-            // X = 0 + 0.9985606468421052 * 0.1 * (2 + 1) = 0.2995681940526316
-            // 
-            // Zt = 0.2995681940526316 * 0.9968016936943993 = 0.2986100832086356
-            // 
-            // Yt = 0 + 0.9985606468421052 * 0.1 * (2 + 1) - 0.2986100832086356 = 0.0009581108439959962
-            // 
-            // mined = 0.2986100832086356 * 0.9 = 0.26874907488777205
-            // 
-            // cnodeReward = 0.02986100832086356
-            // fw = 0.014930504160431781
         }
 
         if (true) {
-            console.log('7. owner 领取分红');
-            let receipt = await cofixVaultForStaking.getReward(usdtPair.address);
-            await showReceipt(receipt);
+            console.log('7. withdraw');
+            let receipt = await cofixVaultForStaking.withdraw(usdtPair.address, toBigInt('2'));
             status = await getStatus();
             console.log(status);
+            console.log({
+                nvps: (await usdtPair.getNAVPerShare(toBigInt(1), toBigInt(2700, 6))).toString()
+            });
+            console.log({
+                nvps: (await usdtPair.calcNAVPerShare('6002353106758695759', '18000000000', toBigInt(1), toBigInt(2700, 6))).toString()
+            });
 
-            console.log('8. 等待一个区块后')
-            await usdt.transfer(owner.address, 0);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('9. addr2使用1eth兑换usdt');
-
-            let receipt = await cofixRouter.connect(addr2).swapExactETHForTokens(
-                // 目标token地址
+            console.log('8. 取回流动性');
+            await usdtPair.approve(cofixRouter.address, toBigInt('10000000'));
+            receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
+                usdtPair.address,
+                // 要移除的token对
+                //address token,
                 usdt.address,
-                // eth数量
-                BigInt('1000000000000000000'),
-                // 预期获得的token的最小数量
-                BigInt('100'),
+                // 移除的额度
+                BigInt('3999999999000000000'),//uint liquidity,
+                // 预期最少可以获得的eth数量
+                BigInt('1'),//uint amountETHMin,
                 // 接收地址
-                addr2.address,
-                // 出矿接收地址
-                addr2.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('1010000000000000000')
-                }
-            )
-            await showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-            
-            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
-            // 3. 第三次交易
-            // Et = 7.006068035345306275
-            // k0 = 3000
-            // Ut = 15308.204313
-            // Pt = 2700
-            // 
-            // D2 = (7.006068035345306275 * 3000 - 15308.204313) / (3000 + 2700) = 1.0017543496554249
-            // 
-            // vt = 0
-            // 
-            // X = 0.0009581108439959962 + 0.003193702813319728 * 0.1 * (3 + 1) = 0.0022355919693238875
-            // 
-            // Zt = 0.0022355919693238875 * 0 = 0
-            // 
-            // Yt = 0.0009581108439959962 + 0.003193702813319728 * 0.1 * (3 + 1) - 0 = 0.0022355919693238875
-            // 
-            // mined = 0 * 0.9 = 0
-            // 
-            // cnodeReward = 0
-            // fw = 0
-
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
-            console.log('10. addr2使用2691.421431兑换eth');
-            receipt = await cofixRouter.connect(addr2).swapExactTokensForETH(
-                usdt.address,
-                BigInt('2691421431'),
-                BigInt('100'),
-                addr2.address,
-                // 出矿接收地址
-                addr2.address,
+                owner.address, //address to,
+                // 截止时间
                 BigInt('1800000000000'), {
                     value: BigInt('10000000000000000')
                 }
             );
-            await showReceipt(receipt);
-
             status = await getStatus();
             console.log(status);
 
-            // 4. 第四次交易
-            // Et = 6.012136070690612550
-            // k0 = 3000
-            // Ut = 18000.000000
-            // Pt = 2700
-            // 
-            // D3 = (6.012136070690612550 * 3000 - 18000.000000) / (3000 + 2700) = 0.006387405626638179
-            // 
-            // vt = (1.0017543496554249 - 0.006387405626638179) / 1.0017543496554249 = 0.9936237804918588
-            // 
-            // X = 0.0022355919693238875 + 1.0017543496554249 * 0.1 * (2 + 1) = 0.30276189686595134
-            // 
-            // Zt = 0.30276189686595134 * 0.9936237804918588 = 0.30083142055283285
-            // 
-            // Yt = 0.0022355919693238875 + 1.0017543496554249 * 0.1 * (2 + 1) - 0.30083142055283285 = 0.0019304763131184899
-            // 
-            // mined = 0.30083142055283285 * 0.9 = 0.27074827849754957
-            // 
-            // cnodeReward = 0.030083142055283285
-            // fw = 0.015041571027641643
+            console.log('8. addr1 withdraw');
+            receipt = await cofixVaultForStaking.connect(addr1).withdraw(usdtPair.address, toBigInt('2'));
+            status = await getStatus();
+            console.log(status);
 
-            console.log('k: ' + await cofixController.calcK('9988776', 20));
+            console.log('9. addr1 取回流动性');
+            await usdtPair.connect(addr1).approve(cofixRouter.address, toBigInt('10000000'));
+            receipt = await cofixRouter.connect(addr1).removeLiquidityGetTokenAndETH(
+                usdtPair.address,
+                // 要移除的token对
+                //address token,
+                usdt.address,
+                // 移除的额度
+                BigInt('2000000000000000000'),//uint liquidity,
+                // 预期最少可以获得的eth数量
+                BigInt('1'),//uint amountETHMin,
+                // 接收地址
+                addr1.address, //address to,
+                // 截止时间
+                BigInt('1800000000000'), {
+                    value: BigInt('10000000000000000')
+                }
+            );
+            status = await getStatus();
+            console.log(status);
         }
+
+        if (true) {
+            await usdt.approve(cofixRouter.address, toBigInt(1000000));
+            let receipt = await cofixRouter.addLiquidity(
+                usdtPair.address,
+                usdt.address,
+                toBigInt(2),
+                toBigInt(6000, 6),
+                toBigInt(0.9),
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('2010000000000000000')
+                }
+            );
+            await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        let tr = await cofixRouter.getTradeReward(cnode.address);
+        console.log('tradeReward: ' + tr);
+
+        let ic = await usdtPair.impactCostForBuyInETH(toBigInt(99999));
+        console.log('ic: ' + ic);
+        ic = await nestPair.impactCostForSellOutETH(toBigInt(99999));
+        console.log('ic: ' + ic);
     });
 });

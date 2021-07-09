@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
 import "./interfaces/ICoFiXGovernance.sol";
+
 import "./CoFiXMapping.sol";
 
 /// @dev CoFiX governance contract
 contract CoFiXGovernance is CoFiXMapping, ICoFiXGovernance {
 
     /// @dev To support open-zeppelin/upgrades
-    /// @param governance INestGovernance implementation contract address
+    /// @param governance ICoFiXGovernance implementation contract address
     function initialize(address governance) public override {
 
-        // While initialize NestGovernance, nestGovernanceAddress is address(this),
-        // So must let nestGovernanceAddress to 0
+        // While initialize CoFiXGovernance, newGovernance is address(this),
+        // So must let newGovernance to 0
         require(governance == address(0), "CoFiXGovernance:!address");
 
-        // nestGovernanceAddress is address(this)
+        // newGovernance is address(this)
         super.initialize(address(this));
 
         // Add msg.sender to governance

@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
-import "./libs/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXVaultForStaking.sol";
 import "./interfaces/ICoFiXRouter.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
+
 import "hardhat/console.sol";
 
 /// @dev 存入做市份额或者CNode，领取CoFi出矿
 contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
-    // 账户信息
+    /// @dev 账户信息
     struct Account {
         // 账户锁仓余额
         uint128 balance;
@@ -22,7 +24,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         uint128 rewardCursor;
     }
     
-    // Stake通道信息
+    /// @dev Stake通道信息
     struct StakeChannel{
 
         // 配置
@@ -46,13 +48,6 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         mapping(address=>Account) accounts;
     }
     
-    // Address of CoFiToken
-    address immutable COFI_TOKEN_ADDRESS;
-    // Address of CoFiNode
-    address immutable CNODE_TOKEN_ADDRESS;
-    // TODO: 确定CoFi创世区块号
-    // Genesis block number of CoFi
-    uint constant COFI_GENESIS_BLOCK = 0;
     // 总出矿速度权重
     uint constant TOTAL_COFI_WEIGHT = 100000;
 
@@ -64,16 +59,12 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     mapping(address=>StakeChannel) _channels;
     
     /// @dev Create CoFiXVaultForStaking
-    /// @param cofiToken CoFi TOKEN
-    /// @param cnodeToken CNode TOKEN
-    constructor (address cofiToken, address cnodeToken) {
-        COFI_TOKEN_ADDRESS = cofiToken;
-        CNODE_TOKEN_ADDRESS = cnodeToken;
+    constructor () {
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(nestGovernanceAddress) when overriding, and override method without onlyGovernance
-    /// @param newGovernance INestGovernance implementation contract address
+    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
+    /// @param newGovernance ICoFiXGovernance implementation contract address
     function update(address newGovernance) public override {
         super.update(newGovernance);
         _cofixRouter = ICoFiXGovernance(newGovernance).getCoFiXRouterAddress();
@@ -96,17 +87,17 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         return _config;
     }
 
-    // function batchSetPoolWeight(address[] memory pools, uint256[] memory weights) external override onlyGovernance {
-    //     uint256 cnt = pools.length;
-    //     require(cnt == weights.length, "CVaultForLP: mismatch len");
-    //     for (uint256 i = 0; i < cnt; i++) {
-    //         require(pools[i] != address(0), "CVaultForTrader: invalid pool");
-    //         require(weights[i] <= WEIGHT_BASE, "CVaultForLP: invalid weight");
-    //         require(poolInfo[pools[i]].state == POOL_STATE.ENABLED, "CVaultForLP: pool not enabled"); // only set weight if pool is enabled
-    //         poolInfo[pools[i]].weight = weights[i];
-    //     }
-    //     // governance should ensure total weights equal to WEIGHT_BASE
-    // }
+    /// @dev 初始化出矿权重
+    /// @param xtokens 份额代币地址数组
+    /// @param weights 出矿权重数组
+    function batchSetPoolWeight(address[] memory xtokens, uint[] memory weights) external override onlyGovernance {
+        uint cnt = xtokens.length;
+        require(cnt == weights.length, "CoFiXVaultForStaking: mismatch len");
+        for (uint i = 0; i < cnt; ++i) {
+            require(xtokens[i] != address(0), "CoFiXVaultForStaking: invalid xtoken");
+            _channels[xtokens[i]].cofiWeight = weights[i];
+        }
+    }
 
     /// @dev 初始化锁仓参数
     /// @param pair 目标交易对
@@ -207,7 +198,6 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 
         // 更新总锁仓量
         channel.totalStaked -= amount;
-        // TODO: _getReward()方法中已经有一次写入，考虑合并优化
         // 更新用户锁仓量
         account.balance = uint128(uint(account.balance) - amount);
         channel.accounts[msg.sender] = account;
@@ -330,7 +320,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     // CoFi ore drawing attenuation interval. 2400000 blocks, about one year
     uint constant COFI_REDUCTION_SPAN = 2400000;
     // The decay limit of CoFi ore drawing becomes stable after exceeding this interval. 24 million blocks, about 4 years
-    uint constant COFI_REDUCTION_LIMIT = 9600000; // NEST_REDUCTION_SPAN * 4;
+    uint constant COFI_REDUCTION_LIMIT = 9600000; // COFI_REDUCTION_SPAN * 4;
     // Attenuation gradient array, each attenuation step value occupies 16 bits. The attenuation value is an integer
     uint constant COFI_REDUCTION_STEPS = 0x280035004300530068008300A300CC010001400190;
         // 0

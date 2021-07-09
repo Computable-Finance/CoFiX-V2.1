@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.6;
 
-//import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./libs/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // CoFiToken with Governance. It offers possibilities to adopt off-chain gasless governance infra.
 contract CoFiToken is ERC20("CoFi Token", "CoFi") {
