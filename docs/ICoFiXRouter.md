@@ -11,8 +11,8 @@
     /// @dev 注册交易对
     /// @param token0 交易对token0。（0地址表示eth）
     /// @param token1 交易对token1。（0地址表示eth）
-    /// @param pair 交易对资金池
-    function registerPair(address token0, address token1, address pair) external;
+    /// @param pool 交易对资金池
+    function registerPair(address token0, address token1, address pool) external;
 ```
 
 ### 2.2. 根据token地址获取交易对
@@ -104,8 +104,8 @@
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
     /// @param  to The target address receiving the Token
     /// @param  deadline The dealine of this request
-    /// @return amountToken The real amount of Token transferred from the pool
     /// @return amountETH The real amount of ETH transferred from the pool
+    /// @return amountToken The real amount of Token transferred from the pool
     function removeLiquidityGetTokenAndETH(
         address pool,
         address token,
@@ -113,7 +113,7 @@
         uint amountETHMin,
         address to,
         uint deadline
-    ) external payable returns (uint amountToken, uint amountETH);
+    ) external payable returns (uint amountETH, uint amountToken);
 ```
 
 ### 2.8. Trader swap exact amount of ETH for ERC20 Tokens
@@ -206,8 +206,8 @@
 ### 2.12. 获取目标pair的交易挖矿分成
 
 ```javascript
-    /// @dev 获取目标pair的交易挖矿分成
-    /// @param pair 目标pair地址
-    /// @return 目标pair的交易挖矿分成
-    function getTradeReward(address pair) external view returns (uint);
+    /// @dev 获取目标xtoken的交易挖矿分成
+    /// @param xtoken 目标xtoken地址
+    /// @return 目标xtoken的交易挖矿分成
+    function getTradeReward(address xtoken) external view returns (uint);
 ```

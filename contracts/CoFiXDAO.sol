@@ -52,7 +52,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     /// @dev Modify configuration
     /// @param config Configuration object
-    function setConfig(Config memory config) external override onlyGovernance {
+    function setConfig(Config calldata config) external override onlyGovernance {
         _config = config;
     }
 
@@ -109,27 +109,6 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         //require(pool != address(0));
         return address(this).balance;
     }
-
-    // /// @dev Pay
-    // /// @param pool Destination pool. Indicates which ntoken to pay with
-    // /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    // /// @param to Address to receive
-    // /// @param value Amount to receive
-    // function pay(address pool, address tokenAddress, address to, uint value) external override {
-    //     //require(pool != address(0));
-    //     require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
-
-    //     // Pay eth from ledger
-    //     if (tokenAddress == address(0)) {
-    //         // pay
-    //         payable(to).transfer(value);
-    //     }
-    //     // Pay token
-    //     else {
-    //         // pay
-    //         TransferHelper.safeTransfer(tokenAddress, to, value);
-    //     }
-    // }
 
     /// @dev Settlement
     /// @param pool Destination pool. Indicates which ntoken to pay with

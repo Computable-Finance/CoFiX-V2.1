@@ -62,16 +62,16 @@ interface ICoFiXPool {
     /// @param to 资金接收地址
     /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
-    /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
+    /// @return amountTokenOut 获得的token数量
     function burn(
         address token,
         address to, 
         uint liquidity, 
         address payback
     ) external payable returns (
-        uint amountTokenOut, 
-        uint amountETHOut
+        uint amountETHOut,
+        uint amountTokenOut 
     );
     
     /// @dev 执行兑换交易

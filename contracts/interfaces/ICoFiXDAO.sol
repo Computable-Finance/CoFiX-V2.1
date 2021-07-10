@@ -28,7 +28,7 @@ interface ICoFiXDAO {
 
     /// @dev Modify configuration
     /// @param config Configuration object
-    function setConfig(Config memory config) external;
+    function setConfig(Config calldata config) external;
 
     /// @dev Get configuration
     /// @return Configuration object
@@ -65,13 +65,6 @@ interface ICoFiXDAO {
     /// @dev The function returns eth rewards of specified ntoken
     /// @param pool Destination pool
     function totalETHRewards(address pool) external view returns (uint);
-
-    // /// @dev Pay
-    // /// @param pool Destination pool. Indicates which ntoken to pay with
-    // /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    // /// @param to Address to receive
-    // /// @param value Amount to receive
-    // function pay(address pool, address tokenAddress, address to, uint value) external;
 
     /// @dev Settlement
     /// @param pool Destination pool. Indicates which ntoken to pay with

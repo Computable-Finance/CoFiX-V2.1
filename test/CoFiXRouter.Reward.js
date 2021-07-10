@@ -363,7 +363,7 @@ describe("CoFiXRouter", function() {
             // cnodeReward = 0.030083142055283285
             // fw = 0.015041571027641643
 
-            console.log('k: ' + await cofixController.calcK('9988776', 20));
+            //console.log('k: ' + await cofixController.calcK('9988776', 20));
         }
     });
 });

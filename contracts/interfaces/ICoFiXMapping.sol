@@ -63,10 +63,10 @@ interface ICoFiXMapping {
     /// @dev Registered address. The address registered here is the address accepted by CoFiX system
     /// @param key The key
     /// @param addr Destination address. 0 means to delete the registration information
-    function registerAddress(string memory key, address addr) external;
+    function registerAddress(string calldata key, address addr) external;
 
     /// @dev Get registered address
     /// @param key The key
     /// @return Destination address. 0 means empty
-    function checkAddress(string memory key) external view returns (address);
+    function checkAddress(string calldata key) external view returns (address);
 }

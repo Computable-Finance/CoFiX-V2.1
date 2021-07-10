@@ -71,8 +71,8 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     function init (
         address governance,
         uint index,
-        address[] memory tokens,
-        uint96[] memory bases
+        address[] calldata tokens,
+        uint96[] calldata bases
     ) external {
         super.initialize(governance);
         _unlocked = 1;
@@ -210,16 +210,16 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     /// @param to 资金接收地址
     /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
-    /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
+    /// @return amountTokenOut 获得的token数量
     function burn(
         address token,
         address to, 
         uint liquidity, 
         address payback
     ) external payable override check returns (
-        uint amountTokenOut, 
-        uint amountETHOut
+        uint amountETHOut,
+        uint amountTokenOut 
     ) { 
         // 1. 退回多余的eth
         if (msg.value > 0) {

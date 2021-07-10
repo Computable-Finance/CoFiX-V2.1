@@ -3,6 +3,7 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXPair.sol";
@@ -20,9 +21,12 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
+    // 冲击成本基础规模
     uint constant VOL_BASE = 50 ether;
-    uint256 constant C_BUYIN_ALPHA = 0; // α=0
-    uint256 constant C_BUYIN_BETA = 20000000000000; // β=2e-05*1e18
+    // α=0
+    uint constant C_BUYIN_ALPHA = 0; 
+    // β=2e-05*1e18
+    uint constant C_BUYIN_BETA = 20000000000000; 
 
     // 目标代币地址
     address public TOKEN_ADDRESS; 
@@ -57,7 +61,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Lock flag
     uint8 _unlocked;
 
-    // TODO: 将CoFiXController合并到CoFiXRouter中
     // Address of CoFiXController
     address _cofixController;
 
@@ -83,8 +86,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @param initToken1Amount 初始资产比例 - TOKEN
     function init(
         address governance,
-        string memory name_, 
-        string memory symbol_, 
+        string calldata name_, 
+        string calldata symbol_, 
         address tokenAddress, 
         uint48 initToken0Amount, 
         uint48 initToken1Amount
@@ -235,16 +238,16 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @param to 资金接收地址
     /// @param liquidity 需要移除的流动性份额
     /// @param payback 退回的手续费接收地址
-    /// @return amountTokenOut 获得的token数量
     /// @return amountETHOut 获得的eth数量
+    /// @return amountTokenOut 获得的token数量
     function burn(
         address token,
         address to, 
         uint liquidity, 
         address payback
     ) external payable override check returns (
-        uint amountTokenOut, 
-        uint amountETHOut
+        uint amountETHOut,
+        uint amountTokenOut 
     ) { 
         require(token == TOKEN_ADDRESS, "CoFiXPair: invalid token address");
         // 1. 调用预言机
@@ -377,6 +380,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 4. 转token给用户
         TransferHelper.safeTransfer(token, to, amountTokenOut);
 
+        // TODO: 如果不检查重入，可能存在通过重入来挖矿的行为
         // 5. 挖矿逻辑
         // 【注意】Pt此处没有引入K值，后续需要引入
         mined = _cofiMint(_calcD(

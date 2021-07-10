@@ -23,7 +23,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     // Address of CoFiXVaultForStaing
     address _cofixVaultForStaking;
 
-    // Mapping for trade pairs. keccak256(token0, token1)=>pair
+    // Mapping for trade pairs. keccak256(token0, token1)=>pool
     mapping(bytes32=>address) _pairs;
 
     // Mapping for trade paths. keccak256(token0, token1) = > path
@@ -33,7 +33,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     constructor () {
     }
 
-    // 验证时间没有超过截止时间
+    // 验证时间是否超过截止时间
     modifier ensure(uint deadline) {
         require(block.timestamp <= deadline, "CoFiXRouter: EXPIRED");
         _;
@@ -141,9 +141,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external override payable ensure(deadline) returns (address xtoken, uint liquidity)
     {
-        // 0. 找到交易对合约
-        //address pair = pool; //_pairFor(address(0), token);
-        
         // 1. 转入资金
         // 收取token
         TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
@@ -178,9 +175,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external override payable ensure(deadline) returns (address xtoken, uint liquidity)
     {
-        // 0. 找到交易对合约
-        //address pair = pool; //_pairFor(address(0), token);
-        
         // 1. 转入资金
         // 收取token
         TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
@@ -206,8 +200,8 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
     /// @param  to The target address receiving the Token
     /// @param  deadline The dealine of this request
-    /// @return amountToken The real amount of Token transferred from the pool
     /// @return amountETH The real amount of ETH transferred from the pool
+    /// @return amountToken The real amount of Token transferred from the pool
     function removeLiquidityGetTokenAndETH(
         address pool,
         // 要移除的token对
@@ -220,17 +214,16 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address to,
         // 截止时间
         uint deadline
-    ) external override payable ensure(deadline) returns (uint amountToken, uint amountETH) 
+    ) external override payable ensure(deadline) returns (uint amountETH, uint amountToken) 
     {
-        // 0. 找到交易对
-        //address pair =  pool; //_pairFor(address(0), token);
+        // 0. 找到份额代币
         address xtoken = ICoFiXPool(pool).getXToken(token);
 
         // 1. 转入份额
         TransferHelper.safeTransferFrom(xtoken, msg.sender, pool, liquidity);
 
         // 2. 移除流动性并返还资金
-        (amountToken, amountETH) = ICoFiXPool(pool).burn {
+        (amountETH, amountToken) = ICoFiXPool(pool).burn {
             value: msg.value
         } (token, to, liquidity, msg.sender);
 
@@ -288,13 +281,13 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external override payable ensure(deadline) returns (uint amountOut)
     {
-        // 0. 找到交易对
-        address pair = _pairFor(address(0), token);
+        // 0. 找到交易对资金池
+        address pool = _pairFor(address(0), token);
 
         // 1. 转入token并执行交易
-        TransferHelper.safeTransferFrom(token, msg.sender, pair, amountIn);
+        TransferHelper.safeTransferFrom(token, msg.sender, pool, amountIn);
         uint mined;
-        (amountOut, mined) = ICoFiXPool(pair).swap {
+        (amountOut, mined) = ICoFiXPool(pool).swap {
             value: msg.value
         } (token, address(0), amountIn, to, msg.sender);
 
@@ -324,17 +317,17 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external override payable ensure(deadline) returns (uint amountOut)
     {
-        // 0. 找到交易对
-        address pair = _pairFor(src, dest);
+        // 0. 找到交易对资金池
+        address pool = _pairFor(src, dest);
 
         // 1. 转入token并执行交易
         if (src != address(0)) {
-            TransferHelper.safeTransferFrom(src, msg.sender, pair, amountIn);
+            TransferHelper.safeTransferFrom(src, msg.sender, pool, amountIn);
         }
 
         // 2. 执行兑换交易
         uint mined;
-        (amountOut, mined) = ICoFiXPool(pair).swap {
+        (amountOut, mined) = ICoFiXPool(pool).swap {
             value: msg.value
         } (src, dest, amountIn, to, msg.sender);
 
@@ -398,10 +391,10 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         // 定位第一个交易对
         address token0 = path[0];
         address token1 = path[1];
-        address pair = _pairFor(token0, token1);
+        address pool = _pairFor(token0, token1);
         // 将资金转入第一个交易对
         if (token0 != address(0)) {
-            TransferHelper.safeTransferFrom(token0, to, pair, amountIn);
+            TransferHelper.safeTransferFrom(token0, to, pool, amountIn);
         }
 
         uint mined;
@@ -423,7 +416,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // A: 由于执行入口在CoFiXRouter，CoFiXRouter的代理地址已经被读取，这会让后续的读取gas消耗降低
             // 因此后面通过receive()转账到CoFiXRouter的gas消耗会降低而不至于出错，因此此时openzeeplin
             // 的可升级方案不会导致从资金池转eth到CoFiXRouter失败的问题。
-            (amountIn, mined) = ICoFiXPool(pair).swap {
+            (amountIn, mined) = ICoFiXPool(pool).swap {
                 value: address(this).balance
             } (token0, token1, amountIn, token1 == address(0) ? address(this) : recv, address(this));
 
@@ -440,10 +433,11 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // 切换到路由路径中的下一个交易对
             token0 = token1;
             token1 = next;
-            pair = recv;
+            pool = recv;
         }
     }
 
+    // 挖矿分成
     function _mint(uint mined, address rewardTo) private {
         if (mined > 0) {
             uint cnodeReward = mined / 10;
@@ -454,12 +448,12 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         }
     }
 
-    /// @dev 获取目标pair的交易挖矿分成
-    /// @param pair 目标pair地址
-    /// @return 目标pair的交易挖矿分成
-    function getTradeReward(address pair) external view override returns (uint) {
+    /// @dev 获取目标xtoken的交易挖矿分成
+    /// @param xtoken 目标xtoken地址
+    /// @return 目标xtoken的交易挖矿分成
+    function getTradeReward(address xtoken) external view override returns (uint) {
         // 只有CNode有交易出矿分成，做市份额没有        
-        if (pair == CNODE_TOKEN_ADDRESS) {
+        if (xtoken == CNODE_TOKEN_ADDRESS) {
             return _cnodeReward;
         }
         return 0;

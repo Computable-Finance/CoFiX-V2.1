@@ -119,14 +119,14 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @dev Registered address. The address registered here is the address accepted by CoFiX system
     /// @param key The key
     /// @param addr Destination address. 0 means to delete the registration information
-    function registerAddress(string memory key, address addr) external override onlyGovernance {
+    function registerAddress(string calldata key, address addr) external override onlyGovernance {
         _registeredAddress[key] = addr;
     }
 
     /// @dev Get registered address
     /// @param key The key
     /// @return Destination address. 0 means empty
-    function checkAddress(string memory key) external view override returns (address) {
+    function checkAddress(string calldata key) external view override returns (address) {
         return _registeredAddress[key];
     }
 }
