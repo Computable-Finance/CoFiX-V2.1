@@ -89,8 +89,8 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.setConfig({
     //     cofiRate: 20000
     // });
-    // console.log('cofixVaultForStaking.initStakingChannel');
-    // await cofixVaultForStaking.initStakingChannel(pair.address, 100000, 0);
+    // console.log('cofixVaultForStaking.batchSetPoolWeight');
+    // await cofixVaultForStaking.batchSetPoolWeight([pair.address], [100000]);
 
     // console.log('cofixRouter.setConfig');
     // await cofixRouter.setConfig({

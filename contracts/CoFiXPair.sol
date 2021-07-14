@@ -16,26 +16,35 @@ import "./CoFiXERC20.sol";
 
 import "hardhat/console.sol";
 
-/// @dev 二元资金池: eth/token
+/// @dev Binary pool: eth/token
 contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
+
+    /* ******************************************************************************************
+     * Note: In order to unify the authorization entry, all transferFrom operations are carried
+     * out in the CofixRouter, and the CofixPool needs to be fixed, CofixRouter does trust and 
+     * needs to be taken into account when calculating the pool balance before and after rollover
+     * ******************************************************************************************/
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
-    // 冲击成本基础规模
+
+    // Scale of impact cost base
     uint constant VOL_BASE = 50 ether;
+
     // α=0
     uint constant C_BUYIN_ALPHA = 0; 
+
     // β=2e-05*1e18
     uint constant C_BUYIN_BETA = 20000000000000; 
 
-    // 目标代币地址
-    address public TOKEN_ADDRESS; 
+    // Target token address
+    address _tokenAddress; 
 
-    // 初始资产比例 - ETH
-    uint48 INIT_TOKEN0_AMOUNT;
+    // Initial asset ratio - eth
+    uint48 _initToken0Amount;
     
-    // 初始资产比例 - TOKEN
-    uint48 INIT_TOKEN1_AMOUNT;
+    // Initial asset ratio - token
+    uint48 _initToken1Amount;
 
     // ERC20 - name
     string public name;
@@ -49,41 +58,43 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Address of CoFiXRouter
     address _cofixRouter;
 
-    // 手续费，万分制。20
+    // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
-    // 冲击成本系数。
+    // Impact cost coefficient
     uint16 _gamma;
 
-    // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
+    // in ten thousand points. 1000
     uint32 _nt;
 
     // Lock flag
-    uint8 _unlocked;
+    uint8 _locked;
 
     // Address of CoFiXController
     address _cofixController;
 
-    // 累计出矿量
+    // Total mined
     uint112 _Y;
 
-    // 调整到平衡的交易规模
+    // Adjusting to a balanced trade size
     uint112 _D;
 
-    // 最后更新区块
+    // Last update block
     uint32 _lastblock;
 
-    // 构造函数，为了支持openzeeplin的可升级方案，需要将构造函数移到initialize方法中实现
+    // Constructor, in order to support openzeppelin's scalable scheme, 
+    // it's need to move the constructor to the initialize method
     constructor() {
     }
 
-    /// @dev init 初始化
+    /// @dev init Initialize
     /// @param governance ICoFiXGovernance implementation contract address
-    /// @param name_ 份额代币名称
-    /// @param symbol_ 份额代币代号
-    /// @param tokenAddress 资金池代币地址
-    /// @param initToken0Amount 初始资产比例 - ETH
-    /// @param initToken1Amount 初始资产比例 - TOKEN
+    /// @param name_ Name of xtoken
+    /// @param symbol_ Symbol of xtoken
+    /// @param tokenAddress Target token address
+    /// @param initToken0Amount Initial asset ratio - eth
+    /// @param initToken1Amount Initial asset ratio - token
     function init(
         address governance,
         string calldata name_, 
@@ -95,50 +106,53 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         super.initialize(governance);
         name = name_;
         symbol = symbol_;
-        _unlocked = 1;
-        TOKEN_ADDRESS = tokenAddress;
-        INIT_TOKEN0_AMOUNT = initToken0Amount;
-        INIT_TOKEN1_AMOUNT = initToken1Amount;
+        //_locked = 0;
+        _tokenAddress = tokenAddress;
+        _initToken0Amount = initToken0Amount;
+        _initToken1Amount = initToken1Amount;
     }
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
-        require(_unlocked == 1, "CoFiXPair: LOCKED");
-        _unlocked = 0;
+        require(_locked == 0, "CoFiXPair: LOCKED");
+        _locked = 1;
         _;
-        _unlocked = 1;
+        _locked = 0;
         //_update();
     }
 
-    /// @dev 设置参数
-    /// @param theta 手续费，万分制。20
-    /// @param gamma 冲击成本系数。
-    /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    /// @dev Set configuration
+    /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param gamma Impact cost coefficient
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
+    /// in ten thousand points. 1000
     function setConfig(uint16 theta, uint16 gamma, uint32 nt) external override onlyGovernance {
-        // 手续费，万分制。20
+        // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // 冲击成本系数。
+        // Impact cost coefficient
         _gamma = gamma;
-        // 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
+        // in ten thousand points. 1000
         _nt = nt;
     }
 
-    /// @dev 获取参数
-    /// @return theta 手续费，万分制。20
-    /// @return gamma 冲击成本系数。
-    /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
+    /// @dev Get configuration
+    /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return gamma Impact cost coefficient
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
+    /// in ten thousand points. 1000
     function getConfig() external override view returns (uint16 theta, uint16 gamma, uint32 nt) {
         return (_theta, _gamma, _nt);
     }
 
-    /// @dev 获取初始资产比例
-    /// @return initToken0Amount 初始资产比例 - ETH
-    /// @return initToken1Amount 初始资产比例 - TOKEN
+    /// @dev Get initial asset ratio
+    /// @return initToken0Amount Initial asset ratio - eth
+    /// @return initToken1Amount Initial asset ratio - token
     function getInitialAssetRatio() public override view returns (
         uint initToken0Amount, 
         uint initToken1Amount
     ) {
-        return (uint(INIT_TOKEN0_AMOUNT), uint(INIT_TOKEN1_AMOUNT));
+        return (uint(_initToken0Amount), uint(_initToken1Amount));
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -156,14 +170,15 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
     }
 
-    /// @dev 添加流动性并增发份额
-    /// @param token 目标token地址
-    /// @param to 份额接收地址
-    /// @param amountETH 要添加的eth数量
-    /// @param amountToken 要添加的token数量
-    /// @param payback 退回的手续费接收地址
-    /// @return xtoken 获得的流动性份额代币地址
-    /// @return liquidity 获得的流动性份额
+    /// @dev Add liquidity and mint xtoken
+    /// @param token Target token address
+    /// @param to The address to receive xtoken
+    /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
+    /// @param amountToken The amount of Token added to pool
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return xtoken The liquidity share token address obtained
+    /// @return liquidity The real liquidity or XToken minted from pool
     function mint(
         address token,
         address to,
@@ -174,28 +189,24 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         address xtoken,
         uint liquidity
     ) {
-        // 1. 验证资金的正确性
-        // 确保比例正确
-        require(token == TOKEN_ADDRESS, "CoFiXPair: invalid token address");
-        //uint initToken0Amount = uint(INIT_TOKEN0_AMOUNT);
-        //uint initToken1Amount = uint(INIT_TOKEN1_AMOUNT);
+        // 1. Check token address
+        require(token == _tokenAddress, "CoFiXPair: invalid token address");
+        // Make sure the proportions are correct
         require(
-            amountETH * uint(INIT_TOKEN1_AMOUNT) == amountToken * uint(INIT_TOKEN0_AMOUNT), 
+            amountETH * uint(_initToken1Amount) == amountToken * uint(_initToken0Amount), 
             "CoFiXPair: invalid asset ratio"
         );
 
-        // 2. 计算净值和份额
+        // 2. Calculate net worth and share
         uint total = totalSupply;
         if (total > 0) {
-            // 3. 调用预言机
-            // 计算K值
-            // 计算θ
+            // 3. Query oracle
             (
                 uint ethAmount, 
                 uint tokenAmount, 
                 //uint blockNumber, 
             ) = ICoFiXController(_cofixController).queryPrice { 
-                // 多余的部分，都作为预言机调用费用
+                // Any amount over the amountETH will be charged as the seer call fee
                 value: msg.value - amountETH
             } (
                 token,
@@ -203,43 +214,47 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             );
 
             // TODO: Pt此处没有引入K值，后续需要引入
-            // 做市没有冲击成本
-            // 当发行量不为0时，正常发行份额
+            // There are no cost shocks to market making
+            // When the circulation is not zero, the normal issue share
             liquidity = amountETH * total / _calcTotalValue(
-                // 当前eth余额，减去amountETH等于交易前eth余额
+                // To calculate the net value, we need to use the asset balance before the market making fund 
+                // is transferred. Since the ETH was transferred when CofixRouter called this method and the 
+                // Token was transferred before CofixRouter called this method, we need to deduct the amountETH 
+                // and amountToken respectively
+
+                // The current eth balance minus the amount eth equals the ETH balance before the transaction
                 address(this).balance - amountETH, 
-                // 当前token余额，减去amountToken等于交易前token余额
+                //The current token balance minus the amounttoken equals to the token balance before the transaction
                 IERC20(token).balanceOf(address(this)) - amountToken,
-                // 价格 - eth数量 
+                // Oracle price - eth amount
                 ethAmount, 
-                // 价格 - token数量
+                // Oracle price - token amount
                 tokenAmount,
-                uint(INIT_TOKEN0_AMOUNT),
-                uint(INIT_TOKEN1_AMOUNT)
+                uint(_initToken0Amount),
+                uint(_initToken1Amount)
             );
         } else {
             payable(payback).transfer(msg.value - amountETH);
-            // TODO: 确定基础份额的逻辑
             //liquidity = _calcLiquidity(amountETH, navps) - MINIMUM_LIQUIDITY;
             liquidity = amountETH - MINIMUM_LIQUIDITY;
             // permanently lock the first MINIMUM_LIQUIDITY tokens
-            // 当发行量为0时，有一个基础份额
             _mint(address(0), MINIMUM_LIQUIDITY); 
         }
 
-        // 5. 增发份额
+        // 5. Increase xtoken
         _mint(to, liquidity);
         xtoken = address(this);
         emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
-    /// @dev 移除流动性并销毁
-    /// @param token 目标token地址
-    /// @param to 资金接收地址
-    /// @param liquidity 需要移除的流动性份额
-    /// @param payback 退回的手续费接收地址
-    /// @return amountETHOut 获得的eth数量
-    /// @return amountTokenOut 获得的token数量
+    /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
+    /// @param token The address of ERC20 Token
+    /// @param to The target address receiving the Token
+    /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountETHOut The real amount of ETH transferred from the pool
+    /// @return amountTokenOut The real amount of Token transferred from the pool
     function burn(
         address token,
         address to, 
@@ -249,8 +264,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint amountETHOut,
         uint amountTokenOut 
     ) { 
-        require(token == TOKEN_ADDRESS, "CoFiXPair: invalid token address");
-        // 1. 调用预言机
+        // 1. Check token address
+        require(token == _tokenAddress, "CoFiXPair: invalid token address");
+        // 2. Query oracle
         (
             uint ethAmount, 
             uint tokenAmount, 
@@ -262,16 +278,15 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             payback
         );
 
-        // 2. 计算净值，根据净值计算等比资金
-        // 计算净值
+        // 3. Calculate the net value and calculate the equal proportion fund according to the net value
         uint ethBalance = address(this).balance;
         uint tokenBalance = IERC20(token).balanceOf(address(this));
         uint navps = 1 ether;
         uint total = totalSupply;
-        uint initToken0Amount = uint(INIT_TOKEN0_AMOUNT);
-        uint initToken1Amount = uint(INIT_TOKEN1_AMOUNT);
+        uint initToken0Amount = uint(_initToken0Amount);
+        uint initToken1Amount = uint(_initToken1Amount);
         if (total > 0) {
-            // Pt此处没有引入K值，后续需要引入
+            // TODO: Pt此处没有引入K值，后续需要引入
             navps = _calcTotalValue(
                 ethBalance, 
                 tokenBalance, 
@@ -287,36 +302,39 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         amountETHOut = navps * liquidity / 1 ether;
         amountTokenOut = amountETHOut * initToken1Amount / initToken0Amount;
 
-        // 3. 销毁份额
+        // 4. Destroy xtoken
         _burn(address(this), liquidity);
 
-        // 4. TODO: 根据资金池剩余情况进行调整
-        // 待取回的eth数量超过资金池余额，自动转化为token取出
+        // 5. Adjust according to the surplus of the fund pool
+        // If the number of eth to be retrieved exceeds the balance of the fund pool, 
+        // it will be automatically converted into a token
         if (amountETHOut > ethBalance) {
             amountTokenOut += (amountETHOut - ethBalance) * tokenAmount / ethAmount;
             amountETHOut = ethBalance;
         } 
-        // 待取回的token数量超过资金池余额，自动转化为ETH取出
+        // If the number of tokens to be retrieved exceeds the balance of the fund pool, 
+        // it will be automatically converted to eth
         else if (amountTokenOut > tokenBalance) {
             amountETHOut += (amountTokenOut - tokenBalance) * ethAmount / tokenAmount;
             amountTokenOut = tokenBalance;
         }
 
-        // 5. 资金转入用户指定地址
+        // 6. Transfer of funds to the user's designated address
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(token, to, amountTokenOut);
 
         emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
     }
 
-    /// @dev 执行兑换交易
-    /// @param src 源资产token地址
-    /// @param dest 目标资产token地址
-    /// @param amountIn 输入源资产数量
-    /// @param to 兑换资金接收地址
-    /// @param payback 退回的手续费接收地址
-    /// @return amountOut 兑换到的目标资产数量
-    /// @return mined 出矿量
+    /// @dev Swap token
+    /// @param src Src token address
+    /// @param dest Dest token address
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountOut The real amount of ETH transferred out of pool
+    /// @return mined The amount of CoFi which will be mind by this trade
     function swap(
         address src, 
         address dest, 
@@ -327,7 +345,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint amountOut, 
         uint mined
     ) {
-        address token = TOKEN_ADDRESS;
+        address token = _tokenAddress;
         if (src == address(0) && dest == token) {
             (amountOut, mined) =  _swapForToken(token, amountIn, to, payback);
         } else if (src == token && dest == address(0)) {
@@ -337,12 +355,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         }
     }
 
-    /// @dev 用eth兑换token
-    /// @param amountIn 兑换的eth数量
-    /// @param to 兑换资金接收地址
-    /// @param payback 退回的手续费接收地址
-    /// @return amountTokenOut 兑换到的token数量
-    /// @return mined 出矿量
+    /// @dev Swap for tokens
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountTokenOut The real amount of token transferred out of pool
+    /// @return mined The amount of CoFi which will be mind by this trade
     function _swapForToken(
         address token,
         uint amountIn, 
@@ -352,7 +371,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint amountTokenOut, 
         uint mined
     ) {
-        // 1. 调用预言机获取价格
+        // 1. Query oracle
         (
             uint k, 
             uint ethAmount, 
@@ -366,23 +385,20 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // TODO: 公式需要确认
-        // 2. 计算兑换结果
-        // 2.1. K值计算
-        // 2.2. 冲击成本计算
+        // 2. Calculate the trade result
         uint fee = amountIn * uint(_theta) / 10000;
         amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
             1 ether + k + _impactCostForSellOutETH(amountIn, uint(_gamma))
         );
 
-        // 3. 扣除交易手续费
+        // 3. Transfer transaction fee
         _collect(fee);
 
-        // 4. 转token给用户
+        // 4. Transfer token
         TransferHelper.safeTransfer(token, to, amountTokenOut);
 
         // TODO: 如果不检查重入，可能存在通过重入来挖矿的行为
-        // 5. 挖矿逻辑
-        // 【注意】Pt此处没有引入K值，后续需要引入
+        // 5. Mining logic
         mined = _cofiMint(_calcD(
             address(this).balance, 
             IERC20(token).balanceOf(address(this)), 
@@ -393,12 +409,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         emit SwapForToken(amountIn, to, amountTokenOut, mined);
     }
 
-    /// @dev 用token兑换eth
-    /// @param amountIn 兑换的token数量
-    /// @param to 兑换资金接收地址
-    /// @param payback 退回的手续费接收地址
-    /// @return amountETHOut 兑换到的token数量
-    /// @return mined 出矿量
+    /// @dev Swap for eth
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountETHOut The real amount of eth transferred out of pool
+    /// @return mined The amount of CoFi which will be mind by this trade
     function _swapForETH(
         address token,
         uint amountIn, 
@@ -408,7 +425,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint amountETHOut, 
         uint mined
     ) {
-        // 1. 调用预言机获取价格
+        // 1. Query oracle
         (
             uint k, 
             uint ethAmount, 
@@ -421,26 +438,21 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             payback
         );
 
-        // 2. 计算兑换结果
-        // 2.1. K值计算
-        // 2.2. 冲击成本计算
+        // 2. Calculate the trade result
         amountETHOut = amountIn * ethAmount / tokenAmount;
-        //uint C = impactCostForBuyInETH(amountETHOut);
         amountETHOut = amountETHOut * 1 ether / (
             1 ether + k + _impactCostForBuyInETH(amountETHOut, uint(_gamma))
         ); 
         uint fee = amountETHOut * uint(_theta) / 10000;
         amountETHOut = amountETHOut - fee;
 
-        // 3. 扣除交易手续费
-        //uint fee = amountETHOut * THETA / (1 ether - THETA);
+        // 3. Transfer token
         _collect(fee);
 
-        // 4. 转token给用户
+        // 4. Transfer token
         payable(to).transfer(amountETHOut);
 
-        // 5. 挖矿逻辑
-        // 【注意】Pt此处没有引入K值，后续需要引入
+        // 5. Mining logic
         mined = _cofiMint(_calcD(
             address(this).balance, 
             IERC20(token).balanceOf(address(this)), 
@@ -451,15 +463,15 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         emit SwapForETH(amountIn, to, amountETHOut, mined);
     }
 
-    // 计算调整为𝑘0时所需要的ETH交易规模
+    // Calculate the ETH transaction size required to adjust to 𝑘0
     function _calcD(
         uint balance0, 
         uint balance1, 
         uint ethAmount, 
         uint tokenAmount
     ) private view returns (uint) {
-        uint initToken0Amount = uint(INIT_TOKEN0_AMOUNT);
-        uint initToken1Amount = uint(INIT_TOKEN1_AMOUNT);
+        uint initToken0Amount = uint(_initToken0Amount);
+        uint initToken1Amount = uint(_initToken1Amount);
 
         // D_t=|(E_t 〖*k〗_0 〖-U〗_t)/(k_0+P_t )|
         uint left = balance0 * initToken1Amount;
@@ -476,12 +488,12 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
     }
 
-    // 计算CoFi交易挖矿相关的变量并更新对应状态
+    // Calculate COFI transaction mining related variables and update the corresponding status
     function _cofiMint(uint D1, uint nt) private returns (uint mined) {
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
-        // D0 < D1时，也需要更新Y值
+        // When d0 < D1, the y value also needs to be updated
         uint Y = uint(_Y) + D0 * nt * (block.number + 1 - uint(_lastblock)) / 10000;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
@@ -493,12 +505,12 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         _lastblock = uint32(block.number);
     }
 
-    /// @dev 预估出矿量
-    /// @param newBalance0 新的eth余额
-    /// @param newBalance1 新的token余额
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return mined 预计出矿量
+    /// @dev Estimate mining amount
+    /// @param newBalance0 New balance of eth
+    /// @param newBalance1 New balance of token
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return mined The amount of CoFi which will be mind by this trade
     function estimate(
         uint newBalance0, 
         uint newBalance1, 
@@ -510,35 +522,28 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         if (D0 > D1) {
-            // D0 < D1时，也需要更新Y值
+            // When d0 < D1, the y value also needs to be updated
             uint Y = uint(_Y) + D0 * uint(_nt) * (block.number + 1 - uint(_lastblock)) / 10000;
             mined = Y * (D0 - D1) / D0;
         }
     }
 
-    // 批量存入手续费
+    // Deposit transaction fee
     function _collect(uint fee) private {
-        // uint totalFee = _totalFee + fee;
-        // // 总手续费超过1ETH时才存入
-        // if (totalFee >= 1 ether) {
-        //     _totalFee = 0;
-        //     ICoFiXDAO(_cofixDAO).addETHReward { value: totalFee } (address(this));
-        // } 
-        // _totalFee = totalFee;
         ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
     }
 
-    // 计算净值
+    // Calculate net worth
     // navps = calcNAVPerShare(reserve0, reserve1, _op.ethAmount, _op.tokenAmount);
     // calc Net Asset Value Per Share (no K)
     // use it in this contract, for optimized gas usage
 
-    /// @dev 计算净值
-    /// @param balance0 资金池eth余额
-    /// @param balance1 资金池token余额
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return navps 净值
+    /// @dev Calculate net worth
+    /// @param balance0 Balance of eth
+    /// @param balance1 Balance of token
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return navps Net worth
     function calcNAVPerShare(
         uint balance0, 
         uint balance1, 
@@ -552,17 +557,17 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 balance1, 
                 ethAmount, 
                 tokenAmount,
-                INIT_TOKEN0_AMOUNT,
-                INIT_TOKEN1_AMOUNT
+                _initToken0Amount,
+                _initToken1Amount
             ) * 1 ether / totalSupply;
         }
         return 1 ether;
     }
 
-    /// @dev 获取净值
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return navps 净值
+    /// @dev Get net worth
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return navps Net worth
     function getNAVPerShare(
         uint ethAmount, 
         uint tokenAmount
@@ -571,17 +576,17 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         if (total > 0) {
             return _calcTotalValue(
                 address(this).balance, 
-                IERC20(TOKEN_ADDRESS).balanceOf(address(this)), 
+                IERC20(_tokenAddress).balanceOf(address(this)), 
                 ethAmount, 
                 tokenAmount,
-                INIT_TOKEN0_AMOUNT,
-                INIT_TOKEN1_AMOUNT
+                _initToken0Amount,
+                _initToken1Amount
             ) * 1 ether / totalSupply;
         }
         return 1 ether;
     }
 
-    // 计算资产余额总价值
+    // Calculate the total value of asset balance
     function _calcTotalValue(
         uint balance0, 
         uint balance1, 
@@ -595,8 +600,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
         // NV = (Et + Ut / Pt) / ( (1 + (U0 / Pt * E0)) * Ft )
         // NV = (Et * E0 + Ut * E0  / Pt) / ( (E0 + U0 / Pt) * Ft )
-        //navps = (ethBalance * INIT_TOKEN0_AMOUNT * tokenAmount + tokenBalance * INIT_TOKEN0_AMOUNT * ethAmount) * 1 ether
-        //        / totalSupply / (INIT_TOKEN0_AMOUNT * tokenAmount + INIT_TOKEN1_AMOUNT * ethAmount);
+        //navps = (ethBalance * _initToken0Amount * tokenAmount + tokenBalance * _initToken0Amount * ethAmount) * 1 ether
+        //        / totalSupply / (_initToken0Amount * tokenAmount + _initToken1Amount * ethAmount);
 
         // NV=(E_t+U_t/P_t)/((1+k_0/P_t ))
         totalValue = (
@@ -633,21 +638,25 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
     }
 
-    // α=0，β=2e-06
+    /// @dev Calculate the impact cost of buy in eth
+    /// @param vol Trade amount in eth
+    /// @return impactCost Impact cost
     function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
         return _impactCostForBuyInETH(vol, uint(_gamma));
     }
 
-    // α=0，β=2e-06
+    /// @dev Calculate the impact cost of sell out eth
+    /// @param vol Trade amount in eth
+    /// @return impactCost Impact cost
     function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
         return _impactCostForSellOutETH(vol, uint(_gamma));
     }
 
-    /// @dev 获取指定token做市获得的份额代币地址
-    /// @param token 目标token
-    /// @return 如果资金池支持指定的token，返回做市份额代币地址
+    /// @dev Gets the token address of the share obtained by the specified token market making
+    /// @param token Traget token address
+    /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view override returns (address) {
-        if (token == TOKEN_ADDRESS) {
+        if (token == _tokenAddress) {
             return address(this);
         }
         return address(0);

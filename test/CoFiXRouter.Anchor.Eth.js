@@ -191,6 +191,7 @@ describe("CoFiXRouter", function() {
             showReceipt(receipt);
             status = await getStatus();
             console.log(status);
+            return;
         }
 
         if (true) {

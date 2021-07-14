@@ -13,22 +13,23 @@ contract CoFiXController is ICoFiXController {
     uint constant K_BETA = 10 ether;
     uint constant BLOCK_TIME = 14;
 
-    // nest价格调用合约地址
+    // Address of NestPriceFacade contract
     address immutable NEST_PRICE_FADADE;
 
     constructor(address nestPriceFacade) {
         NEST_PRICE_FADADE = nestPriceFacade;
     }
 
-    /// @dev 查询最新价格信息
-    /// @param tokenAddress token地址
-    /// @param payback 退回的手续费接收地址
-    /// @return blockNumber 价格所在区块号
-    /// @return priceEthAmount 预言机价格-eth数量
-    /// @return priceTokenAmount 预言机价格-token数量
-    /// @return avgPriceEthAmount 平均价格-eth数量
-    /// @return avgPriceTokenAmount 平均价格-token数量
-    /// @return sigmaSQ 波动率的平方（18位小数）
+    /// @dev Query latest price info
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return blockNumber Block number of price
+    /// @return priceEthAmount Oracle price - eth amount
+    /// @return priceTokenAmount Oracle price - token amount
+    /// @return avgPriceEthAmount Avg price - eth amount
+    /// @return avgPriceTokenAmount Avg price - token amount
+    /// @return sigmaSQ The square of the volatility (18 decimal places)
     function latestPriceInfo(address tokenAddress, address payback) 
     public 
     payable 
@@ -60,12 +61,13 @@ contract CoFiXController is ICoFiXController {
     // In the near future, NEST could provide the variance of price directly. We will adopt it then.
     // We can make use of `data` bytes in the future
 
-    /// @dev 查询价格
-    /// @param tokenAddress 目标token地址
-    /// @param payback 手续费退回接收地址
-    /// @return ethAmount 价格-eth数量
-    /// @return tokenAmount 价格-token数量
-    /// @return blockNumber 价格所在区块
+    /// @dev Query price
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return ethAmount Oracle price - eth amount
+    /// @return tokenAmount Oracle price - token amount
+    /// @return blockNumber Block number of price
     function queryPrice(
         address tokenAddress,
         address payback
@@ -80,10 +82,17 @@ contract CoFiXController is ICoFiXController {
         ethAmount = 1 ether;
     }
 
-    // Calc variance of price and K in CoFiX is very expensive
-    // We use expected value of K based on statistical calculations here to save gas
-    // In the near future, NEST could provide the variance of price directly. We will adopt it then.
-    // We can make use of `data` bytes in the future
+    /// @dev Calc variance of price and K in CoFiX is very expensive
+    /// We use expected value of K based on statistical calculations here to save gas
+    /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
+    /// We can make use of `data` bytes in the future
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return k The K value(18 decimal places).
+    /// @return ethAmount Oracle price - eth amount
+    /// @return tokenAmount Oracle price - token amount
+    /// @return blockNumber Block number of price
     function queryOracle(
         address tokenAddress,
         address payback
@@ -106,16 +115,13 @@ contract CoFiXController is ICoFiXController {
         k = calcK(sigmaSQ, blockNumber);
     }
 
-    // TODO: 注意K值是18位小数
-   /**
-    * @notice Calc K value
-    * @param sigmaSQ The square of the volatility (18 decimal places).
-    * @param bn The block number when (ETH, TOKEN) price takes into effective
-    * @return k The K value
-    */
+    // TODO: Note that the value of K is 18 decimal places
+    /// @dev Calc K value
+    /// @param sigmaSQ The square of the volatility (18 decimal places).
+    /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    /// @return k The K value
     function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
-        // TODO: 修改算法为配置
-        uint sigma = sqrt(sigmaSQ / 1e4) * 1e11;
+        uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
         uint gamma = 1 ether;
         if (sigma > 0.0005 ether) {
             gamma = 2 ether;
@@ -127,7 +133,7 @@ contract CoFiXController is ICoFiXController {
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    function sqrt(uint y) private pure returns (uint z) {
+    function _sqrt(uint y) private pure returns (uint z) {
         if (y > 3) {
             z = y;
             uint x = (y >> 1) + 1;

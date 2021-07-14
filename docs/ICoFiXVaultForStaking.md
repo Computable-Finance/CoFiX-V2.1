@@ -36,13 +36,13 @@
     function batchSetPoolWeight(address[] calldata xtokens, uint[] calldata weights) external;
 ```
 
-### 2.4. 初始化锁仓参数
+### 2.4. 获取目标xtoken的总锁仓量
 
 ```javascript
-    /// @dev 初始化锁仓参数
+    /// @dev 获取目标xtoken的总锁仓量
     /// @param xtoken 目标份额代币地址（或CNode地址）
-    /// @param cofiWeight CoFi出矿速度权重
-    function initStakingChannel(address xtoken, uint cofiWeight) external;
+    /// @return 目标xtoken的总锁仓量
+    function totalStakedOf(address xtoken) external view returns (uint);
 ```
 
 ### 2.5. 获取目标地址锁仓的数量

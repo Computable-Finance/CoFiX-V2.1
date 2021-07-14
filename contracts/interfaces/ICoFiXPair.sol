@@ -4,34 +4,34 @@ pragma solidity ^0.8.6;
 
 import "./ICoFiXPool.sol";
 
-/// @dev 二元资金池: eth/token
+/// @dev Binary pool: eth/token
 interface ICoFiXPair is ICoFiXPool {
 
-    /// @dev 用eth兑换token事件
-    /// @param amountIn 兑换的eth数量
-    /// @param to 兑换资金接收地址
-    /// @param amountTokenOut 兑换到的token数量
-    /// @param mined 出矿量
+    /// @dev Swap for token event
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param amountTokenOut The real amount of token transferred out of pool
+    /// @param mined The amount of CoFi which will be mind by this trade
     event SwapForToken(uint amountIn, address to, uint amountTokenOut, uint mined);
 
-    /// @dev 用token兑换eth
-    /// @param amountIn 兑换的token数量
-    /// @param to 兑换资金接收地址
-    /// @param amountETHOut 兑换到的token数量
-    /// @param mined 出矿量
+    /// @dev Swap for eth event
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param amountETHOut The real amount of eth transferred out of pool
+    /// @param mined The amount of CoFi which will be mind by this trade
     event SwapForETH(uint amountIn, address to, uint amountETHOut, uint mined);
 
-    /// @dev 获取初始资产比例
-    /// @return initToken0Amount 初始资产比例 - ETH
-    /// @return initToken1Amount 初始资产比例 - TOKEN
+    /// @dev Get initial asset ratio
+    /// @return initToken0Amount Initial asset ratio - eth
+    /// @return initToken1Amount Initial asset ratio - token
     function getInitialAssetRatio() external view returns (uint initToken0Amount, uint initToken1Amount);
 
-    /// @dev 预估出矿量
-    /// @param newBalance0 新的eth余额
-    /// @param newBalance1 新的token余额
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return mined 预计出矿量
+    /// @dev Estimate mining amount
+    /// @param newBalance0 New balance of eth
+    /// @param newBalance1 New balance of token
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return mined The amount of CoFi which will be mind by this trade
     function estimate(
         uint newBalance0, 
         uint newBalance1, 
@@ -39,12 +39,12 @@ interface ICoFiXPair is ICoFiXPool {
         uint tokenAmount
     ) external view returns (uint mined);
     
-    /// @dev 计算净值
-    /// @param balance0 资金池eth余额
-    /// @param balance1 资金池token余额
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return navps 净值
+    /// @dev Calculate net worth
+    /// @param balance0 Balance of eth
+    /// @param balance1 Balance of token
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return navps Net worth
     function calcNAVPerShare(
         uint balance0, 
         uint balance1, 
@@ -52,22 +52,22 @@ interface ICoFiXPair is ICoFiXPool {
         uint tokenAmount
     ) external view returns (uint navps);
     
-    /// @dev 获取净值
-    /// @param ethAmount 预言机价格-eth数量
-    /// @param tokenAmount 预言机价格-token数量
-    /// @return navps 净值
+    /// @dev Get net worth
+    /// @param ethAmount Oracle price - eth amount
+    /// @param tokenAmount Oracle price - token amount
+    /// @return navps Net worth
     function getNAVPerShare(
         uint ethAmount, 
         uint tokenAmount
     ) external view returns (uint navps);
 
-    /// @dev 计算买入eth的冲击成本
-    /// @param vol 以eth计算的交易规模
-    /// @return impactCost 冲击成本
+    /// @dev Calculate the impact cost of buy in eth
+    /// @param vol Trade amount in eth
+    /// @return impactCost Impact cost
     function impactCostForBuyInETH(uint vol) external view returns (uint impactCost);
 
-    /// @dev 计算卖出eth的冲击成本
-    /// @param vol 以eth计算的交易规模
-    /// @return impactCost 冲击成本
+    /// @dev Calculate the impact cost of sell out eth
+    /// @param vol Trade amount in eth
+    /// @return impactCost Impact cost
     function impactCostForSellOutETH(uint vol) external view returns (uint impactCost);
 }

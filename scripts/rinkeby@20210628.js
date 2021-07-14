@@ -131,10 +131,10 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.setConfig({
     //     cofiRate: '200000000000000000'
     // });
-    // console.log('cofixVaultForStaking.initStakingChannel');
-    // await cofixVaultForStaking.initStakingChannel(usdtPair.address, 100000);
-    // await cofixVaultForStaking.initStakingChannel(nestPair.address, 20000);
-    // await cofixVaultForStaking.initStakingChannel(cnode.address, 100000);
+    // console.log('cofixVaultForStaking.batchSetPoolWeight');
+    // await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [100000]);
+    // await cofixVaultForStaking.batchSetPoolWeight([nestPair.address], [20000]);
+    // await cofixVaultForStaking.batchSetPoolWeight([cnode.address], [100000]);
 
     // console.log('cofixRouter.setConfig');
     // await cofixRouter.setConfig({
@@ -265,19 +265,19 @@ exports.deploy = async function () {
     let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
     console.log('xdai: ' + xdai.address);
 
-    // console.log('26. cofixVaultForStaking.initStakingChannel(xeth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xeth.address, 20000);
-    // console.log('27. cofixVaultForStaking.initStakingChannel(xpeth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xpeth.address, 20000);
-    // console.log('28. cofixVaultForStaking.initStakingChannel(xweth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xweth.address, 20000);
+    // console.log('26. cofixVaultForStaking.batchSetPoolWeight(xeth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xeth.address], [20000]);
+    // console.log('27. cofixVaultForStaking.batchSetPoolWeight(xpeth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xpeth.address], [20000]);
+    // console.log('28. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
 
-    // console.log('29. cofixVaultForStaking.initStakingChannel(xusdt.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xusdt.address, 20000);
-    // console.log('30. cofixVaultForStaking.initStakingChannel(xpusd.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xpusd.address, 20000);
-    // console.log('31. cofixVaultForStaking.initStakingChannel(xdai.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xdai.address, 20000);
+    // console.log('29. cofixVaultForStaking.batchSetPoolWeight(xusdt.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xusdt.address], [20000]);
+    // console.log('30. cofixVaultForStaking.batchSetPoolWeight(xpusd.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xpusd.address], [20000]);
+    // console.log('31. cofixVaultForStaking.batchSetPoolWeight(xdai.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xdai.address], [20000]);
 
 
     const contracts = {

@@ -87,7 +87,7 @@ describe("CoFiXRouter", function() {
         }
 
         await cofixVaultForStaking.setConfig({ cofiRate: '2000000000000000000' });
-        //await cofixVaultForStaking.initStakingChannel(usdtPair.address, 10000);
+        //await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [10000]);
         await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [10000]);
         let status;
         let p;

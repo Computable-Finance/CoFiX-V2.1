@@ -134,12 +134,12 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.setConfig({
     //     cofiRate: '200000000000000000'
     // });
-    // console.log('14. cofixVaultForStaking.initStakingChannel(cnode.address)');
-    // await cofixVaultForStaking.initStakingChannel(cnode.address, 100000);
-    // console.log('15. cofixVaultForStaking.initStakingChannel(usdtPair.address)');
-    // await cofixVaultForStaking.initStakingChannel(usdtPair.address, 100000);
-    // console.log('16. cofixVaultForStaking.initStakingChannel(nestPair.address)');
-    // await cofixVaultForStaking.initStakingChannel(nestPair.address, 20000);
+    // console.log('14. cofixVaultForStaking.batchSetPoolWeight(cnode.address)');
+    // await cofixVaultForStaking.batchSetPoolWeight([cnode.address], [100000]);
+    // console.log('15. cofixVaultForStaking.batchSetPoolWeight(usdtPair.address)');
+    // await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [100000]);
+    // console.log('16. cofixVaultForStaking.batchSetPoolWeight(nestPair.address)');
+    // await cofixVaultForStaking.batchSetPoolWeight([nestPair.address], [20000]);
 
     // // console.log('17. cofixRouter.setConfig');
     // // await cofixRouter.setConfig({
@@ -279,19 +279,19 @@ exports.deploy = async function () {
     let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
     console.log('xdai: ' + xdai.address);
 
-    // console.log('47. cofixVaultForStaking.initStakingChannel(xeth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xeth.address, 20000);
-    // console.log('48. cofixVaultForStaking.initStakingChannel(xpeth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xpeth.address, 20000);
-    // console.log('49. cofixVaultForStaking.initStakingChannel(xweth.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xweth.address, 20000);
+    // console.log('47. cofixVaultForStaking.batchSetPoolWeight(xeth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xeth.address], [20000]);
+    // console.log('48. cofixVaultForStaking.batchSetPoolWeight(xpeth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xpeth.address], [20000]);
+    // console.log('49. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
 
-    // console.log('50. cofixVaultForStaking.initStakingChannel(xusdt.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xusdt.address, 20000);
-    // console.log('51. cofixVaultForStaking.initStakingChannel(xpusd.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xpusd.address, 20000);
-    // console.log('52. cofixVaultForStaking.initStakingChannel(xdai.address, 20000)');
-    // await cofixVaultForStaking.initStakingChannel(xdai.address, 20000);
+    // console.log('50. cofixVaultForStaking.batchSetPoolWeight(xusdt.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xusdt.address], [20000]);
+    // console.log('51. cofixVaultForStaking.batchSetPoolWeight(xpusd.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xpusd.address], [20000]);
+    // console.log('52. cofixVaultForStaking.batchSetPoolWeight(xdai.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xdai.address], [20000]);
 
     // console.log('53. setConfig');
     // await usdtPair.setConfig(20, 1, 1000);
@@ -314,8 +314,14 @@ exports.deploy = async function () {
     //     // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
     //     priceDeviationLimit: 1000
     // });
+
     // await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
+    // await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt('1000000'));
     // await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+
+    // await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
+    // await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
+    // await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
 
     const contracts = {
         cofi: cofi,

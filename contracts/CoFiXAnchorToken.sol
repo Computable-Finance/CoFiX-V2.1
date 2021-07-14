@@ -4,13 +4,10 @@ pragma solidity ^0.8.6;
 
 import "./CoFiXERC20.sol";
 
-/// @dev 锚定份额代币
+/// @dev Anchor pool xtoken
 contract CoFiXAnchorToken is CoFiXERC20 {
 
-    // it's negligible because we calc liquidity in ETH
-    uint constant MINIMUM_LIQUIDITY = 1e9; 
-
-    // 锚定池地址
+    // Address of anchor pool
     address immutable POOL;
 
     // ERC20 - name
@@ -30,30 +27,23 @@ contract CoFiXAnchorToken is CoFiXERC20 {
     }
 
     modifier check() {
-        require(msg.sender == POOL, "CoFiXAnchorToken: Only for CoFiXAnchorToken");
+        require(msg.sender == POOL, "CoFiXAnchorToken: Only for CoFiXAnchorPool");
         _;
     }
 
-    /// @dev 发行份额代币
-    /// @param to 份额接收地址
-    /// @param amount 份额数量
+    /// @dev Distribute xtoken
+    /// @param to The address which xtoken distribute to
+    /// @param amount Amount of xtoken
     function mint(
         address to, 
         uint amount
     ) external check returns (uint) {
-        if (totalSupply == 0) {
-            // TODO: 确定基础份额的逻辑
-            // permanently lock the first MINIMUM_LIQUIDITY tokens
-            // 当发行量为0时，有一个基础份额
-            amount -= MINIMUM_LIQUIDITY;
-            _mint(address(0), MINIMUM_LIQUIDITY);
-        }
         _mint(to, amount);
         return amount;
     }
 
-    /// @dev 销毁份额代币
-    /// @param amount 份额数量
+    /// @dev Burn xtoken
+    /// @param amount Amount of xtoken
     function burn(
         uint amount
     ) external { 
