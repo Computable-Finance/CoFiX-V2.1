@@ -14,10 +14,10 @@ contract CoFiXController is ICoFiXController {
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
-    address immutable NEST_PRICE_FADADE;
+    address immutable NEST_PRICE_FACADE;
 
     constructor(address nestPriceFacade) {
-        NEST_PRICE_FADADE = nestPriceFacade;
+        NEST_PRICE_FACADE = nestPriceFacade;
     }
 
     /// @dev Query latest price info
@@ -49,7 +49,7 @@ contract CoFiXController is ICoFiXController {
             ,//uint triggeredPriceValue,
             avgPriceTokenAmount,
             sigmaSQ
-        ) = INestPriceFacade(NEST_PRICE_FADADE).latestPriceAndTriggeredPriceInfo { 
+        ) = INestPriceFacade(NEST_PRICE_FACADE).latestPriceAndTriggeredPriceInfo { 
             value: msg.value 
         } (tokenAddress, payback);
         priceEthAmount = 1 ether;
@@ -76,7 +76,7 @@ contract CoFiXController is ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     ) {
-        (blockNumber, tokenAmount) = INestPriceFacade(NEST_PRICE_FADADE).latestPrice { 
+        (blockNumber, tokenAmount) = INestPriceFacade(NEST_PRICE_FACADE).latestPrice { 
             value: msg.value 
         } (tokenAddress, payback);
         ethAmount = 1 ether;
@@ -102,17 +102,87 @@ contract CoFiXController is ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     ) {
-        uint sigmaSQ;
         (
-            blockNumber, 
-            ethAmount,
-            tokenAmount,
-            ,//uint avgPriceEthAmount,
-            ,//uint avgPriceTokenAmount,
-            sigmaSQ
-        ) = latestPriceInfo(tokenAddress, payback);
+            uint[] memory prices,
+            ,//uint triggeredPriceBlockNumber,
+            ,//uint triggeredPriceValue,
+            ,//uint triggeredAvgPrice,
+            uint triggeredSigmaSQ
+        ) = INestPriceFacade(NEST_PRICE_FACADE).lastPriceListAndTriggeredPriceInfo {
+            value: msg.value  
+        } (tokenAddress, 2, payback);
 
-        k = calcK(sigmaSQ, blockNumber);
+        ethAmount = 1 ether;
+        tokenAmount = prices[1];
+        blockNumber = prices[0];
+
+        k = calcRevisedK(triggeredSigmaSQ, prices[3], prices[2], tokenAmount, blockNumber);
+    }
+
+    /// @dev K value is calculated by revised volatility
+    /// @param sigmaSQ The square of the volatility (18 decimal places).
+    /// @param p0 Last price (number of tokens equivalent to 1 ETH)
+    /// @param bn0 Block number of the last price
+    /// @param p Latest price (number of tokens equivalent to 1 ETH)
+    /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
+        k = calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
+    }
+
+    // TODO: 为了测试方便写成public的，发布时需要改为private的
+    // Calculate the corrected volatility
+    function _calcRevisedSigmaSQ(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view returns (uint revisedSigmaSQ) {
+        // console.log('_calcRevisedSigmaSQ-sigmaSQ', sigmaSQ);
+        // console.log('_calcRevisedSigmaSQ-p0', p0);
+        // console.log('_calcRevisedSigmaSQ-bn0', bn0);
+        // console.log('_calcRevisedSigmaSQ-p', p);
+        // console.log('_calcRevisedSigmaSQ-bn', bn);
+
+        // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
+        // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
+        // 1. 
+        // rq2 <= 4 * dt * sq1
+        // sqt = sq2
+        // 2. rq2 > 4 * dt * sq1 && rq2 <= 9 * dt * sq1
+        // sqt = (sq1 + rq2 * dt) / 2
+        // 3. rq2 > 9 * dt * sq1
+        // sqt = sq1 * 0.2 + rq2 * dt * 0.8
+
+        uint rq = p * 1 ether / p0;
+        if (rq > 1 ether) {
+            rq -= 1 ether;
+        } else {
+            rq = 1 ether - rq;
+        }
+        //console.log('_calcRevisedSigmaSQ-rq', rq);
+
+        uint rq2 = rq * rq / 1 ether;
+        //console.log('_calcRevisedSigmaSQ-rq2', rq2);
+        uint dt = (bn - bn0) * BLOCK_TIME;
+        //console.log('_calcRevisedSigmaSQ-dt', dt);
+        uint sq2 = sigmaSQ;
+        //console.log('_calcRevisedSigmaSQ-sq2', sq2);
+        uint sq1 = 0;
+        if (sq2 * 10 > rq2 / dt) {
+            sq1 = (sq2 * 10 - rq2 / dt) / 9;
+        }
+        //console.log('_calcRevisedSigmaSQ-sq1', sq1);
+
+        uint sqt = sq2;
+        uint dds = dt * dt * dt * sq1;
+        //console.log('_calcRevisedSigmaSQ-dds', dds);
+        if (rq2 <= 4 * dds) {
+            console.log('case0');
+            //sqt = sq2;
+        } else if (rq2 <= 9 * dds) {
+            console.log('case1');
+            sqt = (sq1 + rq2 / dt) / 2;
+        } else {
+            console.log('case2');
+            sqt = (sq1 + rq2 * 4 / dt) / 5;
+        }
+        revisedSigmaSQ = sqt;
+        //console.log('_calcRevisedSigmaSQ-revisedSigmaSQ', revisedSigmaSQ);
     }
 
     // TODO: Note that the value of K is 18 decimal places
@@ -129,7 +199,7 @@ contract CoFiXController is ICoFiXController {
             gamma = 1.5 ether;
         }
 
-        k = (K_ALPHA * (block.number - bn) * 14 ether + K_BETA * sigma) * gamma / 1e36;
+        k = (K_ALPHA * (block.number - bn) * BLOCK_TIME * 1 ether + K_BETA * sigma) * gamma / 1e36;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
