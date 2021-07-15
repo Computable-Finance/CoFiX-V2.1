@@ -132,12 +132,6 @@ contract CoFiXController is ICoFiXController {
     // TODO: 为了测试方便写成public的，发布时需要改为private的
     // Calculate the corrected volatility
     function _calcRevisedSigmaSQ(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view returns (uint revisedSigmaSQ) {
-        // console.log('_calcRevisedSigmaSQ-sigmaSQ', sigmaSQ);
-        // console.log('_calcRevisedSigmaSQ-p0', p0);
-        // console.log('_calcRevisedSigmaSQ-bn0', bn0);
-        // console.log('_calcRevisedSigmaSQ-p', p);
-        // console.log('_calcRevisedSigmaSQ-bn', bn);
-
         // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
         // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
         // 1. 
@@ -148,41 +142,32 @@ contract CoFiXController is ICoFiXController {
         // 3. rq2 > 9 * dt * sq1
         // sqt = sq1 * 0.2 + rq2 * dt * 0.8
 
-        uint rq = p * 1 ether / p0;
-        if (rq > 1 ether) {
-            rq -= 1 ether;
+        uint rq2 = p * 1 ether / p0;
+        if (rq2 > 1 ether) {
+            rq2 -= 1 ether;
         } else {
-            rq = 1 ether - rq;
+            rq2 = 1 ether - rq2;
         }
-        //console.log('_calcRevisedSigmaSQ-rq', rq);
+        rq2 = rq2 * rq2 / 1 ether;
 
-        uint rq2 = rq * rq / 1 ether;
-        //console.log('_calcRevisedSigmaSQ-rq2', rq2);
         uint dt = (bn - bn0) * BLOCK_TIME;
-        //console.log('_calcRevisedSigmaSQ-dt', dt);
-        uint sq2 = sigmaSQ;
-        //console.log('_calcRevisedSigmaSQ-sq2', sq2);
         uint sq1 = 0;
-        if (sq2 * 10 > rq2 / dt) {
-            sq1 = (sq2 * 10 - rq2 / dt) / 9;
+        uint rq2dt = rq2 / dt;
+        if (sigmaSQ * 10 > rq2dt) {
+            sq1 = (sigmaSQ * 10 - rq2dt) / 9;
         }
-        //console.log('_calcRevisedSigmaSQ-sq1', sq1);
 
-        uint sqt = sq2;
+        revisedSigmaSQ = sigmaSQ;
         uint dds = dt * dt * dt * sq1;
-        //console.log('_calcRevisedSigmaSQ-dds', dds);
-        if (rq2 <= 4 * dds) {
+        if (rq2 <= (dds << 2)) {
             console.log('case0');
-            //sqt = sq2;
         } else if (rq2 <= 9 * dds) {
             console.log('case1');
-            sqt = (sq1 + rq2 / dt) / 2;
+            revisedSigmaSQ = (sq1 + rq2dt) >> 1;
         } else {
             console.log('case2');
-            sqt = (sq1 + rq2 * 4 / dt) / 5;
+            revisedSigmaSQ = (sq1 + (rq2dt << 2)) / 5;
         }
-        revisedSigmaSQ = sqt;
-        //console.log('_calcRevisedSigmaSQ-revisedSigmaSQ', revisedSigmaSQ);
     }
 
     // TODO: Note that the value of K is 18 decimal places
