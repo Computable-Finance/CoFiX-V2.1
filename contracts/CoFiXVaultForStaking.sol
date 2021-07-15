@@ -19,9 +19,9 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @dev Account information
     struct Account {
         // Staked of current account
-        uint128 balance;
+        uint160 balance;
         // Token dividend value mark of the unit that the account has received
-        uint128 rewardCursor;
+        uint96 rewardCursor;
     }
     
     /// @dev Stake channel information
@@ -133,17 +133,17 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
             newReward += ICoFiXRouter(_cofixRouter).getTradeReward(xtoken) - uint(channel.tradeReward);
             // Since there are no decimal places in CNode, in order to unify the accuracy, when calculating 
             // the dividend of CNode unit token, the quantity is multiplied by 1 ether
-            balance *= 1 ether;
-            totalStaked *= 1 ether;
+            //balance *= 1 ether;
+            //totalStaked *= 1 ether;
         }
 
         // Unit token dividend
-        uint rewardPerToken = uint(channel.rewardPerToken);
+        uint rewardPerToken = _decodeFloat(channel.rewardPerToken);
         if (totalStaked > 0) {
             rewardPerToken += newReward * 1 ether / totalStaked;
         }
         
-        return (rewardPerToken - uint(account.rewardCursor)) * balance / 1 ether;
+        return (rewardPerToken - _decodeFloat(account.rewardCursor)) * balance / 1 ether;
     }
 
     /// @dev Stake xtoken to earn CoFi, this method is only for CoFiXRouter
@@ -160,7 +160,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         channel.totalStaked += amount;
 
         // Update stake balance of account
-        account.balance = uint128(uint(account.balance) + amount);
+        account.balance = uint160(uint(account.balance) + amount);
         channel.accounts[to] = account;
     }
 
@@ -179,7 +179,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         channel.totalStaked += amount;
 
         // Update stake balance of account
-        account.balance = uint128(uint(account.balance) + amount);
+        account.balance = uint160(uint(account.balance) + amount);
         channel.accounts[msg.sender] = account;
     }
 
@@ -195,7 +195,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         // Update totalStaked
         channel.totalStaked -= amount;
         // Update stake balance of account
-        account.balance = uint128(uint(account.balance) - amount);
+        account.balance = uint160(uint(account.balance) - amount);
         channel.accounts[msg.sender] = account;
 
         // Transfer xtoken to msg.sender
@@ -222,13 +222,13 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         
         // Calculate reward for account
         uint balance = uint(account.balance);
-        if (xtoken == CNODE_TOKEN_ADDRESS) {
-            balance *= 1 ether;
-        }
-        uint reward = (rewardPerToken - uint(account.rewardCursor)) * balance / 1 ether;
+        // if (xtoken == CNODE_TOKEN_ADDRESS) {
+        //     //balance *= 1 ether;
+        // }
+        uint reward = (rewardPerToken - _decodeFloat(account.rewardCursor)) * balance / 1 ether;
         
         // Update sign of account
-        account.rewardCursor = uint128(rewardPerToken);
+        account.rewardCursor = _encodeFloat(rewardPerToken);
         //channel.accounts[to] = account;
 
         // Transfer CoFi to account
@@ -251,16 +251,16 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
             channel.tradeReward = uint128(tradeReward);
             // Since there are no decimal places in CNode, in order to unify the accuracy, 
             // when calculating the dividend of CNode unit token, the quantity is multiplied by 1 ether
-            totalStaked *= 1 ether;
+            //totalStaked *= 1 ether;
         }
         
-        rewardPerToken = uint(channel.rewardPerToken);
+        rewardPerToken = _decodeFloat(channel.rewardPerToken);
         if (totalStaked > 0) {
             rewardPerToken += newReward * 1 ether / totalStaked;
         }
 
         // Update the dividend value of unit share
-        channel.rewardPerToken = uint96(rewardPerToken);
+        channel.rewardPerToken = _encodeFloat(rewardPerToken);
         // Update settled block number
         channel.blockCursor = uint32(block.number);
     }
@@ -293,10 +293,10 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         if (xtoken == CNODE_TOKEN_ADDRESS) {
             // Get the cumulative share of the trading ore output of the corresponding track
             newReward += ICoFiXRouter(_cofixRouter).getTradeReward(xtoken) - uint(channel.tradeReward);
-            totalStaked *= 1 ether;
+            //totalStaked *= 1 ether;
         }
 
-        rewardPerToken = uint(channel.rewardPerToken);
+        rewardPerToken = _decodeFloat(channel.rewardPerToken);
         if (totalStaked > 0) {
             rewardPerToken += newReward * 1 ether / totalStaked;
         }
@@ -329,5 +329,25 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
             return (COFI_REDUCTION_STEPS >> ((delta / COFI_REDUCTION_SPAN) << 4)) & 0xFFFF;
         }
         return (COFI_REDUCTION_STEPS >> 64) & 0xFFFF;
+    }
+
+    /// @dev Encode the uint value as a floating-point representation in the form of fraction * 16 ^ exponent
+    /// @param value Destination uint value
+    /// @return float format
+    function _encodeFloat(uint value) private pure returns (uint96) {
+
+        uint exponent = 0; 
+        while (value > 0x3FFFFFFFFFFFFFFFFFFFFFF) {
+            value >>= 4;
+            ++exponent;
+        }
+        return uint96((value << 6) | exponent);
+    }
+
+    /// @dev Decode the floating-point representation of fraction * 16 ^ exponent to uint
+    /// @param floatValue fraction value
+    /// @return decode format
+    function _decodeFloat(uint96 floatValue) private pure returns (uint) {
+        return (uint(floatValue) >> 6) << ((uint(floatValue) & 0x3F) << 2);
     }
 }

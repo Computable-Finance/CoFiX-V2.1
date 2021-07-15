@@ -401,7 +401,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // Address to receive funds for this transaction
             address recv = to;
 
-            // Nest token address. 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF means empty
+            // Next token address. 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF means empty
             address next = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
             if (++i < path.length) {
                 next = path[i];
