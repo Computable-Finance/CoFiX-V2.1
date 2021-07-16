@@ -44,6 +44,7 @@ describe("CoFiXRouter", function() {
             return bi;
         }
 
+        console.log('ok');
         // if (true) {
         //     console.log('0. 设置价格');
         //     await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);

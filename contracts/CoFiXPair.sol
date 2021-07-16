@@ -233,6 +233,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 uint(_initToken0Amount),
                 uint(_initToken1Amount)
             );
+
+            // 6. Mining logic
+            updateMintState(token, ethAmount, tokenAmount);
         } else {
             payable(payback).transfer(msg.value - amountETH);
             //liquidity = _calcLiquidity(amountETH, navps) - MINIMUM_LIQUIDITY;
@@ -324,6 +327,19 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         TransferHelper.safeTransfer(token, to, amountTokenOut);
 
         emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
+
+        // 7. Mining logic
+        updateMintState(token, ethAmount, tokenAmount);
+    }
+
+    function updateMintState(address token, uint ethAmount, uint tokenAmount) private {
+        // Mining logic
+        _cofiMint(_calcD(
+            address(this).balance, 
+            IERC20(token).balanceOf(address(this)), 
+            ethAmount, 
+            tokenAmount
+        ), uint(_nt));
     }
 
     /// @dev Swap token

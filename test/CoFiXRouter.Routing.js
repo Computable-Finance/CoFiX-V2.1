@@ -94,8 +94,8 @@ describe("CoFiXRouter", function() {
         await usdt.transfer(addr1.address, toBigInt(10000000, 6));
         await usdt.transfer(owner.address, toBigInt(10000000, 6));
         await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
-        await nest.transfer(owner.address, toBigInt(1000000000));
-        await nest.approve(cofixRouter.address, toBigInt(1000000000));
+        await nest.transfer(owner.address, toBigInt(100000000));
+        await nest.approve(cofixRouter.address, toBigInt(100000000));
 
         if (true) {
             console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
