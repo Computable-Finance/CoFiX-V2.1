@@ -5,7 +5,7 @@
 ### 2021-07-16@rinkeby
 | Name | Interfaces | rinkeby |
 | ---- | ---- | ---- |
-| nestPriceFacade | INestPriceFacade | 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838 |
+| nestPriceFacade | INestPriceFacade, INestQuery | 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838 |
 | cnode | IERC20 | 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64 |
 | usdt | IERC20 | 0x20125a7256EFafd0d4Eec24048E08C5045BC5900 |
 | nest | IERC20 | 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25 |
