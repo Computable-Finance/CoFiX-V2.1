@@ -234,118 +234,15 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         require(amountETH >= amountETHMin, "CoFiXRouter: less eth than expected");
     }
 
-    /// @dev Trader swap exact amount of ETH for ERC20 Tokens (notice: msg.value = amountIn + oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of ETH a trader want to swap into pool
-    /// @param  amountOutMin The minimum amount of Token a trader want to swap out of pool
-    /// @param  to The target address receiving the Token
+    /// @dev Swap exact tokens for tokens
+    /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
+    /// token addresses (ETH address is represented by 0) of the exchange path
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
     /// @return amountOut The real amount of Token transferred out of pool
-    function swapExactETHForTokens(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external override payable ensure(deadline) returns (uint amountOut) {
-        // 0. Get xtoken corresponding to the token
-        address pair = _pairFor(address(0), token);
-
-        // 1. Trade
-        uint mined;
-        (amountOut, mined) = ICoFiXPool(pair).swap {
-            value: msg.value
-        } (address(0), token, amountIn, to, to);
-        
-        // 2. amountOut must not less than expected
-        require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
-
-        // 3. Mining cofi for trade
-        _mint(mined, rewardTo);
-    }
-
-    /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swapExactTokensForETH(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external override payable ensure(deadline) returns (uint amountOut) {
-        // 0. Get pool address for trade pair
-        address pool = _pairFor(address(0), token);
-
-        // 1. Transfer token to the pool and Trade
-        TransferHelper.safeTransferFrom(token, msg.sender, pool, amountIn);
-        uint mined;
-        (amountOut, mined) = ICoFiXPool(pool).swap {
-            value: msg.value
-        } (token, address(0), amountIn, to, to);
-
-        // 2. amountOut must not less than expected
-        require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
-
-        // 3. Mining cofi for trade
-        _mint(mined, rewardTo);
-    }
-
-    /// @dev Swap tokens for tokens
-    /// @param  src Src token address
-    /// @param  dest Dest token address
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swap(
-        address src, 
-        address dest, 
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external override payable ensure(deadline) returns (uint amountOut) {
-        // 0. Get pool address for trade pair
-        address pool = _pairFor(src, dest);
-
-        // 1. Transfer token to the pool
-        if (src != address(0)) {
-            TransferHelper.safeTransferFrom(src, msg.sender, pool, amountIn);
-        }
-
-        // 2. Trade
-        uint mined;
-        (amountOut, mined) = ICoFiXPool(pool).swap {
-            value: msg.value
-        } (src, dest, amountIn, to, to);
-
-        // 3. amountOut must not less than expected
-        require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
-
-        // 4. Mining cofi for trade
-        _mint(mined, rewardTo);
-    }
-
-    /// @dev Swap tokens for tokens with routing path
-    /// @param  path Routing path
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amounts The number of assets exchanged each time in the conversion path
     function swapExactTokensForTokens(
         address[] calldata path,
         uint amountIn,
@@ -353,23 +250,48 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable override ensure(deadline) returns (uint[] memory amounts) {
-        // Record the total mined
-        uint totalMined = 0;
-        // 1. Trade
-        (amounts, totalMined) = _swap(path, amountIn, to);
-        // 2. amountOut must not less than expected
-        require(amounts[path.length - 1] >= amountOutMin, "CoFiXRouter: got less than expected");
+    ) external payable override ensure(deadline) returns (uint amountOut) {
+        if (path.length == 2) {
+            address src = path[0];
+            address dest = path[1];
 
-        // 3. Any remaining ETH in the Router is considered to be the user's and is forwarded to 
-        // the address specified by the Router
-        uint balance = address(this).balance;
-        if (balance > 0) {
-            payable(to).transfer(balance);
-        } 
+            // 0. Get pool address for trade pair
+            address pool = _pairFor(src, dest);
 
-        // 4. Mining cofi for trade
-        _mint(totalMined, rewardTo);
+            // 1. Transfer token to the pool
+            if (src != address(0)) {
+                TransferHelper.safeTransferFrom(src, msg.sender, pool, amountIn);
+            }
+
+            // 2. Trade
+            uint mined;
+            (amountOut, mined) = ICoFiXPool(pool).swap {
+                value: msg.value
+            } (src, dest, amountIn, to, to);
+
+            // 3. amountOut must not less than expected
+            require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
+
+            // 4. Mining cofi for trade
+            _mint(mined, rewardTo);
+        } else {
+            // Record the total mined
+            uint totalMined = 0;
+            // 1. Trade
+            (amountOut, totalMined) = _swap(path, amountIn, to);
+            // 2. amountOut must not less than expected
+            require(amountOut >= amountOutMin, "CoFiXRouter: got less than expected");
+
+            // 3. Any remaining ETH in the Router is considered to be the user's and is forwarded to 
+            // the address specified by the Router
+            uint balance = address(this).balance;
+            if (balance > 0) {
+                payable(to).transfer(balance);
+            } 
+
+            // 4. Mining cofi for trade
+            _mint(totalMined, rewardTo);
+        }
     }
 
     // Trade
@@ -378,12 +300,12 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint amountIn,
         address to
     ) private returns (
-        uint[] memory amounts, 
+        uint amountOut, 
         uint totalMined
     ) {
         // Initialize
-        amounts = new uint[](path.length);
-        amounts[0] = amountIn;
+        //amounts = new uint[](path.length);
+        //amounts[0] = amountIn;
         totalMined = 0;
         
         // Get the first pair
@@ -424,7 +346,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // Increase total mining
             totalMined += mined;
             // Record the amount of money exchanged this time
-            amounts[i - 1] = amountIn;
+            //amounts[i - 1] = amountIn;
 
             // next equal to 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF means trade is over
             if (next == 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF) {
@@ -436,6 +358,8 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             token1 = next;
             pool = recv;
         }
+
+        amountOut = amountIn;
     }
 
     // Mint CoFi to target address, and increase for CNode

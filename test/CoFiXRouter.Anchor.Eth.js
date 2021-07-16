@@ -88,7 +88,7 @@ describe("CoFiXRouter", function() {
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
                 xdai: toDecimal(await xdai.balanceOf(account)),
                 peth: toDecimal(await peth.balanceOf(account)),
-                weth: toDecimal(await weth.balanceOf(account)),
+                //weth: toDecimal(await weth.balanceOf(account)),
             };
         }
         const getStatus = async function() {
@@ -131,8 +131,8 @@ describe("CoFiXRouter", function() {
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
             await nest.transfer(owner.address, toBigInt(10000000));
             await nest.approve(cofixRouter.address, toBigInt(10000000));
-            await weth.transfer(owner.address, toBigInt(10000000));
-            await weth.approve(cofixRouter.address, toBigInt(10000000));
+            //await weth.transfer(owner.address, toBigInt(10000000));
+            //await weth.approve(cofixRouter.address, toBigInt(10000000));
             await peth.transfer(owner.address, toBigInt(10000000));
             await peth.approve(cofixRouter.address, toBigInt(10000000));
         }
@@ -193,97 +193,5 @@ describe("CoFiXRouter", function() {
             console.log(status);
             return;
         }
-
-        if (true) {
-            console.log('4. ethAnthor做市20000peth');
-            let receipt = await cofixRouter.addLiquidity(
-                ethAnchor.address,
-                peth.address,
-                0,
-                toBigInt(20000),
-                0,
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('5. ethAnchor做市30000weth');
-            let receipt = await cofixRouter.addLiquidity(
-                ethAnchor.address,
-                weth.address,
-                0,
-                toBigInt(30000),
-                0,
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('6. 使用700weth兑换peth');
-            let receipt = await cofixRouter.swap(
-                weth.address, 
-                peth.address, 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('7. 使用700peth兑换eth');
-            let receipt = await cofixRouter.swap(
-                peth.address, 
-                '0x0000000000000000000000000000000000000000', 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('8. 使用700eth兑换weth');
-            let receipt = await cofixRouter.swap(
-                '0x0000000000000000000000000000000000000000', 
-                weth.address, 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('700000000000000000000')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        return;
     });
 });

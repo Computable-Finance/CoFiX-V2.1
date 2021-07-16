@@ -65,6 +65,10 @@ exports.deploy = async function () {
     //const nestPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('nestPair: ' + nestPair.address);
 
+    const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt('1'), BigInt('1000')], { initializer: 'init' });
+    //const cofiPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
+    console.log('cofiPair: ' + cofiPair.address);
+
     const cofixDAO = await upgrades.deployProxy(CoFiXDAO, [cofixGovernance.address], { initializer: 'initialize' });
     //const cofixDAO = await CoFiXDAO.deploy();
     //const cofixDAO = await CoFiXDAO.attach('0x7D3d375759Dce4D8609EcA61fCe5898e5Dd52E09');
@@ -113,8 +117,10 @@ exports.deploy = async function () {
     await cofixVaultForStaking.update(cofixGovernance.address);
     console.log('11. usdtPair.update');
     await usdtPair.update(cofixGovernance.address);
-    console.log('12. usdtPair.update');
+    console.log('12. nestPair.update');
     await nestPair.update(cofixGovernance.address);
+    console.log('12.1. cofiPair.update');
+    await cofiPair.update(cofixGovernance.address);
 
     console.log('13. cofixVaultForStaking.setConfig');
     await cofixVaultForStaking.setConfig({
@@ -126,15 +132,19 @@ exports.deploy = async function () {
     await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [100000]);
     console.log('16. cofixVaultForStaking.batchSetPoolWeight(nestPair.address)');
     await cofixVaultForStaking.batchSetPoolWeight([nestPair.address], [20000]);
+    console.log('17. cofixVaultForStaking.batchSetPoolWeight(cofiPair.address)');
+    await cofixVaultForStaking.batchSetPoolWeight([cofiPair.address], [20000]);
 
     // console.log('17. cofixRouter.setConfig');
     // await cofixRouter.setConfig({
     //     cnodeRewardRate: 1000
     // });
-    console.log('18. cofixRouter.addPair(usdt.address, usdtPair.address)');
-    await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
-    console.log('19. cofixRouter.addPair(nest.address, nestPair.address)');
-    await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // console.log('18. cofixRouter.addPair(usdt.address, usdtPair.address)');
+    // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
+    // console.log('19. cofixRouter.addPair(nest.address, nestPair.address)');
+    // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // console.log('19.1. cofixRouter.addPair(cofi.address, cofitPair.address)');
+    // await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
     console.log('20. cofi.addMinter(cofixRouter.address)');
     await cofi.addMinter(cofixRouter.address);
     console.log('21. cofi.addMinter(cofixVaultForStaking.addres)');
@@ -149,8 +159,8 @@ exports.deploy = async function () {
     // 部署PETH, WETH
     let peth = await TestERC20.deploy('PETH', 'PETH', 18);
     console.log('peth: ' + peth.address);
-    let weth = await TestERC20.deploy('WETH', 'WETH', 18);
-    console.log('weth: ' + weth.address);
+    // let weth = await TestERC20.deploy('WETH', 'WETH', 18);
+    // console.log('weth: ' + weth.address);
     // 部署PUSD, DAI
     let pusd = await TestERC20.deploy('PUSD', 'PUSD', 18);
     console.log('pusd: ' + pusd.address);
@@ -160,8 +170,8 @@ exports.deploy = async function () {
     let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
         cofixGovernance.address, 
         0, 
-        [eth.address, peth.address, weth.address],
-        ['1000000000000000000', '1000000000000000000', '1000000000000000000']
+        [eth.address, peth.address],
+        ['1000000000000000000', '1000000000000000000']
     ], { initializer: 'init' });
     console.log('ethAnchor: ' + ethAnchor.address);
     // 部署USD锚定池
@@ -178,13 +188,16 @@ exports.deploy = async function () {
     await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
     console.log('23. registerPair(eth.address, nest.address, nestPair.address)');
     await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    console.log('23.1. registerPair(eth.address, cofi.address, cofiPair.address)');
+    await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
+
     // 注册ETH锚定池
     console.log('24. registerPair(eth.address, peth.address, ethAnchor.address)');
     await cofixRouter.registerPair(eth.address, peth.address, ethAnchor.address);
-    console.log('25. registerPair(eth.address, weth.address, ethAnchor.address)');
-    await cofixRouter.registerPair(eth.address, weth.address, ethAnchor.address);
-    console.log('26. registerPair(peth.address, weth.address, ethAnchor.address)');
-    await cofixRouter.registerPair(peth.address, weth.address, ethAnchor.address);
+    // console.log('25. registerPair(eth.address, weth.address, ethAnchor.address)');
+    // await cofixRouter.registerPair(eth.address, weth.address, ethAnchor.address);
+    // console.log('26. registerPair(peth.address, weth.address, ethAnchor.address)');
+    // await cofixRouter.registerPair(peth.address, weth.address, ethAnchor.address);
     // 注册USD锚定池
     console.log('27. registerPair(usdt.address, pusd.address, usdAnchor.address)');
     await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
@@ -198,16 +211,16 @@ exports.deploy = async function () {
     await cofixRouter.registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address]);
     console.log('31. registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address])');
     await cofixRouter.registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address]);
-    console.log('32. registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address])');
-    await cofixRouter.registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address]);
+    // console.log('32. registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address])');
+    // await cofixRouter.registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address]);
     
-    // eth, nest, usdt, pusd, dai, peth, weth
+    // eth, nest, usdt, pusd, dai, peth, cofi
     console.log('33. registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address])');
     await cofixRouter.registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address]);
     console.log('34. registerRouterPath(pusd.address, peth.address, [pusd.address, usdt.address, eth.address, peth.address])');
     await cofixRouter.registerRouterPath(pusd.address, peth.address, [pusd.address, usdt.address, eth.address, peth.address]);
-    console.log('35. registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address])');
-    await cofixRouter.registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address]);
+    // console.log('35. registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address])');
+    // await cofixRouter.registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address]);
     console.log('36. registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address])');
     await cofixRouter.registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address]);
 
@@ -215,15 +228,26 @@ exports.deploy = async function () {
     await cofixRouter.registerRouterPath(dai.address, eth.address, [dai.address, usdt.address, eth.address]);
     console.log('38. registerRouterPath(dai.address, peth.address, [dai.address, usdt.address, eth.address, peth.address])');
     await cofixRouter.registerRouterPath(dai.address, peth.address, [dai.address, usdt.address, eth.address, peth.address]);
-    console.log('39. registerRouterPath(dai.address, weth.address, [dai.address, usdt.address, eth.address, weth.address])');
-    await cofixRouter.registerRouterPath(dai.address, weth.address, [dai.address, usdt.address, eth.address, weth.address]);
+    // console.log('39. registerRouterPath(dai.address, weth.address, [dai.address, usdt.address, eth.address, weth.address])');
+    // await cofixRouter.registerRouterPath(dai.address, weth.address, [dai.address, usdt.address, eth.address, weth.address]);
     console.log('40. registerRouterPath(dai.address, nest.address, [dai.address, usdt.address, eth.address, nest.address])');
     await cofixRouter.registerRouterPath(dai.address, nest.address, [dai.address, usdt.address, eth.address, nest.address]);
 
     console.log('41. registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address])');
     await cofixRouter.registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address]);
-    console.log('42. registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address])');
-    await cofixRouter.registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address]);
+    // console.log('42. registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address])');
+    // await cofixRouter.registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address]);
+
+    console.log('42. registerRouterPath(cofi.address, nest.address, [cofi.address, eth.address, nest.address])');
+    await cofixRouter.registerRouterPath(cofi.address, nest.address, [cofi.address, eth.address, nest.address]);
+    console.log('43. registerRouterPath(cofi.address, usdt.address, [cofi.address, eth.address, usdt.address])');
+    await cofixRouter.registerRouterPath(cofi.address, usdt.address, [cofi.address, eth.address, usdt.address]);
+    console.log('44. registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address])');
+    await cofixRouter.registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address]);
+    console.log('45. registerRouterPath(cofi.address, dai.address, [cofi.address, eth.address, usdt.address, dai.address])');
+    await cofixRouter.registerRouterPath(cofi.address, dai.address, [cofi.address, eth.address, usdt.address, dai.address]);
+    console.log('46. registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address])');
+    await cofixRouter.registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address]);
 
     // console.log('43. ethAnchor.init(cofixGovernance.address)');
     // await ethAnchor.init(cofixGovernance.address, 0, 
@@ -244,8 +268,8 @@ exports.deploy = async function () {
     console.log('xeth: ' + xeth.address);
     let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
     console.log('xpeth: ' + xpeth.address);
-    let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
-    console.log('xweth: ' + xweth.address);
+    // let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
+    // console.log('xweth: ' + xweth.address);
 
     let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
     console.log('xusdt: ' + xusdt.address);
@@ -258,8 +282,8 @@ exports.deploy = async function () {
     await cofixVaultForStaking.batchSetPoolWeight([xeth.address], [20000]);
     console.log('48. cofixVaultForStaking.batchSetPoolWeight(xpeth.address, 20000)');
     await cofixVaultForStaking.batchSetPoolWeight([xpeth.address], [20000]);
-    console.log('49. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
-    await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
+    // console.log('49. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
+    // await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
 
     console.log('50. cofixVaultForStaking.batchSetPoolWeight(xusdt.address, 20000)');
     await cofixVaultForStaking.batchSetPoolWeight([xusdt.address], [20000]);
@@ -271,6 +295,7 @@ exports.deploy = async function () {
     console.log('53. setConfig');
     await usdtPair.setConfig(20, 1, 1000);
     await nestPair.setConfig(20, 100, 1000);
+    await cofiPair.setConfig(20, 100, 1000);
     await ethAnchor.setConfig(20, 0, 1000);
     await usdAnchor.setConfig(20, 0, 1000);
 
@@ -296,7 +321,7 @@ exports.deploy = async function () {
 
     await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
     await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
-    await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
+    //await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
 
     const contracts = {
         cofi: cofi,
@@ -311,19 +336,20 @@ exports.deploy = async function () {
         usdt: usdt,
         nest: nest,
         peth: peth,
-        weth: weth,
+        //weth: weth,
         pusd: pusd,
         dai: dai,
 
         xeth: xeth,
         xpeth: xpeth,
-        xweth: xweth,
+        //xweth: xweth,
         xusdt: xusdt,
         xpusd: xpusd,
         xdai: xdai,
 
         usdtPair: usdtPair,
         nestPair: nestPair,
+        cofiPair: cofiPair,
         ethAnchor: ethAnchor,
         usdAnchor: usdAnchor
     };

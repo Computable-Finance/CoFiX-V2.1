@@ -280,9 +280,9 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('8. owner使用22000usdt兑换xdai');
             await usdt.approve(cofixRouter.address, toBigInt(22000, 6));
-            let receipt = await cofixRouter.swap(
-                usdt.address, 
-                dai.address, 
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                [usdt.address, 
+                dai.address], 
                 toBigInt(22000, 6),
                 toBigInt(0),
                 owner.address,
@@ -300,9 +300,9 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('9. owner使用18000pusd兑换xdai');
             await pusd.approve(cofixRouter.address, toBigInt(18000));
-            let receipt = await cofixRouter.swap(
-                pusd.address, 
-                dai.address, 
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                [pusd.address, 
+                dai.address], 
                 toBigInt(18000),
                 toBigInt(0),
                 owner.address,
@@ -353,9 +353,9 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('12. addr1回购5个CoFi');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(5));
-            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(5), addr1.address, {
+            console.log('12. addr1回购3个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(3));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(3), addr1.address, {
                 value: BigInt('20000000000000000')
             });
             await showReceipt(receipt);
@@ -439,8 +439,7 @@ describe("CoFiXRouter", function() {
 
             console.log('eth.exchange: ' + await cofixDAO.getTokenExchange('0x0000000000000000000000000000000000000000'));
             console.log('peth.exchange: ' + await cofixDAO.getTokenExchange(peth.address));
-            console.log('weth.exchange: ' + await cofixDAO.getTokenExchange(weth.address));
-
+            //console.log('weth.exchange: ' + await cofixDAO.getTokenExchange(weth.address));
         }
     });
 });

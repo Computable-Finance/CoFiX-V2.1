@@ -35,10 +35,10 @@ interface ICoFiXVaultForStaking {
     /// @return Staked amount of target address
     function balanceOf(address xtoken, address addr) external view returns (uint);
 
-    /// @dev Get the number of COFI to be collected by the target address on the designated transaction pair lock
+    /// @dev Get the number of CoFi to be collected by the target address on the designated transaction pair lock
     /// @param xtoken xtoken address (or CNode address)
     /// @param addr Target address
-    /// @return The number of COFI to be collected by the target address on the designated transaction lock
+    /// @return The number of CoFi to be collected by the target address on the designated transaction lock
     function earned(address xtoken, address addr) external view returns (uint);
 
     /// @dev Stake xtoken to earn CoFi, this method is only for CoFiXRouter

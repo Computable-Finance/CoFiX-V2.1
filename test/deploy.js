@@ -65,7 +65,7 @@ describe("CoFiXRouter", function() {
         console.log('xusdt: ' + await usdAnchor.getXToken(usdt.address));
         console.log('xpusd: ' + await usdAnchor.getXToken(pusd.address));
         console.log('xdai: ' + await usdAnchor.getXToken(dai.address));
-        console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
+        //console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
         
 
         // await usdt.transfer(owner.address, BigInt('10000000000000'));

@@ -113,10 +113,10 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         return uint(_channels[xtoken].accounts[addr].balance);
     }
 
-    /// @dev Get the number of COFI to be collected by the target address on the designated transaction pair lock
+    /// @dev Get the number of CoFi to be collected by the target address on the designated transaction pair lock
     /// @param xtoken xtoken address (or CNode address)
     /// @param addr Target address
-    /// @return The number of COFI to be collected by the target address on the designated transaction lock
+    /// @return The number of CoFi to be collected by the target address on the designated transaction lock
     function earned(address xtoken, address addr) public view override returns (uint) {
         // Load staking channel
         StakeChannel storage channel = _channels[xtoken];

@@ -394,17 +394,17 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 3. Transfer transaction fee
         _collect(fee);
 
-        // 4. Transfer token
-        TransferHelper.safeTransfer(token, to, amountTokenOut);
-
         // TODO: 如果不检查重入，可能存在通过重入来挖矿的行为
-        // 5. Mining logic
+        // 4. Mining logic
         mined = _cofiMint(_calcD(
             address(this).balance, 
-            IERC20(token).balanceOf(address(this)), 
+            IERC20(token).balanceOf(address(this)) - amountTokenOut, 
             ethAmount, 
             tokenAmount
         ), uint(_nt));
+        
+        // 5. Transfer token
+        TransferHelper.safeTransfer(token, to, amountTokenOut);
 
         emit SwapForToken(amountIn, to, amountTokenOut, mined);
     }
@@ -443,22 +443,23 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         amountETHOut = amountETHOut * 1 ether / (
             1 ether + k + _impactCostForBuyInETH(amountETHOut, uint(_gamma))
         ); 
+
         uint fee = amountETHOut * uint(_theta) / 10000;
         amountETHOut = amountETHOut - fee;
 
-        // 3. Transfer token
+        // 3. Transfer transaction fee
         _collect(fee);
 
-        // 4. Transfer token
-        payable(to).transfer(amountETHOut);
-
-        // 5. Mining logic
+        // 4. Mining logic
         mined = _cofiMint(_calcD(
-            address(this).balance, 
+            address(this).balance - amountETHOut, 
             IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
         ), uint(_nt));
+
+        // 5. Transfer token
+        payable(to).transfer(amountETHOut);
 
         emit SwapForETH(amountIn, to, amountETHOut, mined);
     }
@@ -488,13 +489,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
     }
 
-    // Calculate COFI transaction mining related variables and update the corresponding status
+    // Calculate CoFi transaction mining related variables and update the corresponding status
     function _cofiMint(uint D1, uint nt) private returns (uint mined) {
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * nt * (block.number + 1 - uint(_lastblock)) / 10000;
+        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 10000;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -523,7 +524,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint D0 = uint(_D);
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number + 1 - uint(_lastblock)) / 10000;
+            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 10000;
             mined = Y * (D0 - D1) / D0;
         }
     }
@@ -607,9 +608,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         totalValue = (
             balance0 * tokenAmount 
             + balance1 * ethAmount
-        ) * uint(initToken0Amount)
-        / (
-            uint(initToken0Amount) * tokenAmount 
+        ) * initToken0Amount / (
+            initToken0Amount * tokenAmount 
             + initToken1Amount * ethAmount
         );
     }

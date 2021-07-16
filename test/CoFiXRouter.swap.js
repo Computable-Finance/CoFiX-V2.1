@@ -196,10 +196,10 @@ describe("CoFiXRouter", function() {
         if (true) {
             console.log('5. addr2使用1eth兑换usdt');
 
-            let receipt = await cofixRouter.connect(addr2).swap(
-                '0x0000000000000000000000000000000000000000',
+            let receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
+                ['0x0000000000000000000000000000000000000000',
                 // 目标token地址
-                usdt.address,
+                usdt.address],
                 // eth数量
                 BigInt('1000000000000000000'),
                 // 预期获得的token的最小数量
@@ -228,9 +228,9 @@ describe("CoFiXRouter", function() {
             );
             console.log('6. addr2使用2691.421431兑换eth');
             console.log('estimate: ' + e);
-            receipt = await cofixRouter.connect(addr2).swap(
-                usdt.address,
-                '0x0000000000000000000000000000000000000000',
+            receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
+                [usdt.address,
+                '0x0000000000000000000000000000000000000000'],
                 BigInt('2691421431'),
                 BigInt('100'),
                 addr2.address,

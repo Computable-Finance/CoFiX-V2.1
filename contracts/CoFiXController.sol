@@ -131,7 +131,7 @@ contract CoFiXController is ICoFiXController {
 
     // TODO: 为了测试方便写成public的，发布时需要改为private的
     // Calculate the corrected volatility
-    function _calcRevisedSigmaSQ(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view returns (uint revisedSigmaSQ) {
+    function _calcRevisedSigmaSQ(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public pure returns (uint revisedSigmaSQ) {
         // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
         // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
         // 1. 
@@ -141,6 +141,11 @@ contract CoFiXController is ICoFiXController {
         // sqt = (sq1 + rq2 * dt) / 2
         // 3. rq2 > 9 * dt * sq1
         // sqt = sq1 * 0.2 + rq2 * dt * 0.8
+
+        // sq表示波动率，sq2表示nest返回的最新波动率，sq1表示nest的上一个波动率
+        // dt表示最新两个价格的时间间隔
+        // rq2表示最新的收益率（根据最新两个价格和价格的时间间隔计算）
+        // sqt表示修正波动率
 
         uint rq2 = p * 1 ether / p0;
         if (rq2 > 1 ether) {
@@ -157,15 +162,12 @@ contract CoFiXController is ICoFiXController {
             sq1 = (sigmaSQ * 10 - rq2dt) / 9;
         }
 
-        revisedSigmaSQ = sigmaSQ;
         uint dds = dt * dt * dt * sq1;
         if (rq2 <= (dds << 2)) {
-            console.log('case0');
+            revisedSigmaSQ = sigmaSQ;
         } else if (rq2 <= 9 * dds) {
-            console.log('case1');
             revisedSigmaSQ = (sq1 + rq2dt) >> 1;
         } else {
-            console.log('case2');
             revisedSigmaSQ = (sq1 + (rq2dt << 2)) / 5;
         }
     }

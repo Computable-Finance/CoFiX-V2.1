@@ -116,82 +116,18 @@
     ) external payable returns (uint amountETH, uint amountToken);
 ```
 
-### 2.8. Trader swap exact amount of ETH for ERC20 Tokens
+### 2.8. 兑换代币
 
 ```javascript
-    /// @dev Trader swap exact amount of ETH for ERC20 Tokens (notice: msg.value = amountIn + oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of ETH a trader want to swap into pool
-    /// @param  amountOutMin The minimum amount of Token a trader want to swap out of pool
-    /// @param  to The target address receiving the Token
+    /// @dev Swap exact tokens for tokens
+    /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
+    /// token addresses (ETH address is represented by 0) of the exchange path
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
     /// @return amountOut The real amount of Token transferred out of pool
-    function swapExactETHForTokens(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-```
-
-### 2.9. Trader swap exact amount of ERC20 Tokens for ETH
-
-```javascript
-    /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swapExactTokensForETH(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-```
-
-### 2.10. 执行兑换交易
-
-```javascript
-    /// @dev 执行兑换交易
-    /// @param  src 源资产token地址
-    /// @param  dest 目标资产token地址
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swap(
-        address src, 
-        address dest, 
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-```
-
-### 2.11. 多级路由兑换
-
-```javascript
-    /// @dev 多级路由兑换
-    /// @param  path 路由路径
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amounts 兑换路径中每次换得的资产数量
     function swapExactTokensForTokens(
         address[] calldata path,
         uint amountIn,
@@ -199,11 +135,11 @@
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint[] memory amounts);
+    ) external payable returns (uint amountOut);
 ```
     Note: 多级路由兑换，path可以通过getRouterPath()查询，也可以前端缓存交易对数据，自行生成。
 
-### 2.12. 获取目标pair的交易挖矿分成
+### 2.9. 获取目标pair的交易挖矿分成
 
 ```javascript
     /// @dev 获取目标xtoken的交易挖矿分成

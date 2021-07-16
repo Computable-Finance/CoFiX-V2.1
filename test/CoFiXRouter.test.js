@@ -62,9 +62,9 @@ describe("CoFiXRouter", function() {
             }
         );
 
-        receipt = await cofixRouter.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactTokensForTokens(
             // 目标token地址
-            usdt.address.toString(),
+            ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量
@@ -79,9 +79,9 @@ describe("CoFiXRouter", function() {
         );
         console.log((await receipt.wait()).gasUsed.toString());
 
-        receipt = await cofixRouter.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactTokensForTokens(
             // 目标token地址
-            usdt.address.toString(),
+            ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量

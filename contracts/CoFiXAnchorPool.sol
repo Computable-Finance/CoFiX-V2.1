@@ -165,11 +165,11 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     }
 
     // Query balance, 0 address means eth
-    function _balanceOf(address token, address addr) private view returns (uint balance) {
+    function _balanceOf(address token) private view returns (uint balance) {
         if (token == address(0)) {
-            balance = addr.balance;
+            balance = address(this).balance;
         } else {
-            balance = IERC20(token).balanceOf(addr);
+            balance = IERC20(token).balanceOf(address(this));
         }
     }
 
@@ -253,8 +253,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
         // 4. Adjust according to the surplus of the fund pool
-        uint balance = _balanceOf(token, address(this));
-        _cash(liquidity, token, base, balance, to);
+        _cash(liquidity, token, base, _balanceOf(token), to);
     }
 
     // Retrieve the target token according to the share. If the token balance in the fund pool is not enough, 
@@ -285,7 +284,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
                 if (ta != token) {
                     // Find the token with the largest balance and update it
                     //uint b = IERC20(ta).balanceOf(address(this));
-                    uint b = _balanceOf(ta, address(this));
+                    uint b = _balanceOf(ta);
                     uint bs = uint(tokenInfo.base);
                     if (max < b * 1 ether / bs) {
                         // Update base
@@ -321,7 +320,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
             // Find the token with the largest balance and update it
             //uint b = IERC20(ta).balanceOf(address(this));
-            uint b = _balanceOf(ta, address(this));
+            uint b = _balanceOf(ta);
             uint bs = uint(tokenInfo.base);
             uint stdBalance = b * 1 ether / bs;
             // Calculate total assets
@@ -384,32 +383,37 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         uint base0 = uint(tokenInfo0.base);
         uint base1 = uint(tokenInfo1.base);
 
-        // 3. Calculate the number of tokens exchanged and the handling charge
-        amountOut = amountIn * base1 / base0;
-        uint fee = amountOut * uint(_theta) / 10000;
-        amountOut = amountOut - fee;
+        {
+            // 3. Calculate the number of tokens exchanged
+            amountOut = amountIn * base1 / base0;
+            uint fee = amountOut * uint(_theta) / 10000;
+            amountOut = amountOut - fee;
 
-        // 4. Converted token and handling charge
-        _transfer(dest, to, amountOut);
-        if (dest == address(0)) {
-            ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
-        } else {
-            _transfer(dest, _cofixDAO, fee);
+            // 4. Transfer transaction fee
+            if (dest == address(0)) {
+                ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
+            } else {
+                _transfer(dest, _cofixDAO, fee);
+            }
         }
-
+        
         // 5. Mining logic
         uint nt = uint(_nt);
-        mined = _cofiMint(tokenInfo0, base0, nt) + _cofiMint(tokenInfo1, base1, nt);
+        mined = _cofiMint(tokenInfo0, _balanceOf(src) * 1 ether / base0, nt);
+        mined += _cofiMint(tokenInfo1, (_balanceOf(dest) - amountOut) * 1 ether / base1, nt);
+
+        // 6. Transfer token
+        _transfer(dest, to, amountOut);
     }
 
-    // Calculate COFI transaction mining related variables and update the corresponding status
-    function _cofiMint(TokenInfo storage tokenInfo, uint base, uint nt) private returns (uint mined) {
+    // Calculate CoFi transaction mining related variables and update the corresponding status
+    function _cofiMint(TokenInfo storage tokenInfo, uint x, uint nt) private returns (uint mined) {
 
         // 1. Get total shares
         uint L = IERC20(tokenInfo.xtokenAddress).totalSupply();
 
         // 2. Get the current token balance and convert it into the corresponding number of shares
-        uint x = _balanceOf(tokenInfo.tokenAddress, address(this)) * 1 ether / base;
+        //uint x = _balanceOf(tokenInfo.tokenAddress) * 1 ether / base;
         
         // 3. Calculate and adjust the scale
         uint D1 = L > x ? L - x : x - L;
@@ -419,7 +423,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number + 1 - uint(tokenInfo._lastblock)) / 10000;
+        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 10000;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -456,7 +460,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number + 1 - uint(tokenInfo._lastblock)) / 10000;
+            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number - uint(tokenInfo._lastblock)) / 10000;
             mined = Y * (D0 - D1) / D0;
         }
     }

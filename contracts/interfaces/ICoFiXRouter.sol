@@ -91,67 +91,15 @@ interface ICoFiXRouter {
         uint deadline
     ) external payable returns (uint amountETH, uint amountToken);
 
-    /// @dev Trader swap exact amount of ETH for ERC20 Tokens (notice: msg.value = amountIn + oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of ETH a trader want to swap into pool
-    /// @param  amountOutMin The minimum amount of Token a trader want to swap out of pool
-    /// @param  to The target address receiving the Token
+    /// @dev Swap exact tokens for tokens
+    /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
+    /// token addresses (ETH address is represented by 0) of the exchange path
+    /// @param  amountIn The exact amount of Token a trader want to swap into pool
+    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
     /// @param  deadline The dealine of this request
     /// @return amountOut The real amount of Token transferred out of pool
-    function swapExactETHForTokens(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-
-    /// @dev Trader swap exact amount of ERC20 Tokens for ETH (notice: msg.value = oracle fee)
-    /// @param  token The address of ERC20 Token
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swapExactTokensForETH(
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-    
-    /// @dev Swap tokens for tokens
-    /// @param  src Src token address
-    /// @param  dest Dest token address
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amountOut The real amount of ETH transferred out of pool
-    function swap(
-        address src, 
-        address dest, 
-        uint amountIn,
-        uint amountOutMin,
-        address to,
-        address rewardTo,
-        uint deadline
-    ) external payable returns (uint amountOut);
-
-    /// @dev Swap tokens for tokens with routing path
-    /// @param  path Routing path
-    /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
-    /// @param  to The target address receiving the ETH
-    /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
-    /// @return amounts The number of assets exchanged each time in the conversion path
     function swapExactTokensForTokens(
         address[] calldata path,
         uint amountIn,
@@ -159,7 +107,7 @@ interface ICoFiXRouter {
         address to,
         address rewardTo,
         uint deadline
-    ) external payable returns (uint[] memory amounts);
+    ) external payable returns (uint amountOut);
 
     /// @dev Acquire the transaction mining share of the target XToken
     /// @param xtoken The destination XToken address
