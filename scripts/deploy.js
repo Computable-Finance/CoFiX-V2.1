@@ -3,6 +3,6 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const deploy = require("./rinkeby@20210716.js");
+const deploy = require("./deploy.proxy.js");
 
 exports.deploy = deploy.deploy;

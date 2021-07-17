@@ -214,6 +214,8 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // 4. Increase xtoken
         liquidity = CoFiXAnchorToken(xtoken).mint(to, amountToken * 1 ether / uint(tokenInfo.base));
         emit Mint(token, to, amountETH, amountToken, liquidity);
+
+        _cofiMint(tokenInfo, _balanceOf(token) * 1 ether / uint(tokenInfo.base), _nt);
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
@@ -263,13 +265,18 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             // The number of tokens to be paid to the user
             uint need = liquidity * base / 1 ether;
             // If the balance is enough, the token will be transferred to the user directly and break
+
+            TokenInfo storage ti = _tokens[_tokenMapping[token] - 1];
             if (need <= balance) {
                 _transfer(token, to, need);
+                _cofiMint(ti, _balanceOf(token) * 1 ether / uint(ti.base), _nt);
                 break;
             }
 
             // If the balance is not enough, transfer all the balance to the user
             _transfer(token, to, balance);
+            _cofiMint(ti, _balanceOf(token) * 1 ether / uint(ti.base), _nt);
+
             // After deducting the transferred token, the remaining share
             liquidity -= balance * 1 ether / base;
 
