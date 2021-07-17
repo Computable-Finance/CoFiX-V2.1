@@ -29,17 +29,15 @@ interface ICoFiXPool {
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
-    /// @param gamma Impact cost coefficient
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external;
+    /// @param impactCostVOL Impact cost threshold
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external;
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
-    /// @return gamma Impact cost coefficient
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function getConfig() external view returns (uint16 theta, uint16 gamma, uint32 nt);
+    /// @return impactCostVOL Impact cost threshold
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function getConfig() external view returns (uint16 theta, uint16 impactCostVOL, uint56 nt);
 
     /// @dev Add liquidity and mint xtoken
     /// @param token Target token address

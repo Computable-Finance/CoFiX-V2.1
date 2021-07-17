@@ -125,7 +125,7 @@ exports.deploy = async function () {
 
     console.log('13. cofixVaultForStaking.setConfig');
     await cofixVaultForStaking.setConfig({
-        cofiRate: '200000000000000000'
+        cofiUnit: '10000000000000000'
     });
     console.log('14. cofixVaultForStaking.batchSetPoolWeight(cnode.address)');
     await cofixVaultForStaking.batchSetPoolWeight([cnode.address], [100000]);

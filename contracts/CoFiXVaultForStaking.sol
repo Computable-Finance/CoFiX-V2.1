@@ -47,8 +47,8 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         mapping(address=>Account) accounts;
     }
     
-    // Total weight of ore drawing speed
-    uint constant TOTAL_COFI_WEIGHT = 100000;
+    // // Cofi mining speed weight base
+    // uint constant COFI_WEIGHT_BASE = 1e9;
 
     // Configuration
     Config _config;
@@ -270,9 +270,9 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         newReward =
             (block.number - uint(channel.blockCursor)) 
             * _redution(block.number - COFI_GENESIS_BLOCK) 
-            * uint(_config.cofiRate) 
+            * uint(_config.cofiUnit) 
             * channel.cofiWeight
-            / 400 / TOTAL_COFI_WEIGHT;
+            / 400 ;
     }
 
     /// @dev Calculate dividend data

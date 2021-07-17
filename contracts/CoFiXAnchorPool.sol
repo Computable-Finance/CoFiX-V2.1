@@ -50,12 +50,11 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
-    // Impact cost coefficient
-    //uint16 _gamma;
+    // Impact cost threshold
+    //uint16 _impactCostVOL;
 
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    // in ten thousand points. 1000
-    uint32 _nt;
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    uint56 _nt;
 
     // Lock flag
     uint8 _locked;
@@ -115,26 +114,23 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
-    /// @param gamma Impact cost coefficient
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external override onlyGovernance {
+    /// @param impactCostVOL Impact cost threshold
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // Impact cost coefficient
-        //_gamma = gamma;
-        require(gamma == 0, "CoFiXAnchorPool: gamma must be 0");
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-        // in ten thousand points. 1000
+        // Impact cost threshold
+        //_impactCostVOL = impactCostVOL;
+        require(impactCostVOL == 0, "CoFiXAnchorPool: impactCostVOL must be 0");
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
         _nt = nt;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
-    /// @return gamma Impact cost coefficient
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function getConfig() external override view returns (uint16 theta, uint16 gamma, uint32 nt) {
+    /// @return impactCostVOL Impact cost threshold
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function getConfig() external override view returns (uint16 theta, uint16 impactCostVOL, uint56 nt) {
         return (_theta, 0, _nt);
     }
 
@@ -430,7 +426,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 10000;
+        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1e9;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -467,7 +463,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number - uint(tokenInfo._lastblock)) / 10000;
+            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number - uint(tokenInfo._lastblock)) / 1e9;
             mined = Y * (D0 - D1) / D0;
         }
     }

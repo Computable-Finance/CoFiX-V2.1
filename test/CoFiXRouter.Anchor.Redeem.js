@@ -342,9 +342,9 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('11. addr1回购0.02个CoFi');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.02));
-            let receipt = await cofixDAO.connect(addr1).redeemToken(usdt.address, toBigInt(0.02), addr1.address, {
+            console.log('11. addr1回购0.0002个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.0002));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(usdt.address, toBigInt(0.0002), addr1.address, {
                 value: BigInt('20000000000000000')
             });
             await showReceipt(receipt);
@@ -353,9 +353,9 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('12. addr1回购3个CoFi');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(3));
-            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(3), addr1.address, {
+            console.log('12. addr1回购0.003个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.003));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(0.003), addr1.address, {
                 value: BigInt('20000000000000000')
             });
             await showReceipt(receipt);
@@ -375,8 +375,8 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('14. addr1.redeem()');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.1'));
-            await cofixDAO.connect(addr1).redeem(toBigInt('0.01'), addr1.address, { value: toBigInt('0.1')});
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.0001'));
+            await cofixDAO.connect(addr1).redeem(toBigInt('0.0001'), addr1.address, { value: toBigInt('0.1')});
             status = await getStatus();
             console.log(status);
             console.log('quotaOf: ' + await cofixDAO.quotaOf());

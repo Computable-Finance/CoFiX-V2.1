@@ -14,8 +14,8 @@
 
     /// @dev CoFiXRouter configuration structure
     struct Config {
-        // CoFi mining speed
-        uint96 cofiRate;
+        // CoFi mining unit
+        uint96 cofiUnit;
     }
 ```
 

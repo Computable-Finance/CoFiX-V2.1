@@ -9,8 +9,8 @@ import "hardhat/console.sol";
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
 
-    uint constant K_ALPHA = 0.00001 ether;
-    uint constant K_BETA = 10 ether;
+    // uint constant K_ALPHA = 0.00001 ether;
+    // uint constant K_BETA = 10 ether;
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
@@ -52,6 +52,8 @@ contract CoFiXController is ICoFiXController {
         ) = INestPriceFacade(NEST_PRICE_FACADE).latestPriceAndTriggeredPriceInfo { 
             value: msg.value 
         } (tokenAddress, payback);
+        
+        _checkPrice(priceTokenAmount, avgPriceTokenAmount);
         priceEthAmount = 1 ether;
         avgPriceEthAmount = 1 ether;
     }
@@ -80,6 +82,23 @@ contract CoFiXController is ICoFiXController {
             value: msg.value 
         } (tokenAddress, payback);
         ethAmount = 1 ether;
+
+        // (
+        //     uint latestPriceBlockNumber, 
+        //     uint latestPriceValue,
+        //     ,//uint triggeredPriceBlockNumber,
+        //     ,//uint triggeredPriceValue,
+        //     uint triggeredAvgPrice,
+        //     //uint triggeredSigmaSQ
+        // ) = INestPriceFacade(NEST_PRICE_FACADE).latestPriceAndTriggeredPriceInfo { 
+        //     value: msg.value 
+        // } (tokenAddress, payback);
+        
+        // _checkPrice(latestPriceValue, triggeredAvgPrice);
+
+        // ethAmount = 1 ether;
+        // tokenAmount = latestPriceValue;
+        // blockNumber = latestPriceBlockNumber;
     }
 
     /// @dev Calc variance of price and K in CoFiX is very expensive
@@ -106,15 +125,16 @@ contract CoFiXController is ICoFiXController {
             uint[] memory prices,
             ,//uint triggeredPriceBlockNumber,
             ,//uint triggeredPriceValue,
-            ,//uint triggeredAvgPrice,
+            uint triggeredAvgPrice,
             uint triggeredSigmaSQ
         ) = INestPriceFacade(NEST_PRICE_FACADE).lastPriceListAndTriggeredPriceInfo {
             value: msg.value  
         } (tokenAddress, 2, payback);
 
-        ethAmount = 1 ether;
         tokenAmount = prices[1];
+        _checkPrice(tokenAmount, triggeredAvgPrice);
         blockNumber = prices[0];
+        ethAmount = 1 ether;
 
         k = calcRevisedK(triggeredSigmaSQ, prices[3], prices[2], tokenAmount, blockNumber);
     }
@@ -178,15 +198,25 @@ contract CoFiXController is ICoFiXController {
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value
     function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
-        uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
-        uint gamma = 1 ether;
-        if (sigma > 0.0005 ether) {
-            gamma = 2 ether;
-        } else if (sigma > 0.0003 ether) {
-            gamma = 1.5 ether;
-        }
+        // uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
+        // uint gamma = 1 ether;
+        // if (sigma > 0.0005 ether) {
+        //     gamma = 2 ether;
+        // } else if (sigma > 0.0003 ether) {
+        //     gamma = 1.5 ether;
+        // }
 
-        k = (K_ALPHA * (block.number - bn) * BLOCK_TIME * 1 ether + K_BETA * sigma) * gamma / 1e36;
+        // k = (K_ALPHA * (block.number - bn) * BLOCK_TIME * 1 ether + K_BETA * sigma) * gamma / 1e36;
+
+        // k = 0.002 + 2 * D^0.5 * σ
+     
+        k = 0.002 ether + _sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ / 1e4) * 2e11;
+        console.log('calck-dt', (block.number - bn) * BLOCK_TIME);
+        console.log('calck-sigmaSQ', sigmaSQ);
+        console.log('calck-k', k);
+        
+        // TODO: 删除此代码
+        k -= 0.002 ether;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
@@ -201,5 +231,14 @@ contract CoFiXController is ICoFiXController {
         } else if (y != 0) {
             z = 1;
         }
+    }
+
+    // Check price
+    function _checkPrice(uint price, uint avgPrice) private pure {
+        require(
+            price <= avgPrice * 11 / 10 &&
+            price >= avgPrice * 9 / 10, 
+            "CoFiXController: price deviation"
+        );
     }
 }

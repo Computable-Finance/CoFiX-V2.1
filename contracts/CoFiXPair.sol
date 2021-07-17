@@ -28,14 +28,16 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
-    // Scale of impact cost base
-    uint constant VOL_BASE = 50 ether;
+    // // Scale of impact cost base
+    // uint constant VOL_BASE = 50 ether;
+    uint constant VOL_UNIT = 0.1 ether;
 
-    // α=0
-    uint constant C_BUYIN_ALPHA = 0; 
+    // // α=0
+    // uint constant C_BUYIN_ALPHA = 0; 
 
     // β=2e-05*1e18
-    uint constant C_BUYIN_BETA = 20000000000000; 
+    //uint constant C_BUYIN_BETA = 20000000000000; 
+    uint constant C_BUYIN_BETA = 0.001 ether; 
 
     // Target token address
     address _tokenAddress; 
@@ -61,12 +63,12 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
-    // Impact cost coefficient
-    uint16 _gamma;
+    // Impact cost threshold
+    //uint16 _gamma;
+    uint16 _impactCostVOL;
 
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    // in ten thousand points. 1000
-    uint32 _nt;
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    uint56 _nt;
 
     // Lock flag
     uint8 _locked;
@@ -123,26 +125,23 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
-    /// @param gamma Impact cost coefficient
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external override onlyGovernance {
+    /// @param impactCostVOL Impact cost threshold
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // Impact cost coefficient
-        _gamma = gamma;
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-        // in ten thousand points. 1000
+        // Impact cost threshold
+        _impactCostVOL = impactCostVOL;
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
         _nt = nt;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
-    /// @return gamma Impact cost coefficient
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 
-    /// in ten thousand points. 1000
-    function getConfig() external override view returns (uint16 theta, uint16 gamma, uint32 nt) {
-        return (_theta, _gamma, _nt);
+    /// @return impactCostVOL Impact cost threshold
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function getConfig() external override view returns (uint16 theta, uint16 impactCostVOL, uint56 nt) {
+        return (_theta, _impactCostVOL, _nt);
     }
 
     /// @dev Get initial asset ratio
@@ -201,12 +200,26 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint total = totalSupply;
         if (total > 0) {
             // 3. Query oracle
+            // (
+            //     uint ethAmount, 
+            //     uint tokenAmount, 
+            //     //uint blockNumber, 
+            // ) = ICoFiXController(_cofixController).queryPrice { 
+            //     // Any amount over the amountETH will be charged as the seer call fee
+            //     value: msg.value - amountETH
+            // } (
+            //     token,
+            //     payback
+            // );
+
             (
-                uint ethAmount, 
-                uint tokenAmount, 
-                //uint blockNumber, 
-            ) = ICoFiXController(_cofixController).queryPrice { 
-                // Any amount over the amountETH will be charged as the seer call fee
+                ,//uint blockNumber, 
+                uint ethAmount,
+                uint tokenAmount,
+                ,//uint avgPriceEthAmount,
+                ,//uint avgPriceTokenAmount,
+                //uint sigmaSQ
+            ) = ICoFiXController(_cofixController).latestPriceInfo { 
                 value: msg.value - amountETH
             } (
                 token,
@@ -270,11 +283,25 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 1. Check token address
         require(token == _tokenAddress, "CoFiXPair: invalid token address");
         // 2. Query oracle
+        // (
+        //     uint ethAmount, 
+        //     uint tokenAmount, 
+        //     //uint blockNumber, 
+        // ) = ICoFiXController(_cofixController).queryPrice { 
+        //     value: msg.value 
+        // } (
+        //     token,
+        //     payback
+        // );
+
         (
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNumber, 
-        ) = ICoFiXController(_cofixController).queryPrice { 
+            ,//uint blockNumber, 
+            uint ethAmount,
+            uint tokenAmount,
+            ,//uint avgPriceEthAmount,
+            ,//uint avgPriceTokenAmount,
+            //uint sigmaSQ
+        ) = ICoFiXController(_cofixController).latestPriceInfo { 
             value: msg.value 
         } (
             token,
@@ -404,7 +431,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 2. Calculate the trade result
         uint fee = amountIn * uint(_theta) / 10000;
         amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
-            1 ether + k + _impactCostForSellOutETH(amountIn, uint(_gamma))
+            1 ether + k + _impactCostForSellOutETH(amountIn, uint(_impactCostVOL))
         );
 
         // 3. Transfer transaction fee
@@ -457,7 +484,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 2. Calculate the trade result
         amountETHOut = amountIn * ethAmount / tokenAmount;
         amountETHOut = amountETHOut * 1 ether / (
-            1 ether + k + _impactCostForBuyInETH(amountETHOut, uint(_gamma))
+            1 ether + k + _impactCostForBuyInETH(amountETHOut, uint(_impactCostVOL))
         ); 
 
         uint fee = amountETHOut * uint(_theta) / 10000;
@@ -511,7 +538,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 10000;
+        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 1e9;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -540,7 +567,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint D0 = uint(_D);
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 10000;
+            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
             mined = Y * (D0 - D1) / D0;
         }
     }
@@ -630,42 +657,48 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
     }
 
-    // // impact cost
-    // // - C = 0, if VOL < 500 / γ
-    // // - C = (α + β * VOL) * γ, if VOL >= 500 / γ
+    // impact cost
+    // - C = 0, if VOL < 500 / γ
+    // - C = (α + β * VOL) * γ, if VOL >= 500 / γ
 
     // α=0，β=2e-06
-    function _impactCostForBuyInETH(uint vol, uint gamma) private pure returns (uint impactCost) {
-        //uint gamma = uint(_gamma); //CGammaMap[token];
-        if (vol * gamma < VOL_BASE) {
-            return 0;
+    function _impactCostForBuyInETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
+        // //uint gamma = uint(_gamma); //CGammaMap[token];
+        // if (vol * gamma < VOL_BASE) {
+        //     return 0;
+        // }
+        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
+        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
+        if (vol >= impactCostVOL * VOL_UNIT) {
+            impactCost = vol * C_BUYIN_BETA / 1 ether;
         }
-        // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
     }
 
     // α=0，β=2e-06
-    function _impactCostForSellOutETH(uint vol, uint gamma) private pure returns (uint impactCost) {
-        //uint gamma = uint(_gamma); //CGammaMap[token];
-        if (vol * gamma < VOL_BASE) {
-            return 0;
+    function _impactCostForSellOutETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
+        // //uint gamma = uint(_gamma); //CGammaMap[token];
+        // if (vol * gamma < VOL_BASE) {
+        //     return 0;
+        // }
+        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
+        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
+        if (vol >= impactCostVOL * VOL_UNIT) {
+            impactCost = vol * C_BUYIN_BETA / 1 ether;
         }
-        // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
     }
 
     /// @dev Calculate the impact cost of buy in eth
     /// @param vol Trade amount in eth
     /// @return impactCost Impact cost
-    function impactCostForBuyInETH(uint vol) external view override returns (uint impactCost) {
-        return _impactCostForBuyInETH(vol, uint(_gamma));
+    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
+        return _impactCostForBuyInETH(vol, uint(_impactCostVOL));
     }
 
     /// @dev Calculate the impact cost of sell out eth
     /// @param vol Trade amount in eth
     /// @return impactCost Impact cost
-    function impactCostForSellOutETH(uint vol) external view override returns (uint impactCost) {
-        return _impactCostForSellOutETH(vol, uint(_gamma));
+    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
+        return _impactCostForSellOutETH(vol, uint(_impactCostVOL));
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
