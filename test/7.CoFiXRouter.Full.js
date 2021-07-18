@@ -165,12 +165,12 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('2. cofi做市1eth');
-            await cofi.approve(cofixRouter.address, toBigInt(1000));
+            await cofi.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 cofiPair.address,
                 cofi.address,
                 toBigInt('1'),
-                toBigInt('1000'),
+                toBigInt('2000'),
                 toBigInt('0.900000000000000000'),
                 owner.address,
                 BigInt('1800000000000'), {

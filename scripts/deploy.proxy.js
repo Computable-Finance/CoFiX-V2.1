@@ -81,7 +81,7 @@ exports.deploy = async function () {
     console.log('cofixController: ' + cofixController.address);
 
     // 3. 部署资金池合约
-    const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('3')], { initializer: 'init' });
+    const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('2')], { initializer: 'init' });
     //const usdtPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('usdtPair: ' + usdtPair.address);
 
@@ -89,11 +89,11 @@ exports.deploy = async function () {
     //const hbtcPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('hbtcPair: ' + hbtcPair.address);
 
-    const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt('1'), BigInt('20000')], { initializer: 'init' });
+    const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt('1'), BigInt('100000')], { initializer: 'init' });
     //const nestPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('nestPair: ' + nestPair.address);
 
-    const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-4', 'XToken-4', cofi.address, BigInt('1'), BigInt('1000')], { initializer: 'init' });
+    const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-4', 'XToken-4', cofi.address, BigInt('1'), BigInt('2000')], { initializer: 'init' });
     //const cofiPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('cofiPair: ' + cofiPair.address);
 

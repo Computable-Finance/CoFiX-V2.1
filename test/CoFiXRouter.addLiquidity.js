@@ -98,7 +98,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt(2),
-                toBigInt(6000, 6),
+                toBigInt(4000, 6),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -111,9 +111,9 @@ describe("CoFiXRouter", function() {
 
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('2.000000000000000000'));
-            expect(status.usdtPair.usdt).to.equal('6000.000000');
+            expect(status.usdtPair.usdt).to.equal('4000.000000');
             expect(status.owner.staked).to.equal('0.000000000000000000');
-            expect(status.owner.usdt).to.equal('9994000.000000');
+            expect(status.owner.usdt).to.equal('9996000.000000');
         }
         
         if (true) {
@@ -123,7 +123,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
-                toBigInt('6000.000000', 6),
+                toBigInt('4000.000000', 6),
                 toBigInt('0.900000000000000000'),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -137,9 +137,9 @@ describe("CoFiXRouter", function() {
 
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
-            expect(status.usdtPair.usdt).to.equal('12000.000000');
+            expect(status.usdtPair.usdt).to.equal('8000.000000');
             expect(status.owner.staked).to.equal('2.000000000000000000');
-            expect(status.owner.usdt).to.equal('9988000.000000');
+            expect(status.owner.usdt).to.equal('9992000.000000');
 
             console.log('等待一个区块后');
             await usdt.transfer(owner.address, 0);
@@ -148,9 +148,9 @@ describe("CoFiXRouter", function() {
             
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.usdtPair.eth).to.equal(('4.000000000000000000'));
-            expect(status.usdtPair.usdt).to.equal('12000.000000');
+            expect(status.usdtPair.usdt).to.equal('8000.000000');
             expect(status.owner.staked).to.equal('2.000000000000000000');
-            expect(status.owner.usdt).to.equal('9988000.000000');
+            expect(status.owner.usdt).to.equal('9992000.000000');
             expect(status.owner.earned).to.equal('0.200000000000000000');
         }
 
@@ -162,7 +162,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
-                toBigInt('6000.000000', 6),
+                toBigInt('4000.000000', 6),
                 toBigInt('0.900000000000000000'),
                 addr1.address,
                 BigInt('1800000000000'), {
@@ -174,15 +174,15 @@ describe("CoFiXRouter", function() {
             console.log(status);
 
             expect(status.usdtPair.eth).to.equal(('6.000000000000000000'));
-            expect(status.usdtPair.usdt).to.equal('18000.000000');
+            expect(status.usdtPair.usdt).to.equal('12000.000000');
             expect(status.owner.xtoken).to.equal(('1.999999999000000000'));
             expect(status.owner.staked).to.equal('2.000000000000000000');
-            expect(status.owner.usdt).to.equal('4988000.000000');
+            expect(status.owner.usdt).to.equal('4992000.000000');
             expect(status.owner.earned).to.equal('0.800000000000000000');
 
             expect(status.addr1.xtoken).to.equal('0.000000000000000000');
             //expect(status.addr1.eth).to.equal('6000000000000000000');
-            expect(status.addr1.usdt).to.equal('4994000.000000');
+            expect(status.addr1.usdt).to.equal('4996000.000000');
             expect(status.addr1.staked).to.equal('2.000000000000000000');
         }
 
@@ -215,7 +215,7 @@ describe("CoFiXRouter", function() {
             status = await getStatus();
             console.log(status);
             
-            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('18000.000000');
+            expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('12000.000000');
 
             await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
             console.log('6. addr2使用2691.421431兑换eth');
@@ -299,7 +299,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt(2),
-                toBigInt(6000, 6),
+                toBigInt(4000, 6),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {

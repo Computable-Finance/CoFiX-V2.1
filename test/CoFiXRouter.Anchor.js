@@ -144,7 +144,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt(2),
-                toBigInt(6000, 6),
+                toBigInt(4000, 6),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -163,7 +163,7 @@ describe("CoFiXRouter", function() {
                 nestPair.address,
                 nest.address,
                 toBigInt(2),
-                toBigInt(40000),
+                toBigInt(200000),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {

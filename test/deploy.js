@@ -45,6 +45,9 @@ describe("CoFiXRouter", function() {
         }
 
         console.log('ok');
+
+        console.log('usdt balance: ' + await usdt.balanceOf(owner.address));
+        return;
         // if (true) {
         //     console.log('0. 设置价格');
         //     await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);

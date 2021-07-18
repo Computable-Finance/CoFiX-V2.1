@@ -26,7 +26,7 @@ describe("CoFiXRouter", function() {
             usdtPair.address,
             usdt.address,
             BigInt('2000000000000000000'),
-            BigInt('6000000000'),
+            BigInt('4000000000'),
             BigInt('900000000000000000'),
             owner.address,
             BigInt('1800000000000'), {
