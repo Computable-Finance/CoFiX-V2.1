@@ -226,6 +226,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 payback
             );
 
+            uint balance0 = address(this).balance;
+            uint balance1 = IERC20(token).balanceOf(address(this));
+
             // TODO: Pt此处没有引入K值，后续需要引入
             // There are no cost shocks to market making
             // When the circulation is not zero, the normal issue share
@@ -236,9 +239,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 // and amountToken respectively
 
                 // The current eth balance minus the amount eth equals the ETH balance before the transaction
-                address(this).balance - amountETH, 
+                balance0 - amountETH, 
                 //The current token balance minus the amounttoken equals to the token balance before the transaction
-                IERC20(token).balanceOf(address(this)) - amountToken,
+                balance1 - amountToken,
                 // Oracle price - eth amount
                 ethAmount, 
                 // Oracle price - token amount
@@ -247,8 +250,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 uint(_initToken1Amount)
             );
 
-            // 6. Mining logic
-            _updateMintState(token, ethAmount, tokenAmount);
+            // 6. Update mining state
+            _updateMiningState(balance0, balance1, ethAmount, tokenAmount);
         } else {
             payable(payback).transfer(msg.value - amountETH);
             //liquidity = _calcLiquidity(amountETH, navps) - MINIMUM_LIQUIDITY;
@@ -309,8 +312,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // 3. Calculate the net value and calculate the equal proportion fund according to the net value
-        uint ethBalance = address(this).balance;
-        uint tokenBalance = IERC20(token).balanceOf(address(this));
+        uint balance0 = address(this).balance;
+        uint balance1 = IERC20(token).balanceOf(address(this));
         uint navps = 1 ether;
         uint total = totalSupply;
         uint initToken0Amount = uint(_initToken0Amount);
@@ -318,8 +321,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         if (total > 0) {
             // TODO: Pt此处没有引入K值，后续需要引入
             navps = _calcTotalValue(
-                ethBalance, 
-                tokenBalance, 
+                balance0, 
+                balance1, 
                 ethAmount, 
                 tokenAmount,
                 initToken0Amount,
@@ -338,15 +341,15 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 5. Adjust according to the surplus of the fund pool
         // If the number of eth to be retrieved exceeds the balance of the fund pool, 
         // it will be automatically converted into a token
-        if (amountETHOut > ethBalance) {
-            amountTokenOut += (amountETHOut - ethBalance) * tokenAmount / ethAmount;
-            amountETHOut = ethBalance;
+        if (amountETHOut > balance0) {
+            amountTokenOut += (amountETHOut - balance0) * tokenAmount / ethAmount;
+            amountETHOut = balance0;
         } 
         // If the number of tokens to be retrieved exceeds the balance of the fund pool, 
         // it will be automatically converted to eth
-        else if (amountTokenOut > tokenBalance) {
-            amountETHOut += (amountTokenOut - tokenBalance) * ethAmount / tokenAmount;
-            amountTokenOut = tokenBalance;
+        else if (amountTokenOut > balance1) {
+            amountETHOut += (amountTokenOut - balance1) * ethAmount / tokenAmount;
+            amountTokenOut = balance1;
         }
 
         // 6. Transfer of funds to the user's designated address
@@ -356,17 +359,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
         // 7. Mining logic
-        _updateMintState(token, ethAmount, tokenAmount);
-    }
-
-    function _updateMintState(address token, uint ethAmount, uint tokenAmount) private {
-        // Mining logic
-        _cofiMint(_calcD(
-            address(this).balance, 
-            IERC20(token).balanceOf(address(this)), 
-            ethAmount, 
-            tokenAmount
-        ), uint(_nt));
+        _updateMiningState(balance0 - amountETHOut, balance1 - amountTokenOut, ethAmount, tokenAmount);
     }
 
     /// @dev Swap token
@@ -505,6 +498,24 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         payable(to).transfer(amountETHOut);
 
         emit SwapForETH(amountIn, to, amountETHOut, mined);
+    }
+
+    // Update mining state
+    function _updateMiningState(uint balance0, uint balance1, uint ethAmount, uint tokenAmount) private {
+        uint D1 = _calcD(
+            balance0, //address(this).balance, 
+            balance1, //IERC20(token).balanceOf(address(this)), 
+            ethAmount, 
+            tokenAmount
+        );
+
+        uint D0 = uint(_D);
+        // When d0 < D1, the y value also needs to be updated
+        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
+
+        _Y = uint112(Y);
+        _D = uint112(D1);
+        _lastblock = uint32(block.number);
     }
 
     // Calculate the ETH transaction size required to adjust to 𝑘0

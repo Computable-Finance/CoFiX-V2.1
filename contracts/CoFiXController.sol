@@ -211,12 +211,9 @@ contract CoFiXController is ICoFiXController {
         // k = 0.002 + 2 * D^0.5 * σ
      
         k = 0.002 ether + _sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ / 1e4) * 2e11;
-        console.log('calck-dt', (block.number - bn) * BLOCK_TIME);
-        console.log('calck-sigmaSQ', sigmaSQ);
-        console.log('calck-k', k);
         
         // TODO: 删除此代码
-        k -= 0.002 ether;
+        //k -= 0.002 ether;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

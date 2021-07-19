@@ -232,7 +232,8 @@ describe("CoFiXRouter", function() {
         if (true) {
 
             console.log('6. 使用路由dai->usdt->eth兑换10usdt');
-            let path = await cofixRouter.getRouterPath(dai.address, '0x0000000000000000000000000000000000000000');
+            //let path = await cofixRouter.getRouterPath(dai.address, '0x0000000000000000000000000000000000000000');
+            let path = [dai.address, usdt.address, '0x0000000000000000000000000000000000000000'];
             console.log(path);
             console.log('usdtPair: ' + usdtPair.address);
             console.log('nestPair: ' + nestPair.address);
@@ -257,7 +258,8 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('7. 使用路由eth->usdt->dai兑换0.004850458833971061eth');
-            let path = await cofixRouter.getRouterPath('0x0000000000000000000000000000000000000000', dai.address);
+            //let path = await cofixRouter.getRouterPath('0x0000000000000000000000000000000000000000', dai.address);
+            let path = ['0x0000000000000000000000000000000000000000', usdt.address, dai.address];
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,

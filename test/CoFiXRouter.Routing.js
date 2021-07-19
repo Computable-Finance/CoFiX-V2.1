@@ -139,7 +139,8 @@ describe("CoFiXRouter", function() {
 
             console.log('3. 使用路由 usdt->eth->nest兑换1000usdt');
             await usdt.connect(addr1).approve(cofixRouter.address, toBigInt(1000, 6));
-            let path = await cofixRouter.getRouterPath(usdt.address, nest.address);
+            //let path = await cofixRouter.getRouterPath(usdt.address, nest.address);
+            let path = [usdt.address, '0x0000000000000000000000000000000000000000', nest.address];
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,

@@ -224,11 +224,11 @@ describe("CoFiXRouter", function() {
             // 
             // D0 = (7* 3000 - 15308.204313) / (3000 + 2700) = 0.9985606468421052
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
-            console.log('6. addr2使用2691.421431兑换eth');
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2687130851'));
+            console.log('6. addr2使用2687.130851兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
                 [usdt.address, '0x0000000000000000000000000000000000000000'],
-                BigInt('2691421431'),
+                BigInt('2687130851'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址
@@ -321,11 +321,11 @@ describe("CoFiXRouter", function() {
             // cnodeReward = 0
             // fw = 0
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
-            console.log('10. addr2使用2691.421431兑换eth');
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2687130851'));
+            console.log('10. addr2使用2687.130851兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
                 [usdt.address, '0x0000000000000000000000000000000000000000'],
-                BigInt('2691421431'),
+                BigInt('2687130851'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址

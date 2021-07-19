@@ -218,7 +218,7 @@ describe("CoFiXRouter", function() {
             
             expect(toDecimal(toBigInt(status.usdtPair.usdt, 6) + toBigInt(status.addr2.usdt, 6), 6)).to.equal('12000.000000');
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2691421431'));
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2687130851'));
 
             let e = await usdtPair.estimate(
                 '6002353106758695759', 
@@ -226,12 +226,12 @@ describe("CoFiXRouter", function() {
                 '1000000000000000000', 
                 '2700000000'
             );
-            console.log('6. addr2使用2691.421431兑换eth');
+            console.log('6. addr2使用2687.130851兑换eth');
             console.log('estimate: ' + e);
             receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
                 [usdt.address,
                 '0x0000000000000000000000000000000000000000'],
-                BigInt('2691421431'),
+                BigInt('2687130851'),
                 BigInt('100'),
                 addr2.address,
                 // 出矿接收地址

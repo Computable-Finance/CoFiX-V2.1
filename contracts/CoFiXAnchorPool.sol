@@ -206,12 +206,14 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // 3. Load tokenInfo
         TokenInfo storage tokenInfo = _tokens[_tokenMapping[token] - 1];
         xtoken = tokenInfo.xtokenAddress;
+        uint base = uint(tokenInfo.base);
 
         // 4. Increase xtoken
-        liquidity = CoFiXAnchorToken(xtoken).mint(to, amountToken * 1 ether / uint(tokenInfo.base));
+        liquidity = CoFiXAnchorToken(xtoken).mint(to, amountToken * 1 ether / base);
         emit Mint(token, to, amountETH, amountToken, liquidity);
 
-        _cofiMint(tokenInfo, _balanceOf(token) * 1 ether / uint(tokenInfo.base), _nt);
+        // 5. Update mining state
+        _updateMiningState(tokenInfo, _balanceOf(token) * 1 ether / base, uint(_nt));
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
@@ -251,12 +253,29 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
         // 4. Adjust according to the surplus of the fund pool
-        _cash(liquidity, token, base, _balanceOf(token), to);
+        _cash(liquidity, token, base, _balanceOf(token), to, address(0));
+    }
+
+    // Transfer with taxes
+    function _taxes(address token, address to, uint value, address dao) private {
+        if (dao == address(0)) {
+            _transfer(token, to, value);
+        } else {
+            uint taxes = value >> 1;
+            if (token == address(0)) {
+                payable(to).transfer(value - taxes);
+                ICoFiXDAO(dao).addETHReward{ value: taxes }(address(this));
+            } else {
+                _transfer(token, to, value - taxes);
+                _transfer(token, dao, taxes);
+            }
+        }
     }
 
     // Retrieve the target token according to the share. If the token balance in the fund pool is not enough, 
     // the current token will be deducted from the maximum balance of the remaining assets
-    function _cash(uint liquidity, address token, uint base, uint balance, address to) private {
+    function _cash(uint liquidity, address token, uint base, uint balance, address to, address dao) private {
+        uint nt = uint(_nt);
         while (liquidity > 0) {
             // The number of tokens to be paid to the user
             uint need = liquidity * base / 1 ether;
@@ -264,14 +283,14 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
             TokenInfo storage ti = _tokens[_tokenMapping[token] - 1];
             if (need <= balance) {
-                _transfer(token, to, need);
-                _cofiMint(ti, _balanceOf(token) * 1 ether / uint(ti.base), _nt);
+                _taxes(token, to, need, dao);
+                _updateMiningState(ti, (balance - need) * 1 ether / base, nt);
                 break;
             }
 
             // If the balance is not enough, transfer all the balance to the user
-            _transfer(token, to, balance);
-            _cofiMint(ti, _balanceOf(token) * 1 ether / uint(ti.base), _nt);
+            _taxes(token, to, balance, dao);
+            _updateMiningState(ti, 0, nt);
 
             // After deducting the transferred token, the remaining share
             liquidity -= balance * 1 ether / base;
@@ -345,7 +364,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 2. Take away the excess funds in the capital pool that exceed the total share
         if (totalBalance > totalShare) {
-            _cash(totalBalance - totalShare, token, base, balance, msg.sender);
+            _cash(totalBalance - totalShare, token, base, balance, msg.sender, _cofixDAO);
         }
     }
 
@@ -407,6 +426,30 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 6. Transfer token
         _transfer(dest, to, amountOut);
+    }
+
+    // Update mining state
+    function _updateMiningState(TokenInfo storage tokenInfo, uint x, uint nt) private {
+        // 1. Get total shares
+        uint L = IERC20(tokenInfo.xtokenAddress).totalSupply();
+
+        // 2. Get the current token balance and convert it into the corresponding number of shares
+        //uint x = _balanceOf(tokenInfo.tokenAddress) * 1 ether / base;
+        
+        // 3. Calculate and adjust the scale
+        uint D1 = L > x ? L - x : x - L;
+
+        // 4. According to the adjusted scale before and after the transaction, the ore drawing data is calculated
+        // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
+        // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
+        uint D0 = uint(tokenInfo._D);
+        // When d0 < D1, the y value also needs to be updated
+        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1e9;
+
+        // 5. Update ore drawing parameters
+        tokenInfo._Y = uint112(Y);
+        tokenInfo._D = uint112(D1);
+        tokenInfo._lastblock = uint32(block.number);
     }
 
     // Calculate CoFi transaction mining related variables and update the corresponding status

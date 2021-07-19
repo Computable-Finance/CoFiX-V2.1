@@ -233,7 +233,8 @@ describe("CoFiXRouter", function() {
         if (true) {
 
             console.log('6. 使用路由dai->usdt->eth->nest兑换1000usdt');
-            let path = await cofixRouter.getRouterPath(dai.address, nest.address);
+            //let path = await cofixRouter.getRouterPath(dai.address, nest.address);
+            let path = [dai.address, usdt.address, '0x0000000000000000000000000000000000000000', nest.address];
             console.log(path);
             console.log('usdtPair: ' + usdtPair.address);
             console.log('nestPair: ' + nestPair.address);
@@ -259,7 +260,8 @@ describe("CoFiXRouter", function() {
         if (true) {
             await nest.connect(addr1).approve(cofixRouter.address, toBigInt(900));
             console.log('7. 使用路由nest->eth->usdt->dai兑换900nest');
-            let path = await cofixRouter.getRouterPath(nest.address, dai.address);
+            //let path = await cofixRouter.getRouterPath(nest.address, dai.address);
+            let path = [nest.address, '0x0000000000000000000000000000000000000000', usdt.address, dai.address];
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,

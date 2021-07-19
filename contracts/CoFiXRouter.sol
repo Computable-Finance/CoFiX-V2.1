@@ -276,7 +276,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             _mint(mined, rewardTo);
         } else {
             // Record the total mined
-            uint totalMined = 0;
+            uint totalMined;
             // 1. Trade
             (amountOut, totalMined) = _swap(path, amountIn, to);
             // 2. amountOut must not less than expected
