@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();
         

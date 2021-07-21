@@ -98,11 +98,13 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         }
     }
 
-    /// @dev Get total staked amount of xtoken
+    /// @dev Get stake channel information
     /// @param xtoken xtoken address (or CNode address)
-    /// @return Total lock volume of target xtoken
-    function totalStakedOf(address xtoken) external view override returns (uint) {
-        return _channels[xtoken].totalStaked;
+    /// @return totalStaked Total lock volume of target xtoken
+    /// @return cofiPerBlock Mining speed, cofi per block
+    function getChannelInfo(address xtoken) external view override returns (uint totalStaked, uint cofiPerBlock) {
+        StakeChannel storage channel = _channels[xtoken];
+        return (channel.totalStaked, uint(channel.cofiWeight) * uint(_config.cofiUnit));
     }
 
     /// @dev Get staked amount of target address

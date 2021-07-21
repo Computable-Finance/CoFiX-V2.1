@@ -93,8 +93,8 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
             // Generate name and symbol for token
             string memory idx = _getAddressStr(i);
-            string memory name = _strConcat(_strConcat(_strConcat('XToken-', si), '-'), idx);
-            string memory symbol = _strConcat(_strConcat(_strConcat('XT-', si), '-'), idx);
+            string memory name = _strConcat(_strConcat(_strConcat("XToken-", si), "-"), idx);
+            string memory symbol = _strConcat(_strConcat(_strConcat("XT-", si), "-"), idx);
 
             tokenInfo.tokenAddress = token;
             // Create xtoken contract

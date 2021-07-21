@@ -3,17 +3,17 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers } = require("hardhat");
+const { ethers } = require('hardhat');
 
 exports.deploy = async function () {
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
-    const CoFiToken = await ethers.getContractFactory("CoFiToken");
-    const CoFiXGovernance = await ethers.getContractFactory("CoFiXGovernance");
-    const CoFiXDAO = await ethers.getContractFactory("CoFiXDAO");
-    const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
-    const CoFiXController = await ethers.getContractFactory("CoFiXController");
-    const CoFiXVaultForStaking = await ethers.getContractFactory("CoFiXVaultForStaking");
-    const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const CoFiToken = await ethers.getContractFactory('CoFiToken');
+    const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
+    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAO');
+    const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+    const CoFiXController = await ethers.getContractFactory('CoFiXController');
+    const CoFiXVaultForStaking = await ethers.getContractFactory('CoFiXVaultForStaking');
+    const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
 
     // cnode: 0x2dC52e1FcD06a43285c5D7f5E833131b1c411852
     // usdt: 0xd5798C4DbC5AC13DbE4809d2914b5fd5e5030948

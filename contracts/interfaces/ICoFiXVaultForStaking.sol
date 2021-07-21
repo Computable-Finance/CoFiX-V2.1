@@ -26,8 +26,9 @@ interface ICoFiXVaultForStaking {
 
     /// @dev Get total staked amount of xtoken
     /// @param xtoken xtoken address (or CNode address)
-    /// @return Total lock volume of target xtoken
-    function totalStakedOf(address xtoken) external view returns (uint);
+    /// @return totalStaked Total lock volume of target xtoken
+    /// @return cofiPerBlock Mining speed, cofi per block
+    function getChannelInfo(address xtoken) external view returns (uint totalStaked, uint cofiPerBlock);
 
     /// @dev Get staked amount of target address
     /// @param xtoken xtoken address (or CNode address)

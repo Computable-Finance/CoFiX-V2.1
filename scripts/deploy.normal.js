@@ -3,22 +3,22 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers } = require("hardhat");
+const { ethers } = require('hardhat');
 
 exports.deploy = async function () {
     
     const eth = { address: '0x0000000000000000000000000000000000000000' };
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
-    const CoFiToken = await ethers.getContractFactory("CoFiToken");
-    const CoFiXGovernance = await ethers.getContractFactory("CoFiXGovernance");
-    const CoFiXDAO = await ethers.getContractFactory("CoFiXDAO");
-    const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
-    const CoFiXController = await ethers.getContractFactory("CoFiXController");
-    const CoFiXVaultForStaking = await ethers.getContractFactory("CoFiXVaultForStaking");
-    const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
-    const CoFiXAnchorPool = await ethers.getContractFactory("CoFiXAnchorPool");
-    const CoFiXAnchorToken = await ethers.getContractFactory("CoFiXAnchorToken");
-    const NestPriceFacade = await ethers.getContractFactory("NestPriceFacade");
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const CoFiToken = await ethers.getContractFactory('CoFiToken');
+    const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
+    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAO');
+    const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+    const CoFiXController = await ethers.getContractFactory('CoFiXController');
+    const CoFiXVaultForStaking = await ethers.getContractFactory('CoFiXVaultForStaking');
+    const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
+    const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
+    const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
+    const NestPriceFacade = await ethers.getContractFactory('NestPriceFacade');
 
     // cnode: 0x2dC52e1FcD06a43285c5D7f5E833131b1c411852
     // usdt: 0xd5798C4DbC5AC13DbE4809d2914b5fd5e5030948
@@ -94,11 +94,11 @@ exports.deploy = async function () {
     console.log('4. cofixVaultForStaking.initialize');
     await cofixVaultForStaking.initialize(cofixGovernance.address);
     console.log('5. usdtPair.initialize');
-    await usdtPair.init(cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('3'));
+    await usdtPair.init(cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt(1000000000), BigInt(3));
     console.log('6. nestPair.initialize');
-    await nestPair.init(cofixGovernance.address, 'XT-2', 'XToken-2', nest.address, BigInt('1'), BigInt('20000'));
+    await nestPair.init(cofixGovernance.address, 'XT-2', 'XToken-2', nest.address, BigInt(1), BigInt(20000));
     console.log('6.1. cofiPair.initialize');
-    await cofiPair.init(cofixGovernance.address, 'XT-3', 'XToken-3', cofi.address, BigInt('1'), BigInt('20000'));
+    await cofiPair.init(cofixGovernance.address, 'XT-3', 'XToken-3', cofi.address, BigInt(1), BigInt(20000));
 
     console.log('7. cofixGovernance.setBuiltinAddress');
     await cofixGovernance.setBuiltinAddress(
@@ -244,7 +244,7 @@ exports.deploy = async function () {
     console.log('44. usdAnchor.init(cofixGovernance.address)');
     await usdAnchor.init(cofixGovernance.address, 1,
         [usdt.address, pusd.address, dai.address],
-        ['1000000', '1000000000000000000', '1000000000000000000']
+        [1000000, '1000000000000000000', '1000000000000000000']
     );
     console.log('45. ethAnchor.update(cofixGovernance.address)');
     await ethAnchor.update(cofixGovernance.address);
@@ -303,8 +303,8 @@ exports.deploy = async function () {
     });
 
     await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
-    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt('1000000'));
-    await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
+    await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt(1000000));
 
     await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
     await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));

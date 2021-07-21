@@ -3,22 +3,22 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades } = require('hardhat');
 
 exports.deploy = async function () {
     
     const eth = { address: '0x0000000000000000000000000000000000000000' };
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
-    const CoFiToken = await ethers.getContractFactory("CoFiToken");
-    const CoFiXGovernance = await ethers.getContractFactory("CoFiXGovernance");
-    const CoFiXDAO = await ethers.getContractFactory("CoFiXDAO");
-    const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
-    const CoFiXController = await ethers.getContractFactory("CoFiXController");
-    const CoFiXVaultForStaking = await ethers.getContractFactory("CoFiXVaultForStaking");
-    const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
-    const CoFiXAnchorPool = await ethers.getContractFactory("CoFiXAnchorPool");
-    const CoFiXAnchorToken = await ethers.getContractFactory("CoFiXAnchorToken");
-    const NestPriceFacade = await ethers.getContractFactory("NestPriceFacade");
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const CoFiToken = await ethers.getContractFactory('CoFiToken');
+    const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
+    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAO');
+    const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+    const CoFiXController = await ethers.getContractFactory('CoFiXController');
+    const CoFiXVaultForStaking = await ethers.getContractFactory('CoFiXVaultForStaking');
+    const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
+    const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
+    const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
+    const NestPriceFacade = await ethers.getContractFactory('NestPriceFacade');
 
     //nestPriceFacade: 0xDda3801487a8Bb5ec19dD1E3510b6340BA435863
     //cnode: 0x6E9c1edACe6Fc03f9666769f09D557b1383f7F57

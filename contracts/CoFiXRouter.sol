@@ -92,7 +92,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint j = path.length;
 
         // If it is a reverse path, reverse the path
-        require(j > 0, 'CoFiXRouter: path not exist');
+        require(j > 0, "CoFiXRouter: path not exist");
         if (src == path[--j] && dest == path[0]) {
             for (uint i = 0; i < j;) {
                 address tmp = path[i];
@@ -100,7 +100,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
                 path[j--] = tmp;
             }
         } else {
-            require(src == path[0] && dest == path[j], 'CoFiXRouter: path error');
+            require(src == path[0] && dest == path[j], "CoFiXRouter: path error");
         }
     }
     

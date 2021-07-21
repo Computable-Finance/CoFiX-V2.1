@@ -3,7 +3,7 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers } = require("hardhat");
+const { ethers } = require('hardhat');
 
 exports.deploy = async function () {
     
@@ -12,16 +12,16 @@ exports.deploy = async function () {
         return;
     }
     const eth = { address: '0x0000000000000000000000000000000000000000' };
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
-    const CoFiToken = await ethers.getContractFactory("CoFiToken");
-    const CoFiXGovernance = await ethers.getContractFactory("CoFiXGovernance");
-    const CoFiXDAO = await ethers.getContractFactory("CoFiXDAO");
-    const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
-    const CoFiXController = await ethers.getContractFactory("CoFiXController");
-    const CoFiXVaultForStaking = await ethers.getContractFactory("CoFiXVaultForStaking");
-    const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
-    const CoFiXAnchorPool = await ethers.getContractFactory("CoFiXAnchorPool");
-    const CoFiXAnchorToken = await ethers.getContractFactory("CoFiXAnchorToken");
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const CoFiToken = await ethers.getContractFactory('CoFiToken');
+    const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
+    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAO');
+    const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+    const CoFiXController = await ethers.getContractFactory('CoFiXController');
+    const CoFiXVaultForStaking = await ethers.getContractFactory('CoFiXVaultForStaking');
+    const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
+    const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
+    const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
 
     // cnode: 0x5F22b973c29d739a12a0d20CEf99fa10b3A558df
     // usdt: 0x34deF4DF57ED33eDbE5d04bC49623659a553404e

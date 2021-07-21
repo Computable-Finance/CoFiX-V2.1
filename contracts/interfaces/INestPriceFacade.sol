@@ -1,31 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.3;
+pragma solidity ^0.8.6;
 
 /// @dev This interface defines the methods for price call entry
 interface INestPriceFacade {
     
-    // /// @dev Price call entry configuration structure
-    // struct Config {
-
-    //     // Single query fee（0.0001 ether, DIMI_ETHER). 100
-    //     uint16 singleFee;
-
-    //     // Double query fee（0.0001 ether, DIMI_ETHER). 100
-    //     uint16 doubleFee;
-
-    //     // The normal state flag of the call address. 0
-    //     uint8 normalFlag;
-    // }
-
-    // /// @dev Modify configuration
-    // /// @param config Configuration object
-    // function setConfig(Config memory config) external;
-
-    // /// @dev Get configuration
-    // /// @return Configuration object
-    // function getConfig() external view returns (Config memory);
-
     // /// @dev Set the address flag. Only the address flag equals to config.normalFlag can the price be called
     // /// @param addr Destination address
     // /// @param flag Address flag

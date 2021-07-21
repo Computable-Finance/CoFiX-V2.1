@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();
         
@@ -29,7 +29,7 @@ describe("CoFiXRouter", function() {
             decimals = decimals || 18;
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
@@ -47,7 +47,7 @@ describe("CoFiXRouter", function() {
             val = val * 1000000;
             decimals -= 6;
             let bi = BigInt(val.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             while (decimals > 0) {
                 bi *= BASE;
                 --decimals;
@@ -123,7 +123,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
-                toBigInt('4000.000000', 6),
+                toBigInt(4000.000000, 6),
                 toBigInt('0.900000000000000000'),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -162,7 +162,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt('2.000000000000000000'),
-                toBigInt('4000.000000', 6),
+                toBigInt(4000.000000, 6),
                 toBigInt('0.900000000000000000'),
                 addr1.address,
                 BigInt('1800000000000'), {
@@ -202,7 +202,7 @@ describe("CoFiXRouter", function() {
                 // eth数量
                 BigInt('1000000000000000000'),
                 // 预期获得的token的最小数量
-                BigInt('100'),
+                BigInt(100),
                 // 接收地址
                 addr2.address,
                 // 出矿接收地址
@@ -224,12 +224,12 @@ describe("CoFiXRouter", function() {
             // 
             // D0 = (7* 3000 - 15308.204313) / (3000 + 2700) = 0.9985606468421052
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2687130851'));
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt(2687130851));
             console.log('6. addr2使用2687.130851兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
                 [usdt.address, '0x0000000000000000000000000000000000000000'],
-                BigInt('2687130851'),
-                BigInt('100'),
+                BigInt(2687130851),
+                BigInt(100),
                 addr2.address,
                 // 出矿接收地址
                 addr2.address,
@@ -286,7 +286,7 @@ describe("CoFiXRouter", function() {
                 // eth数量
                 BigInt('1000000000000000000'),
                 // 预期获得的token的最小数量
-                BigInt('100'),
+                BigInt(100),
                 // 接收地址
                 addr2.address,
                 // 出矿接收地址
@@ -321,12 +321,12 @@ describe("CoFiXRouter", function() {
             // cnodeReward = 0
             // fw = 0
 
-            await usdt.connect(addr2).approve(cofixRouter.address, BigInt('2687130851'));
+            await usdt.connect(addr2).approve(cofixRouter.address, BigInt(2687130851));
             console.log('10. addr2使用2687.130851兑换eth');
             receipt = await cofixRouter.connect(addr2).swapExactTokensForTokens(
                 [usdt.address, '0x0000000000000000000000000000000000000000'],
-                BigInt('2687130851'),
-                BigInt('100'),
+                BigInt(2687130851),
+                BigInt(100),
                 addr2.address,
                 // 出矿接收地址
                 addr2.address,

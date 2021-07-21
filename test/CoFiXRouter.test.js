@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         const [owner, addr1] = await ethers.getSigners();
         
@@ -68,7 +68,7 @@ describe("CoFiXRouter", function() {
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量
-            BigInt('10'),
+            BigInt(10),
             // 接收地址
             owner.address,
             // 出矿接收地址
@@ -85,7 +85,7 @@ describe("CoFiXRouter", function() {
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量
-            BigInt('10'),
+            BigInt(10),
             // 接收地址
             owner.address,
             // 出矿接收地址

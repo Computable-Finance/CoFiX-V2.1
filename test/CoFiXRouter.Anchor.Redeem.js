@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         var [owner, addr1, addr2] = await ethers.getSigners();
         //console.log('owner: ' + owner.address);
@@ -45,7 +45,7 @@ describe("CoFiXRouter", function() {
             val = val * 1000000;
             decimals -= 6;
             let bi = BigInt(val.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             while (decimals > 0) {
                 bi *= BASE;
                 --decimals;
@@ -62,7 +62,7 @@ describe("CoFiXRouter", function() {
             decimals = decimals || 18;
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
@@ -116,9 +116,9 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('0. 设置价格');
-            await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
-            await nestPriceFacade.setPrice(cofi.address, toBigInt('2051', 18), 1);
-            await nestPriceFacade.setPrice(nest.address, toBigInt('192307'), 1);
+            await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
+            await nestPriceFacade.setPrice(cofi.address, toBigInt(2051, 18), 1);
+            await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
 
         let status;
@@ -321,13 +321,13 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('10. owner赎回29999 xdai份额');
-            await xdai.approve(cofixRouter.address, toBigInt('29999'));
+            await xdai.approve(cofixRouter.address, toBigInt(29999));
             let receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
                 usdAnchor.address,
                 // 要移除的token对
                 dai.address,
                 // 移除的额度
-                toBigInt('29999'),
+                toBigInt(29999),
                 // 预期最少可以获得的eth数量
                 toBigInt(0),
                 // 接收地址

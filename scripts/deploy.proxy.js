@@ -3,22 +3,22 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers, upgrades } = require("hardhat");
+const { ethers, upgrades } = require('hardhat');
 
 exports.deploy = async function () {
     
     const eth = { address: '0x0000000000000000000000000000000000000000' };
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
-    const NestPriceFacade = await ethers.getContractFactory("NestPriceFacade");
-    const CoFiToken = await ethers.getContractFactory("CoFiToken");
-    const CoFiXGovernance = await ethers.getContractFactory("CoFiXGovernance");
-    const CoFiXDAO = await ethers.getContractFactory("CoFiXDAO");
-    const CoFiXRouter = await ethers.getContractFactory("CoFiXRouter");
-    const CoFiXVaultForStaking = await ethers.getContractFactory("CoFiXVaultForStaking");
-    const CoFiXController = await ethers.getContractFactory("CoFiXController");
-    const CoFiXPair = await ethers.getContractFactory("CoFiXPair");
-    const CoFiXAnchorPool = await ethers.getContractFactory("CoFiXAnchorPool");
-    const CoFiXAnchorToken = await ethers.getContractFactory("CoFiXAnchorToken");
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const NestPriceFacade = await ethers.getContractFactory('NestPriceFacade');
+    const CoFiToken = await ethers.getContractFactory('CoFiToken');
+    const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
+    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAO');
+    const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+    const CoFiXVaultForStaking = await ethers.getContractFactory('CoFiXVaultForStaking');
+    const CoFiXController = await ethers.getContractFactory('CoFiXController');
+    const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
+    const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
+    const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
 
     console.log('** 开始部署合约 deploy.proxy.js **');
     
@@ -81,19 +81,19 @@ exports.deploy = async function () {
     console.log('cofixController: ' + cofixController.address);
 
     // 3. 部署资金池合约
-    const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('2')], { initializer: 'init' });
+    const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt(1000000000), BigInt(2)], { initializer: 'init' });
     //const usdtPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('usdtPair: ' + usdtPair.address);
 
-    const hbtcPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-2', 'XToken-2', hbtc.address, BigInt('20'), BigInt('1')], { initializer: 'init' });
+    const hbtcPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-2', 'XToken-2', hbtc.address, BigInt(20), BigInt(1)], { initializer: 'init' });
     //const hbtcPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('hbtcPair: ' + hbtcPair.address);
 
-    const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt('1'), BigInt('100000')], { initializer: 'init' });
+    const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt(1), BigInt(100000)], { initializer: 'init' });
     //const nestPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('nestPair: ' + nestPair.address);
 
-    const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-4', 'XToken-4', cofi.address, BigInt('1'), BigInt('2000')], { initializer: 'init' });
+    const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-4', 'XToken-4', cofi.address, BigInt(1), BigInt(2000)], { initializer: 'init' });
     //const cofiPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('cofiPair: ' + cofiPair.address);
 
@@ -112,10 +112,21 @@ exports.deploy = async function () {
         cofixGovernance.address, 
         1,
         [usdt.address, pusd.address, dai.address],
-        ['1000000', '1000000000000000000', '1000000000000000000']
+        [1000000, '1000000000000000000', '1000000000000000000']
     ], { initializer: 'init' });
     //const usdAnchor = await CoFiXAnchorPool.attach('0x0000000000000000000000000000000000000000');
     console.log('usdAnchor: ' + usdAnchor.address);
+    
+    let xeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(eth.address));
+    console.log('xeth: ' + xeth.address);
+    let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
+    console.log('xpeth: ' + xpeth.address);
+    let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
+    console.log('xusdt: ' + xusdt.address);
+    let xpusd = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(pusd.address));
+    console.log('xpusd: ' + xpusd.address);
+    let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
+    console.log('xdai: ' + xdai.address);
 
     // 4. 更新合约
     console.log('1. cofixGovernance.setBuiltinAddress');
@@ -139,7 +150,7 @@ exports.deploy = async function () {
     await hbtcPair.update(cofixGovernance.address);
     console.log('7. nestPair.update');
     await nestPair.update(cofixGovernance.address);
-    console.log('8.1. cofiPair.update');
+    console.log('8. cofiPair.update');
     await cofiPair.update(cofixGovernance.address);
     console.log('9. ethAnchor.update(cofixGovernance.address)');
     await ethAnchor.update(cofixGovernance.address);
@@ -182,18 +193,6 @@ exports.deploy = async function () {
     console.log('18. usdAnchor.setConfig()');
     await usdAnchor.setConfig(20, 0, 50000);
 
-    let xeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(eth.address));
-    console.log('xeth: ' + xeth.address);
-    let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
-    console.log('xpeth: ' + xpeth.address);
-
-    let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
-    console.log('xusdt: ' + xusdt.address);
-    let xpusd = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(pusd.address));
-    console.log('xpusd: ' + xpusd.address);
-    let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
-    console.log('xdai: ' + xdai.address);
-
     // 7. 初始化锁仓挖矿参数
     console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
     await cofixVaultForStaking.batchSetPoolWeight([
@@ -213,9 +212,9 @@ exports.deploy = async function () {
     console.log('20. cofixDAO.setTokenExchange(usdt.address, usdt.address)');
     await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
     console.log('21. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
-    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt('1000000'));
+    await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
     console.log('22. cofixDAO.setTokenExchange(dai.address, usdt.address)');
-    await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt('1000000'));
+    await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt(1000000));
     console.log('23. cofixDAO.setTokenExchange(eth.address, eth.address)');
     await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
     console.log('24. cofixDAO.setTokenExchange(peth.address, eth.address)');

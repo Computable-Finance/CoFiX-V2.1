@@ -36,13 +36,14 @@
     function batchSetPoolWeight(address[] calldata xtokens, uint[] calldata weights) external;
 ```
 
-### 2.4. 获取目标xtoken的总锁仓量
+### 2.4. Get stake channel information
 
 ```javascript
-    /// @dev 获取目标xtoken的总锁仓量
-    /// @param xtoken 目标份额代币地址（或CNode地址）
-    /// @return 目标xtoken的总锁仓量
-    function totalStakedOf(address xtoken) external view returns (uint);
+    /// @dev Get stake channel information
+    /// @param xtoken xtoken address (or CNode address)
+    /// @return totalStaked Total lock volume of target xtoken
+    /// @return cofiPerBlock Mining speed, cofi per block
+    function getChannelInfo(address xtoken) external view returns (uint totalStaked, uint cofiPerBlock);
 ```
 
 ### 2.5. 获取目标地址锁仓的数量
