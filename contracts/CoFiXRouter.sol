@@ -19,11 +19,11 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
-     * out in the CofixRouter, and the CofixPool needs to be fixed, CofixRouter does trust and 
+     * out in the CoFiXRouter, and the CoFiXPool needs to be fixed, CoFiXRouter does trust and 
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
-    // Address of CoFiXVaultForStaing
+    // Address of CoFiXVaultForStaking
     address _cofixVaultForStaking;
 
     // Mapping for trade pairs. keccak256(token0, token1)=>pool
@@ -137,7 +137,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
@@ -154,7 +154,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
         }
 
-        // 2. Add liquidity, and increate xtoken
+        // 2. Add liquidity, and increase xtoken
         (xtoken, liquidity) = ICoFiXPool(pool).mint { 
             value: msg.value 
         } (token, to, amountETH, amountToken, to);
@@ -171,7 +171,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
@@ -188,7 +188,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
         }
 
-        // 2. Add liquidity, and increate xtoken
+        // 2. Add liquidity, and increase xtoken
         address cofixVaultForStaking = _cofixVaultForStaking;
         (xtoken, liquidity) = ICoFiXPool(pool).mint { 
             value: msg.value 
@@ -208,7 +208,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
     /// @param  to The target address receiving the Token
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountETH The real amount of ETH transferred from the pool
     /// @return amountToken The real amount of Token transferred from the pool
     function removeLiquidityGetTokenAndETH(
@@ -238,10 +238,10 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
     /// token addresses (ETH address is represented by 0) of the exchange path
     /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  amountOutMin The minimum amount of ETH a trader want to swap out of pool
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountOut The real amount of Token transferred out of pool
     function swapExactTokensForTokens(
         address[] calldata path,
@@ -251,6 +251,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable override ensure(deadline) returns (uint amountOut) {
+        uint mined;
         if (path.length == 2) {
             address src = path[0];
             address dest = path[1];
@@ -264,34 +265,26 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             }
 
             // 2. Trade
-            uint mined;
             (amountOut, mined) = ICoFiXPool(pool).swap {
                 value: msg.value
             } (src, dest, amountIn, to, to);
-
-            // 3. amountOut must not less than expected
-            require(amountOut >= amountOutMin, "CoFiXRouter: got less eth than expected");
-
-            // 4. Mining cofi for trade
-            _mint(mined, rewardTo);
         } else {
-            // Record the total mined
-            uint totalMined;
             // 1. Trade
-            (amountOut, totalMined) = _swap(path, amountIn, to);
-            // 2. amountOut must not less than expected
-            require(amountOut >= amountOutMin, "CoFiXRouter: got less than expected");
+            (amountOut, mined) = _swap(path, amountIn, to);
 
-            // 3. Any remaining ETH in the Router is considered to be the user's and is forwarded to 
+            // 2. Any remaining ETH in the Router is considered to be the user's and is forwarded to 
             // the address specified by the Router
             uint balance = address(this).balance;
             if (balance > 0) {
                 payable(to).transfer(balance);
             } 
-
-            // 4. Mining cofi for trade
-            _mint(totalMined, rewardTo);
         }
+
+        // 3. amountOut must not less than expected
+        require(amountOut >= amountOutMin, "CoFiXRouter: got less than expected");
+        
+        // 4. Mining cofi for trade
+        _mint(mined, rewardTo);
     }
 
     // Trade
@@ -304,8 +297,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint totalMined
     ) {
         // Initialize
-        //amounts = new uint[](path.length);
-        //amounts[0] = amountIn;
         totalMined = 0;
         
         // Get the first pair
@@ -334,9 +325,9 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
             // Perform an exchange transaction. If token1 is ETH, the fund receiving address is address(this).
             // Q: The solution of openzeppelin-upgrades may cause transfer eth fail, 
             //    It needs to be validated and resolved
-            // A: Since the execution entry is at CofixRouter, the proxy address of the CofixRouter has 
+            // A: Since the execution entry is at CoFiXRouter, the proxy address of the CoFiXRouter has 
             //    already been read, which reduces the gas consumption for subsequent reads, So the gas 
-            //    consumption of the later receive() transfer to CofixRouter is reduced without an error, 
+            //    consumption of the later receive() transfer to CoFiXRouter is reduced without an error, 
             //    so OpenZeppelin is now available, The upgradable solution of does not cause the problem 
             //    of converting ETH from the capital pool to CoFixRouter to fail.
             (amountIn, mined) = ICoFiXPool(pool).swap {

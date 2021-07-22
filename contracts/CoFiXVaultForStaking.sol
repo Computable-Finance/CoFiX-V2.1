@@ -47,7 +47,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         mapping(address=>Account) accounts;
     }
     
-    // // Cofi mining speed weight base
+    // // CoFi mining speed weight base
     // uint constant COFI_WEIGHT_BASE = 1e9;
 
     // Configuration
@@ -271,7 +271,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     function _calcReward(StakeChannel storage channel) private view returns (uint newReward) {
         newReward =
             (block.number - uint(channel.blockCursor)) 
-            * _redution(block.number - COFI_GENESIS_BLOCK) 
+            * _reduction(block.number - COFI_GENESIS_BLOCK) 
             * uint(_config.cofiUnit) 
             * channel.cofiWeight
             / 400 ;
@@ -325,7 +325,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         // | (uint(40) << (16 * 10));
 
     // Calculation of attenuation gradient
-    function _redution(uint delta) private pure returns (uint) {
+    function _reduction(uint delta) private pure returns (uint) {
         
         if (delta < COFI_REDUCTION_LIMIT) {
             return (COFI_REDUCTION_STEPS >> ((delta / COFI_REDUCTION_SPAN) << 4)) & 0xFFFF;

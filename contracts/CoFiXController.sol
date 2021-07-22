@@ -151,7 +151,13 @@ contract CoFiXController is ICoFiXController {
 
     // TODO: 为了测试方便写成public的，发布时需要改为private的
     // Calculate the corrected volatility
-    function _calcRevisedSigmaSQ(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public pure returns (uint revisedSigmaSQ) {
+    function _calcRevisedSigmaSQ(
+        uint sigmaSQ,
+        uint p0, 
+        uint bn0, 
+        uint p, 
+        uint bn
+    ) public pure returns (uint revisedSigmaSQ) {
         // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
         // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
         // 1. 

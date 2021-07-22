@@ -20,7 +20,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
-     * out in the CofixRouter, and the CofixPool needs to be fixed, CofixRouter does trust and 
+     * out in the CoFiXRouter, and the CoFiXPool needs to be fixed, CoFiXRouter does trust and 
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
@@ -193,7 +193,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 2. Return unnecessary eth
         // The token is 0, which means that the ETH is transferred in and the part exceeding 
-        // the amounttoken needs to be returned
+        // the amountToken needs to be returned
         if (token == address(0)) {
             _transfer(address(0), payback, msg.value - amountToken);
         } 
@@ -264,7 +264,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             uint taxes = value >> 1;
             if (token == address(0)) {
                 payable(to).transfer(value - taxes);
-                ICoFiXDAO(dao).addETHReward{ value: taxes }(address(this));
+                ICoFiXDAO(dao).addETHReward { value: taxes } (address(this));
             } else {
                 _transfer(token, to, value - taxes);
                 _transfer(token, dao, taxes);
@@ -281,16 +281,16 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             uint need = liquidity * base / 1 ether;
             // If the balance is enough, the token will be transferred to the user directly and break
 
-            TokenInfo storage ti = _tokens[_tokenMapping[token] - 1];
+            TokenInfo storage tokenInfo = _tokens[_tokenMapping[token] - 1];
             if (need <= balance) {
                 _taxes(token, to, need, dao);
-                _updateMiningState(ti, (balance - need) * 1 ether / base, nt);
+                _updateMiningState(tokenInfo, (balance - need) * 1 ether / base, nt);
                 break;
             }
 
             // If the balance is not enough, transfer all the balance to the user
             _taxes(token, to, balance, dao);
-            _updateMiningState(ti, 0, nt);
+            _updateMiningState(tokenInfo, 0, nt);
 
             // After deducting the transferred token, the remaining share
             liquidity -= balance * 1 ether / base;
@@ -300,14 +300,14 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             uint length = _tokens.length;
             for (uint i = 0; i < length; ++i) {
                 // Load token
-                TokenInfo storage tokenInfo = _tokens[i];
-                address ta = tokenInfo.tokenAddress;
+                TokenInfo storage ti = _tokens[i];
+                address ta = ti.tokenAddress;
                 // The token cannot be the same as the token just processed
                 if (ta != token) {
                     // Find the token with the largest balance and update it
                     //uint b = IERC20(ta).balanceOf(address(this));
                     uint b = _balanceOf(ta);
-                    uint bs = uint(tokenInfo.base);
+                    uint bs = uint(ti.base);
                     if (max < b * 1 ether / bs) {
                         // Update base
                         base = bs;
@@ -337,18 +337,18 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         uint length = _tokens.length;
         for (uint i = 0; i < length; ++i) {
             // Load token
-            TokenInfo storage tokenInfo = _tokens[i];
-            address ta = tokenInfo.tokenAddress;
+            TokenInfo storage ti = _tokens[i];
+            address ta = ti.tokenAddress;
 
             // Find the token with the largest balance and update it
             //uint b = IERC20(ta).balanceOf(address(this));
             uint b = _balanceOf(ta);
-            uint bs = uint(tokenInfo.base);
+            uint bs = uint(ti.base);
             uint stdBalance = b * 1 ether / bs;
             // Calculate total assets
             totalBalance += stdBalance;
             // Calculate total share
-            totalShare += IERC20(tokenInfo.xtokenAddress).totalSupply();
+            totalShare += IERC20(ti.xtokenAddress).totalSupply();
 
             if (max < stdBalance) {
                 // Update base
@@ -389,12 +389,12 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     ) {
         // 1. Return unnecessary eth
         // The src is 0, which means that the ETH is transferred in and the part exceeding
-        // the amounttoken needs to be returned
+        // the amountToken needs to be returned
         if (src == address(0)) {
             _transfer(address(0), payback, msg.value - amountIn);
         } 
         // If src is not 0, it means that the token is transferred in and all the transferred 
-        // eths need to be returned
+        // eth need to be returned
         else if (msg.value > 0) {
             payable(payback).transfer(msg.value);
         }
@@ -512,7 +512,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
-    /// @param token Traget token address
+    /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view override returns (address) {
         uint index = _tokenMapping[token];

@@ -21,7 +21,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
-     * out in the CofixRouter, and the CofixPool needs to be fixed, CofixRouter does trust and 
+     * out in the CoFiXRouter, and the CoFiXPool needs to be fixed, CoFiXRouter does trust and 
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
@@ -234,13 +234,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             // When the circulation is not zero, the normal issue share
             liquidity = amountETH * total / _calcTotalValue(
                 // To calculate the net value, we need to use the asset balance before the market making fund 
-                // is transferred. Since the ETH was transferred when CofixRouter called this method and the 
-                // Token was transferred before CofixRouter called this method, we need to deduct the amountETH 
+                // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
+                // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
                 // and amountToken respectively
 
                 // The current eth balance minus the amount eth equals the ETH balance before the transaction
                 balance0 - amountETH, 
-                //The current token balance minus the amounttoken equals to the token balance before the transaction
+                //The current token balance minus the amountToken equals to the token balance before the transaction
                 balance1 - amountToken,
                 // Oracle price - eth amount
                 ethAmount, 
@@ -713,7 +713,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
-    /// @param token Traget token address
+    /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view override returns (address) {
         if (token == _tokenAddress) {

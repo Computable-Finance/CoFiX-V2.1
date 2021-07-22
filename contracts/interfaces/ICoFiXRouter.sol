@@ -38,7 +38,7 @@ interface ICoFiXRouter {
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
@@ -59,7 +59,7 @@ interface ICoFiXRouter {
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
@@ -79,7 +79,7 @@ interface ICoFiXRouter {
     /// @param  liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
     /// @param  to The target address receiving the Token
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountETH The real amount of ETH transferred from the pool
     /// @return amountToken The real amount of Token transferred from the pool
     function removeLiquidityGetTokenAndETH(
@@ -95,10 +95,10 @@ interface ICoFiXRouter {
     /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
     /// token addresses (ETH address is represented by 0) of the exchange path
     /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  amountOutMin The minimum amount of ETH a trader want to swap out of pool
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountOut The real amount of Token transferred out of pool
     function swapExactTokensForTokens(
         address[] calldata path,

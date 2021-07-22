@@ -7,7 +7,7 @@ interface ICoFiXPool {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
-     * out in the CofixRouter, and the CofixPool needs to be fixed, CofixRouter does trust and 
+     * out in the CoFiXRouter, and the CoFiXPool needs to be fixed, CoFiXRouter does trust and 
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
@@ -98,7 +98,7 @@ interface ICoFiXPool {
     );
 
     /// @dev Gets the token address of the share obtained by the specified token market making
-    /// @param token Traget token address
+    /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view returns (address);
 }

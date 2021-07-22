@@ -23,7 +23,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @dev ICoFiXRouter implementation contract address for CoFiX
     address _cofixRouter;
 
-    /// @dev ICoFiXController implementation contract address for ntoken
+    /// @dev ICoFiXController implementation contract address
     address _cofixController;
 
     /// @dev ICoFiXVaultForStaking implementation contract address
@@ -37,7 +37,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @param cofiNode Address of CoFi Node contract
     /// @param cofixDAO ICoFiXDAO implementation contract address
     /// @param cofixRouter ICoFiXRouter implementation contract address for CoFiX
-    /// @param cofixController ICoFiXController implementation contract address for ntoken
+    /// @param cofixController ICoFiXController implementation contract address
     /// @param cofixVaultForStaking ICoFiXVaultForStaking implementation contract address
     function setBuiltinAddress(
         address cofiToken,
@@ -73,7 +73,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @return cofiNode Address of CoFi Node contract
     /// @return cofixDAO ICoFiXDAO implementation contract address
     /// @return cofixRouter ICoFiXRouter implementation contract address for CoFiX
-    /// @return cofixController ICoFiXController implementation contract address for ntoken
+    /// @return cofixController ICoFiXController implementation contract address
     function getBuiltinAddress() external view override returns (
         address cofiToken,
         address cofiNode,
@@ -108,12 +108,12 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     /// @return ICoFiXRouter implementation contract address for CoFiX
     function getCoFiXRouterAddress() external view override returns (address) { return _cofixRouter; }
 
-    /// @dev Get ICoFiXContgroller implementation contract address for ntoken
-    /// @return ICoFiXContgroller implementation contract address for ntoken
+    /// @dev Get ICoFiXController implementation contract address
+    /// @return ICoFiXController implementation contract address
     function getCoFiXControllerAddress() external view override returns (address) { return _cofixController; }
 
-    /// @dev Get ICofixVaultForStaking implementation contract address
-    /// @return ICofixVaultForStaking implementation contract address
+    /// @dev Get ICoFiXVaultForStaking implementation contract address
+    /// @return ICoFiXVaultForStaking implementation contract address
     function getCoFiXVaultForStakingAddress() external view override returns (address) { return _cofixVaultForStaking; }
 
     /// @dev Registered address. The address registered here is the address accepted by CoFiX system
