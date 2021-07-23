@@ -365,6 +365,51 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
+            console.log('12. 路由兑换1000usdt');
+            let path = [
+                usdt.address,
+                '0x0000000000000000000000000000000000000000',
+            ];
+            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                path,
+                toBigInt(10, 6),
+                0,
+                owner.address,
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('80000000000000000')
+                }
+            );
+            showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (true) {
+            console.log('13. 路由兑换1000usdt');
+            let path = [
+                usdt.address,
+                '0x0000000000000000000000000000000000000000',
+            ];
+            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                path,
+                toBigInt(10, 6),
+                0,
+                owner.address,
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('80000000000000000')
+                }
+            );
+            showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+        return;
+
+        if (true) {
             console.log('11. 路由兑换1000usdt');
             let path = [
                 usdt.address,

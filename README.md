@@ -1,4 +1,49 @@
 # CoFiX-V2.1
+CoFiX Dapp is the most efficient Token Swap on Ethereum. Traders always get market prices at the smallest spread. Reversing trade in CoFiX can mining COFI Tokens by hedging.
+
+![](https://img.shields.io/github/issues/Computable-Finance/CoFiX-V2.1)
+![](https://img.shields.io/github/forks/Computable-Finance/CoFiX-V2.1)
+![](https://img.shields.io/github/stars/Computable-Finance/CoFiX-V2.1)
+![](https://img.shields.io/github/license/Computable-Finance/CoFiX-V2.1)
+![](https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2FComputable-Finance%2FCoFiX-V2.1)
+
+## Whitepaper
+
+**[https://cofix.io/doc/CoFiX_White_Paper.pdf](https://cofix.io/doc/CoFiX_White_Paper.pdf)**
+
+## Documents
+
+**[CoFiX v2.1 Contract Specification](docs/readme.md)**
+
+**[CoFiX v2.1 Contract Structure Diagram](docs/CoFiX2.1.svg)**
+
+**[CoFiX v2.1 Application Scenarios](docs/readme.md#5-application-scenarios)**
+
+**[Learn More...](https://docs.cofix.io/)**
+
+**[Goto](https://cofix.tech/)**
+
+## Usage
+
+### Run test
+
+```shell
+npm install
+
+npx hardhat test
+```
+
+### Compile
+
+Run `npx hardhat compile`, get build results in `artifacts/contracts` folder, including `ABI` json files.
+
+### Deploy
+
+Deploy with `hardhat` and you will get a contract deployment summary on contract addresses.
+
+```shell
+npx hardhat test ./test/deploy.js --network rinkeby
+```
 
 ## Contract Addresses
 

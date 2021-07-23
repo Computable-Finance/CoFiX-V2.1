@@ -191,21 +191,6 @@ exports.deploy = async function () {
     console.log('18. usdAnchor.setConfig()');
     await usdAnchor.setConfig(20, 0, 50000);
 
-    // 7. 初始化锁仓挖矿参数
-    console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
-    await cofixVaultForStaking.batchSetPoolWeight([
-        cnode.address,
-        usdtPair.address,
-        hbtcPair.address,
-        nestPair.address,
-        cofiPair.address,
-        xeth.address,
-        xpeth.address,
-        xusdt.address,
-        xpusd.address,
-        xusdc.address
-    ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
-
     // 8. 设置资金兑换比例
     console.log('20. cofixDAO.setTokenExchange(usdt.address, usdt.address)');
     await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
@@ -234,6 +219,21 @@ exports.deploy = async function () {
     await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
     console.log('30. registerPair(eth.address, cofi.address, cofiPair.address)');
     await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
+
+    // 7. 初始化锁仓挖矿参数
+    console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
+    await cofixVaultForStaking.batchSetPoolWeight([
+        cnode.address,
+        usdtPair.address,
+        hbtcPair.address,
+        nestPair.address,
+        cofiPair.address,
+        xeth.address,
+        xpeth.address,
+        xusdt.address,
+        xpusd.address,
+        xusdc.address
+    ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
 
     // 注册ETH锚定池
     console.log('31. registerPair(eth.address, peth.address, ethAnchor.address)');
