@@ -50,10 +50,12 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     // // CoFi mining speed weight base
     // uint constant COFI_WEIGHT_BASE = 1e9;
 
-    // Configuration
-    Config _config;
+    // CoFi mining unit
+    uint _cofiUnit;
+
     // Address of CoFiXRouter
     address _cofixRouter;
+    
     // staking通道信息xtoken=>StakeChannel
     mapping(address=>StakeChannel) _channels;
     
@@ -75,15 +77,15 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     }
 
     /// @dev Modify configuration
-    /// @param config Configuration object
-    function setConfig(Config calldata config) external override onlyGovernance {
-        _config = config;
+    /// @param cofiUnit CoFi mining unit
+    function setConfig(uint cofiUnit) external override onlyGovernance {
+        _cofiUnit = cofiUnit;
     }
 
     /// @dev Get configuration
-    /// @return Configuration object
-    function getConfig() external view override returns (Config memory) {
-        return _config;
+    /// @return cofiUnit CoFi mining unit
+    function getConfig() external view override returns (uint cofiUnit) {
+        return _cofiUnit;
     }
 
     /// @dev Initialize ore drawing weight
@@ -93,8 +95,11 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         uint cnt = xtokens.length;
         require(cnt == weights.length, "CoFiXVaultForStaking: mismatch len");
         for (uint i = 0; i < cnt; ++i) {
-            require(xtokens[i] != address(0), "CoFiXVaultForStaking: invalid xtoken");
-            _channels[xtokens[i]].cofiWeight = weights[i];
+            address xtoken = xtokens[i];
+            require(xtoken != address(0), "CoFiXVaultForStaking: invalid xtoken");
+            StakeChannel storage channel = _channels[xtoken] ;
+            _updateReward(xtoken, channel);
+            channel.cofiWeight = weights[i];
         }
     }
 
@@ -104,7 +109,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @return cofiPerBlock Mining speed, cofi per block
     function getChannelInfo(address xtoken) external view override returns (uint totalStaked, uint cofiPerBlock) {
         StakeChannel storage channel = _channels[xtoken];
-        return (channel.totalStaked, uint(channel.cofiWeight) * uint(_config.cofiUnit));
+        return (channel.totalStaked, uint(channel.cofiWeight) * _cofiUnit);
     }
 
     /// @dev Get staked amount of target address
@@ -272,7 +277,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         newReward =
             (block.number - uint(channel.blockCursor)) 
             * _reduction(block.number - COFI_GENESIS_BLOCK) 
-            * uint(_config.cofiUnit) 
+            * _cofiUnit
             * channel.cofiWeight
             / 400 ;
     }

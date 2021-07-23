@@ -29,7 +29,8 @@ contract CoFiXBase {
     // includes the attenuation logic according to the block. Therefore, it is necessary to trace the block
     // where the CoFi begins to decay. According to the circulation when CoFi2.0 is online, the new mining
     // algorithm is used to deduce and convert the CoFi, and the new algorithm is used to mine the CoFiX2.1
-    // on-line flow, the actual block is 5120000
+    // on-line flow, the actual block is 11040688
+    //uint constant COFI_GENESIS_BLOCK = 11040688;
     // TODO: 确定CoFi创世区块号
     uint constant COFI_GENESIS_BLOCK = 0;
 

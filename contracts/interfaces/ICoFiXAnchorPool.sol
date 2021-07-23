@@ -18,4 +18,14 @@ interface ICoFiXAnchorPool is ICoFiXPool {
         address token,
         uint newBalance
     ) external view returns (uint mined);
+
+    /// @dev Add token information
+    /// @param poolIndex Index of pool
+    /// @param token Target token address
+    /// @param base Base of token
+    function addToken(
+        uint poolIndex, 
+        address token, 
+        uint96 base
+    ) external returns (address xtokenAddress);
 }

@@ -33,3 +33,17 @@
     /// @return 如果资金池支持指定的token，返回做市份额代币地址
     function getXToken(address token) external view returns (address);
 ```
+
+### 2.4. Add token information
+
+```javascript
+    /// @dev Add token information
+    /// @param poolIndex Index of pool
+    /// @param token Target token address
+    /// @param base Base of token
+    function addToken(
+        uint poolIndex, 
+        address token, 
+        uint96 base
+    ) external returns (address xtokenAddress);
+```

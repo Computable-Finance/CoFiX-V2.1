@@ -57,12 +57,6 @@ interface ICoFiXController {
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) external view returns (uint k);
 
-    /// @dev Calc K value
-    /// @param sigmaSQ The square of the volatility (18 decimal places).
-    /// @param bn The block number when (ETH, TOKEN) price takes into effective
-    /// @return k The K value
-    function calcK(uint sigmaSQ, uint bn) external view returns (uint k);
-
     /// @dev Query latest price info
     /// @param tokenAddress Target address of token
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 

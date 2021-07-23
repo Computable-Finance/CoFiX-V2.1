@@ -146,7 +146,7 @@ contract CoFiXController is ICoFiXController {
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
-        k = calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
+        k = _calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
     }
 
     // TODO: 为了测试方便写成public的，发布时需要改为private的
@@ -203,7 +203,7 @@ contract CoFiXController is ICoFiXController {
     /// @param sigmaSQ The square of the volatility (18 decimal places).
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value
-    function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
+    function _calcK(uint sigmaSQ, uint bn) private view returns (uint k) {
         // uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
         // uint gamma = 1 ether;
         // if (sigma > 0.0005 ether) {

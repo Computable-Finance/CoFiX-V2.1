@@ -86,20 +86,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         string memory si = _getAddressStr(index);
         // Traverse the token and initialize the corresponding data
         for (uint i = 0; i < tokens.length; ++i) {
-            // Create TokenInfo
-            address token = tokens[i];
-            TokenInfo storage tokenInfo = _tokens.push();
-            _tokenMapping[token] = _tokens.length;
-
-            // Generate name and symbol for token
-            string memory idx = _getAddressStr(i);
-            string memory name = _strConcat(_strConcat(_strConcat("XToken-", si), "-"), idx);
-            string memory symbol = _strConcat(_strConcat(_strConcat("XT-", si), "-"), idx);
-
-            tokenInfo.tokenAddress = token;
-            // Create xtoken contract
-            tokenInfo.xtokenAddress = address(new CoFiXAnchorToken(name, symbol, address(this)));
-            tokenInfo.base = bases[i];
+            addToken(index, tokens[i], bases[i]);
         }
     }
 
@@ -147,6 +134,31 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             ,//_cofixController,
             //cofixVaultForStaking
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
+    }
+
+    /// @dev Add token information
+    /// @param poolIndex Index of pool
+    /// @param token Target token address
+    /// @param base Base of token
+    function addToken(
+        uint poolIndex, 
+        address token, 
+        uint96 base
+    ) public override onlyGovernance returns (address xtokenAddress) {
+        TokenInfo storage tokenInfo = _tokens.push();
+        uint tokenIndex = _tokens.length;
+        _tokenMapping[token] = tokenIndex;
+
+        // Generate name and symbol for token
+        string memory si = _getAddressStr(poolIndex);
+        string memory idx = _getAddressStr(tokenIndex);
+        string memory name = _strConcat(_strConcat(_strConcat("XToken-", si), "-"), idx);
+        string memory symbol = _strConcat(_strConcat(_strConcat("XT-", si), "-"), idx);
+
+        xtokenAddress = address(new CoFiXAnchorToken(name, symbol, address(this)));
+        tokenInfo.tokenAddress = token;
+        tokenInfo.xtokenAddress = xtokenAddress;
+        tokenInfo.base = base;
     }
 
     // Transfer token, 0 address means eth

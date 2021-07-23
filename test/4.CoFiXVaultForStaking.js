@@ -126,12 +126,12 @@ describe('CoFiXRouter', function() {
         if (true) {
             let config = await cofixVaultForStaking.getConfig();
             console.log({
-                cofiUnit: config.cofiUnit.toString()
+                cofiUnit: config.toString()
             });
-            await cofixVaultForStaking.setConfig({cofiUnit: 9527});
+            await cofixVaultForStaking.setConfig(9527);
             config = await cofixVaultForStaking.getConfig();
             console.log({
-                cofiUnit: config.cofiUnit.toString()
+                cofiUnit: config.toString()
             });
         }
     });

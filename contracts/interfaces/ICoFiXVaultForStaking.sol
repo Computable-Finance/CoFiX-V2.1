@@ -5,19 +5,13 @@ pragma solidity ^0.8.6;
 /// @dev This interface defines methods for CoFiXVaultForStaking
 interface ICoFiXVaultForStaking {
 
-    /// @dev CoFiXRouter configuration structure
-    struct Config {
-        // CoFi mining unit
-        uint96 cofiUnit;
-    }
-
     /// @dev Modify configuration
-    /// @param config Configuration object
-    function setConfig(Config calldata config) external;
+    /// @param cofiUnit CoFi mining unit
+    function setConfig(uint cofiUnit) external;
 
     /// @dev Get configuration
-    /// @return Configuration object
-    function getConfig() external view returns (Config memory);
+    /// @return cofiUnit CoFi mining unit
+    function getConfig() external view returns (uint cofiUnit);
 
     /// @dev Initialize ore drawing weight
     /// @param xtokens xtoken array

@@ -9,22 +9,16 @@
 
 ```javascript
     /// @dev Modify configuration
-    /// @param config Configuration object
-    function setConfig(Config calldata config) external;
-
-    /// @dev CoFiXRouter configuration structure
-    struct Config {
-        // CoFi mining unit
-        uint96 cofiUnit;
-    }
+    /// @param cofiUnit CoFi mining unit
+    function setConfig(uint cofiUnit) external;
 ```
 
 ### 2.2. Get configuration
 
 ```javascript
     /// @dev Get configuration
-    /// @return Configuration object
-    function getConfig() external view returns (Config memory);
+    /// @return cofiUnit CoFi mining unit
+    function getConfig() external view returns (uint cofiUnit);
 ```
 
 ### 2.3. 初始化出矿权重

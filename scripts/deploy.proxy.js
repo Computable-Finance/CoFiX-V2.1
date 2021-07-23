@@ -100,7 +100,7 @@ exports.deploy = async function () {
     // 部署ETH锚定池
     let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
         cofixGovernance.address, 
-        0, 
+        1, 
         [eth.address, peth.address],
         ['1000000000000000000', '1000000000000000000']
     ], { initializer: 'init' });
@@ -110,7 +110,7 @@ exports.deploy = async function () {
     // 部署USD锚定池
     let usdAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
         cofixGovernance.address, 
-        1,
+        2,
         [usdt.address, pusd.address, usdc.address],
         [1000000, '1000000000000000000', '1000000000000000000']
     ], { initializer: 'init' });
@@ -175,9 +175,7 @@ exports.deploy = async function () {
     });
 
     console.log('12. cofixVaultForStaking.setConfig');
-    await cofixVaultForStaking.setConfig({
-        cofiUnit: '10000000000000000'
-    });
+    await cofixVaultForStaking.setConfig('10000000000000000');
 
     // 6. 初始化资金池参数
     console.log('13. usdtPair.setConfig()');
