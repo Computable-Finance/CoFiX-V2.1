@@ -24,13 +24,13 @@ describe('CoFiXRouter', function() {
             nest,
             peth,
             pusd,
-            dai,
+            usdc,
     
             xeth,
             xpeth,
             xusdt,
             xpusd,
-            xdai,
+            xusdc,
 
             usdtPair,
             hbtcPair,
@@ -93,7 +93,7 @@ describe('CoFiXRouter', function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                dai: toDecimal(await dai.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account)),
                 peth: toDecimal(await peth.balanceOf(account)),
                 usdtPair: await getXTokenInfo(account, usdtPair),
                 hbtcPair: await getXTokenInfo(account, hbtcPair),
@@ -101,7 +101,7 @@ describe('CoFiXRouter', function() {
                 cofiPair: await getXTokenInfo(account, cofiPair),
                 xusdt: await getXTokenInfo(account, xusdt),
                 xpusd: await getXTokenInfo(account, xpusd),
-                xdai : await getXTokenInfo(account, xdai),
+                xusdc : await getXTokenInfo(account, xusdc),
                 xpeth: await getXTokenInfo(account, peth),
             };
         }
@@ -148,7 +148,7 @@ describe('CoFiXRouter', function() {
             await nest.transfer(addr1.address, toBigInt(10000000));
             //await cofi.transfer(addr1.address, toBigInt(10000000));
             await pusd.transfer(addr1.address, toBigInt(10000000));
-            await dai .transfer(addr1.address, toBigInt(10000000));
+            await usdc .transfer(addr1.address, toBigInt(10000000));
             await peth.transfer(addr1.address, toBigInt(10000000));
             await cofi.mint(addr1.address, toBigInt(10000000));
 
@@ -157,7 +157,7 @@ describe('CoFiXRouter', function() {
             await nest.transfer(owner.address, toBigInt(10000000));
             //await cofi.transfer(owner.address, toBigInt(10000000));
             await pusd.transfer(owner.address, toBigInt(10000000));
-            await dai .transfer(owner.address, toBigInt(10000000));
+            await usdc .transfer(owner.address, toBigInt(10000000));
             await peth.transfer(owner.address, toBigInt(10000000));
             await cofi.mint(owner.address, toBigInt(10000000));
 
@@ -317,11 +317,11 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('10. 做市2000dai');
-            await dai.approve(cofixRouter.address, toBigInt(2000));
+            console.log('10. 做市2000usdc');
+            await usdc.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
-                dai.address,
+                usdc.address,
                 toBigInt(0),
                 toBigInt(2000),
                 toBigInt('0.900000000000000000'),
@@ -343,7 +343,7 @@ describe('CoFiXRouter', function() {
                 peth.address,
                 '0x0000000000000000000000000000000000000000',
                 usdt.address,
-                dai.address,
+                usdc.address,
                 pusd.address,
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',

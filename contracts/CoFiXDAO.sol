@@ -78,7 +78,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Set the exchange relationship between the token and the price of the anchored target currency.
-    /// For example, set Dai to anchor usdt, because Dai is 18 decimal places and usdt is 6 decimal places. 
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
     /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token Address of origin token
     /// @param target Address of target anchor token
@@ -89,7 +89,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Get the exchange relationship between the token and the price of the anchored target currency.
-    /// For example, set Dai to anchor usdt, because Dai is 18 decimal places and usdt is 6 decimal places. 
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
     /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token Address of origin token
     /// @return target Address of target anchor token

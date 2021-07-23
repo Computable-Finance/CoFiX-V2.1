@@ -43,7 +43,7 @@
 
 ```javascript
     /// @dev 设置token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token 目标token
     /// @param target 目标锚定币
     /// @param exchange token和锚定目标币价格的兑换比例
@@ -54,7 +54,7 @@
 
 ```javascript
     /// @dev 获取token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token 目标token
     /// @return target 目标锚定币
     /// @return exchange token和锚定目标币价格的兑换比例

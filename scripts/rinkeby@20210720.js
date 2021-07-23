@@ -27,7 +27,7 @@ exports.deploy = async function () {
     // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
     // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
     // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
-    // dai: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+    // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
     // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
     // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
     // cnode: 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64
@@ -47,7 +47,7 @@ exports.deploy = async function () {
     // xpeth: 0x4034e0afC49f6ed8bE2E144A5240DaA993C87F88
     // xusdt: 0x927e7d1deaC7C2c9bCB74Df28e62eA8e7d3dDF18
     // xpusd: 0xB9a8cD49ba5BA661c490cFeADAC50A76b0c37367
-    // xdai: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
+    // xusdc: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
@@ -66,9 +66,9 @@ exports.deploy = async function () {
     const pusd = await TestERC20.attach('0x01A8088947B1222a5dC5a13C45b845E0361EEFF7');
     console.log('pusd: ' + pusd.address);
 
-    //let dai = await TestERC20.deploy('DAI', 'DAI', 18);
-    const dai = await TestERC20.attach('0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92');
-    console.log('dai: ' + dai.address);
+    //let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
+    const usdc = await TestERC20.attach('0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92');
+    console.log('usdc: ' + usdc.address);
 
     //const nest = await TestERC20.deploy('NEST', 'NEST', 18);
     const nest = await TestERC20.attach('0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25');
@@ -138,7 +138,7 @@ exports.deploy = async function () {
     // let usdAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
     //     1,
-    //     [usdt.address, pusd.address, dai.address],
+    //     [usdt.address, pusd.address, usdc.address],
     //     [1000000, '1000000000000000000', '1000000000000000000']
     // ], { initializer: 'init' });
     const usdAnchor = await CoFiXAnchorPool.attach('0x4Ac7ea8AfF091D12C38b5A7Cf049482298656DE6');
@@ -152,8 +152,8 @@ exports.deploy = async function () {
     console.log('xusdt: ' + xusdt.address);
     let xpusd = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(pusd.address));
     console.log('xpusd: ' + xpusd.address);
-    let xdai = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(dai.address));
-    console.log('xdai: ' + xdai.address);
+    let xusdc = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdc.address));
+    console.log('xusdc: ' + xusdc.address);
 
     if (false) {
         // 4. 更新合约
@@ -233,7 +233,7 @@ exports.deploy = async function () {
             xpeth.address,
             xusdt.address,
             xpusd.address,
-            xdai.address
+            xusdc.address
         ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
 
         // 8. 设置资金兑换比例
@@ -241,8 +241,8 @@ exports.deploy = async function () {
         await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
         console.log('21. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
         await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
-        console.log('22. cofixDAO.setTokenExchange(dai.address, usdt.address)');
-        await cofixDAO.setTokenExchange(dai.address, usdt.address, BigInt(1000000));
+        console.log('22. cofixDAO.setTokenExchange(usdc.address, usdt.address)');
+        await cofixDAO.setTokenExchange(usdc.address, usdt.address, BigInt(1000000));
         console.log('23. cofixDAO.setTokenExchange(eth.address, eth.address)');
         await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
         console.log('24. cofixDAO.setTokenExchange(peth.address, eth.address)');
@@ -271,10 +271,10 @@ exports.deploy = async function () {
         // 注册USD锚定池
         console.log('32. registerPair(usdt.address, pusd.address, usdAnchor.address)');
         await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
-        console.log('33. registerPair(usdt.address, dai.address, usdAnchor.address)');
-        await cofixRouter.registerPair(usdt.address, dai.address, usdAnchor.address);
-        console.log('34. registerPair(pusd.address, dai.address, usdAnchor.address)');
-        await cofixRouter.registerPair(pusd.address, dai.address, usdAnchor.address);
+        console.log('33. registerPair(usdt.address, usdc.address, usdAnchor.address)');
+        await cofixRouter.registerPair(usdt.address, usdc.address, usdAnchor.address);
+        console.log('34. registerPair(pusd.address, usdc.address, usdAnchor.address)');
+        await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
     } else {
     }
     if (false) {
@@ -284,7 +284,7 @@ exports.deploy = async function () {
         console.log('36. registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address])');
         await cofixRouter.registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address]);
         
-        // eth, nest, usdt, pusd, dai, peth, cofi, hbtc
+        // eth, nest, usdt, pusd, usdc, peth, cofi, hbtc
         console.log('37. registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address])');
         await cofixRouter.registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address]);
         console.log('38. registerRouterPath(pusd.address, peth.address, [pusd.address, usdt.address, eth.address, peth.address])');
@@ -292,12 +292,12 @@ exports.deploy = async function () {
         console.log('39. registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address])');
         await cofixRouter.registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address]);
 
-        console.log('40. registerRouterPath(dai.address, eth.address, [dai.address, usdt.address, eth.address])');
-        await cofixRouter.registerRouterPath(dai.address, eth.address, [dai.address, usdt.address, eth.address]);
-        console.log('41. registerRouterPath(dai.address, peth.address, [dai.address, usdt.address, eth.address, peth.address])');
-        await cofixRouter.registerRouterPath(dai.address, peth.address, [dai.address, usdt.address, eth.address, peth.address]);
-        console.log('42. registerRouterPath(dai.address, nest.address, [dai.address, usdt.address, eth.address, nest.address])');
-        await cofixRouter.registerRouterPath(dai.address, nest.address, [dai.address, usdt.address, eth.address, nest.address]);
+        console.log('40. registerRouterPath(usdc.address, eth.address, [usdc.address, usdt.address, eth.address])');
+        await cofixRouter.registerRouterPath(usdc.address, eth.address, [usdc.address, usdt.address, eth.address]);
+        console.log('41. registerRouterPath(usdc.address, peth.address, [usdc.address, usdt.address, eth.address, peth.address])');
+        await cofixRouter.registerRouterPath(usdc.address, peth.address, [usdc.address, usdt.address, eth.address, peth.address]);
+        console.log('42. registerRouterPath(usdc.address, nest.address, [usdc.address, usdt.address, eth.address, nest.address])');
+        await cofixRouter.registerRouterPath(usdc.address, nest.address, [usdc.address, usdt.address, eth.address, nest.address]);
 
         console.log('43. registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address])');
         await cofixRouter.registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address]);
@@ -308,8 +308,8 @@ exports.deploy = async function () {
         await cofixRouter.registerRouterPath(cofi.address, usdt.address, [cofi.address, eth.address, usdt.address]);
         console.log('46. registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address])');
         await cofixRouter.registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address]);
-        console.log('47. registerRouterPath(cofi.address, dai.address, [cofi.address, eth.address, usdt.address, dai.address])');
-        await cofixRouter.registerRouterPath(cofi.address, dai.address, [cofi.address, eth.address, usdt.address, dai.address]);
+        console.log('47. registerRouterPath(cofi.address, usdc.address, [cofi.address, eth.address, usdt.address, usdc.address])');
+        await cofixRouter.registerRouterPath(cofi.address, usdc.address, [cofi.address, eth.address, usdt.address, usdc.address]);
         console.log('48. registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address])');
         await cofixRouter.registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address]);
 
@@ -319,8 +319,8 @@ exports.deploy = async function () {
         await cofixRouter.registerRouterPath(hbtc.address, usdt.address, [hbtc.address, eth.address, usdt.address]);
         console.log('51. registerRouterPath(hbtc.address, pusd.address, [hbtc.address, eth.address, usdt.address, pusd.address])');
         await cofixRouter.registerRouterPath(hbtc.address, pusd.address, [hbtc.address, eth.address, usdt.address, pusd.address]);
-        console.log('52. registerRouterPath(hbtc.address, dai.address, [hbtc.address, eth.address, usdt.address, dai.address])');
-        await cofixRouter.registerRouterPath(hbtc.address, dai.address, [hbtc.address, eth.address, usdt.address, dai.address]);
+        console.log('52. registerRouterPath(hbtc.address, usdc.address, [hbtc.address, eth.address, usdt.address, usdc.address])');
+        await cofixRouter.registerRouterPath(hbtc.address, usdc.address, [hbtc.address, eth.address, usdt.address, usdc.address]);
         console.log('53. registerRouterPath(hbtc.address, peth.address, [hbtc.address, eth.address, peth.address])');
         await cofixRouter.registerRouterPath(hbtc.address, peth.address, [hbtc.address, eth.address, peth.address]);
         console.log('54. registerRouterPath(hbtc.address, cofi.address, [hbtc.address, eth.address, cofi.address])');
@@ -342,13 +342,13 @@ exports.deploy = async function () {
         nest: nest,
         peth: peth,
         pusd: pusd,
-        dai: dai,
+        usdc: usdc,
 
         xeth: xeth,
         xpeth: xpeth,
         xusdt: xusdt,
         xpusd: xpusd,
-        xdai: xdai,
+        xusdc: xusdc,
 
         usdtPair: usdtPair,
         hbtcPair: hbtcPair,

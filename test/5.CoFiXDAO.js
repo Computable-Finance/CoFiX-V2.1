@@ -24,14 +24,14 @@ describe('CoFiXRouter', function() {
             peth,
             weth,
             pusd,
-            dai,
+            usdc,
     
             xeth,
             xpeth,
             xweth,
             xusdt,
             xpusd,
-            xdai,
+            xusdc,
 
             usdtPair,
             nestPair,
@@ -83,10 +83,10 @@ describe('CoFiXRouter', function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                dai: toDecimal(await dai.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account)),
                 xusdt: toDecimal(await xusdt.balanceOf(account)),
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
-                xdai: toDecimal(await xdai.balanceOf(account)),
+                xusdc: toDecimal(await xusdc.balanceOf(account)),
                 //staked: toDecimal(await cofixVaultForStaking.balanceOf(usdtPair.address, account)),
                 //earned: toDecimal(await cofixVaultForStaking.earned(usdtPair.address, account))
             };

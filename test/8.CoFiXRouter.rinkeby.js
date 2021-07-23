@@ -24,13 +24,13 @@ describe('CoFiXRouter', function() {
             nest,
             peth,
             pusd,
-            dai,
+            usdc,
     
             xeth,
             xpeth,
             xusdt,
             xpusd,
-            xdai,
+            xusdc,
 
             usdtPair,
             hbtcPair,
@@ -93,7 +93,7 @@ describe('CoFiXRouter', function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                dai: toDecimal(await dai.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account)),
                 peth: toDecimal(await peth.balanceOf(account)),
                 usdtPair: await getXTokenInfo(account, usdtPair),
                 hbtcPair: await getXTokenInfo(account, hbtcPair),
@@ -101,7 +101,7 @@ describe('CoFiXRouter', function() {
                 cofiPair: await getXTokenInfo(account, cofiPair),
                 xusdt: await getXTokenInfo(account, xusdt),
                 xpusd: await getXTokenInfo(account, xpusd),
-                xdai : await getXTokenInfo(account, xdai),
+                xusdc : await getXTokenInfo(account, xusdc),
                 xpeth: await getXTokenInfo(account, peth),
             };
         }
@@ -134,28 +134,6 @@ describe('CoFiXRouter', function() {
         let status;
         let p;
 
-        if (true) {
-            console.log('11. 路由兑换1000usdt');
-            let path = [
-                usdt.address,
-                '0x0000000000000000000000000000000000000000',
-            ];
-            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
-            let receipt = await cofixRouter.swapExactTokensForTokens(
-                path,
-                toBigInt(10, 6),
-                0,
-                owner.address,
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('80000000000000000')
-                }
-            );
-            showReceipt(receipt);
-            //status = await getStatus();
-            //console.log(status);
-        }
-        return;
         // let nestQuery = await ethers.getContractAt('INestQuery', nestPriceFacade.address);
         // let pi = await nestQuery.lastPriceListAndTriggeredPriceInfo(usdt.address, 2);
         // console.log({
@@ -177,7 +155,7 @@ describe('CoFiXRouter', function() {
             await nest.transfer(addr1.address, toBigInt(10000000));
             //await cofi.transfer(addr1.address, toBigInt(10000000));
             await pusd.transfer(addr1.address, toBigInt(10000000));
-            await dai .transfer(addr1.address, toBigInt(10000000));
+            await usdc .transfer(addr1.address, toBigInt(10000000));
             await peth.transfer(addr1.address, toBigInt(10000000));
             await cofi.mint(addr1.address, toBigInt(10000000));
 
@@ -186,7 +164,7 @@ describe('CoFiXRouter', function() {
             await nest.transfer(owner.address, toBigInt(10000000));
             //await cofi.transfer(owner.address, toBigInt(10000000));
             await pusd.transfer(owner.address, toBigInt(10000000));
-            await dai .transfer(owner.address, toBigInt(10000000));
+            await usdc .transfer(owner.address, toBigInt(10000000));
             await peth.transfer(owner.address, toBigInt(10000000));
             await cofi.mint(owner.address, toBigInt(10000000));
 
@@ -346,11 +324,11 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('10. 做市2000dai');
-            await dai.approve(cofixRouter.address, toBigInt(2000));
+            console.log('10. 做市2000usdc');
+            await usdc.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
-                dai.address,
+                usdc.address,
                 toBigInt(0),
                 toBigInt(2000),
                 toBigInt('0.900000000000000000'),
@@ -394,7 +372,7 @@ describe('CoFiXRouter', function() {
                 peth.address,
                 '0x0000000000000000000000000000000000000000',
                 usdt.address,
-                dai.address,
+                usdc.address,
                 pusd.address,
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',
@@ -424,7 +402,7 @@ describe('CoFiXRouter', function() {
         // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
         // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
         // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
-        // dai: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+        // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
         // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
         // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
         // cnode: 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64
@@ -444,9 +422,9 @@ describe('CoFiXRouter', function() {
         // xpeth: 0x4034e0afC49f6ed8bE2E144A5240DaA993C87F88
         // xusdt: 0x927e7d1deaC7C2c9bCB74Df28e62eA8e7d3dDF18
         // xpusd: 0xB9a8cD49ba5BA661c490cFeADAC50A76b0c37367
-        // xdai: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
+        // xusdc: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
 
-        // usdt->eth->nest->eth->cofi->eth->peth->eth->usdt->dai->pusd
+        // usdt->eth->nest->eth->cofi->eth->peth->eth->usdt->usdc->pusd
         // 0x20125a7256EFafd0d4Eec24048E08C5045BC5900->0x0000000000000000000000000000000000000000->0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25->0x0000000000000000000000000000000000000000->0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695->0x0000000000000000000000000000000000000000->0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588->0x0000000000000000000000000000000000000000->0x20125a7256EFafd0d4Eec24048E08C5045BC5900->0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92->0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
         // ['0x20125a7256EFafd0d4Eec24048E08C5045BC5900', '0x0000000000000000000000000000000000000000', '0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25', '0x0000000000000000000000000000000000000000', '0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695', '0x0000000000000000000000000000000000000000', '0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588', '0x0000000000000000000000000000000000000000', '0x20125a7256EFafd0d4Eec24048E08C5045BC5900', '0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92', '0x01A8088947B1222a5dC5a13C45b845E0361EEFF7']
     });

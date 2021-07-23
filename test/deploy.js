@@ -25,7 +25,7 @@ describe('CoFiXRouter', function() {
             ethAnchor,
 
             pusd,
-            dai,
+            usdc,
             weth
         } = await deployer.deploy();
 
@@ -68,7 +68,7 @@ describe('CoFiXRouter', function() {
 
         console.log('xusdt: ' + await usdAnchor.getXToken(usdt.address));
         console.log('xpusd: ' + await usdAnchor.getXToken(pusd.address));
-        console.log('xdai: ' + await usdAnchor.getXToken(dai.address));
+        console.log('xusdc: ' + await usdAnchor.getXToken(usdc.address));
         //console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
         
 
