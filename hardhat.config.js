@@ -1,10 +1,11 @@
-require("@nomiclabs/hardhat-waffle");
+require('@nomiclabs/hardhat-waffle');
 require('@openzeppelin/hardhat-upgrades');
+require('hardhat-gas-reporter');
 
 const config = require('./.private.json');
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async () => {
+task('accounts', 'Prints the list of accounts', async () => {
   const accounts = await ethers.getSigners();
 
   for (const account of accounts) {
@@ -20,7 +21,7 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: {
-    version: "0.8.6",
+    version: '0.8.6',
     settings: {
       optimizer: {
         enabled: true,
@@ -39,6 +40,7 @@ module.exports = {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${config.alchemy.rinkeby.apiKey}`,
       accounts: [config.account.rinkeby.key, config.account.rinkeby.userA, config.account.rinkeby.userB],
       gasPrice: 1e9,
+      gas: 6e6,
       timeout: 2000000000
     },
     kovan: {
@@ -48,11 +50,16 @@ module.exports = {
       timeout: 2000000000
     },
     hardhat: {
+      gas: 6000000,
       gasPrice: 0
     }
   },
   mocha: {
     timeout: 200000000
+  },
+  gasReporter: {
+    currency: 'CHF',
+    gasPrice: 1
   }
 };
 

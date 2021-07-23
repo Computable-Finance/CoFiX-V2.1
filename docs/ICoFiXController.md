@@ -48,17 +48,7 @@
     );
 ```
 
-### 2.3. Calc K value
-
-```javascript
-    /// @notice Calc K value
-    /// @param sigmaSQ The square of the volatility (18 decimal places).
-    /// @param bn The block number when (ETH, TOKEN) price takes into effective
-    /// @return k The K value(18 decimal places).
-    function calcK(uint sigmaSQ, uint bn) external view returns (uint k);
-```
-
-### 2.4. 查询最新价格信息
+### 2.3. 查询最新价格信息
 
 ```javascript
     /// @dev 查询最新价格信息
@@ -81,4 +71,16 @@
         uint avgPriceTokenAmount,
         uint sigmaSQ
     );
+```
+
+### 2.4. 查询最新价格信息
+
+```javascript
+    /// @dev K value is calculated by revised volatility
+    /// @param sigmaSQ The square of the volatility (18 decimal places).
+    /// @param p0 Last price (number of tokens equivalent to 1 ETH)
+    /// @param bn0 Block number of the last price
+    /// @param p Latest price (number of tokens equivalent to 1 ETH)
+    /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view external returns (k);
 ```

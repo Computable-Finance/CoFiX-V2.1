@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         const [owner, addr1] = await ethers.getSigners();
         
@@ -26,7 +26,7 @@ describe("CoFiXRouter", function() {
             usdtPair.address,
             usdt.address,
             BigInt('2000000000000000000'),
-            BigInt('6000000000'),
+            BigInt('4000000000'),
             BigInt('900000000000000000'),
             owner.address,
             BigInt('1800000000000'), {
@@ -62,13 +62,13 @@ describe("CoFiXRouter", function() {
             }
         );
 
-        receipt = await cofixRouter.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactTokensForTokens(
             // 目标token地址
-            usdt.address.toString(),
+            ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量
-            BigInt('10'),
+            BigInt(10),
             // 接收地址
             owner.address,
             // 出矿接收地址
@@ -79,13 +79,13 @@ describe("CoFiXRouter", function() {
         );
         console.log((await receipt.wait()).gasUsed.toString());
 
-        receipt = await cofixRouter.swapExactETHForTokens(
+        receipt = await cofixRouter.swapExactTokensForTokens(
             // 目标token地址
-            usdt.address.toString(),
+            ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
             // eth数量
             BigInt('100000000000000000'),
             // 预期获得的token的最小数量
-            BigInt('10'),
+            BigInt(10),
             // 接收地址
             owner.address,
             // 出矿接收地址

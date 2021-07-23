@@ -4,18 +4,28 @@ pragma solidity ^0.8.6;
 
 import "./ICoFiXPool.sol";
 
-/// @dev 锚定资金池（有关锚定资金池的逻辑请参考产品文档）。
+/// @dev Anchor pool (please refer to the product documentation for the logic of anchoring the fund pool)
 interface ICoFiXAnchorPool is ICoFiXPool {
 
-    /// @dev 将资金池内超过总份额的多余资金转走
+    /// @dev Transfer the excess funds that exceed the total share in the fund pool
     function skim() external;
 
-    /// @dev 预估出矿量
-    /// @param token 目标token地址
-    /// @param newBalance 新的token余额
-    /// @return mined 预计出矿量
+    /// @dev Estimate mining amount
+    /// @param token Target token address
+    /// @param newBalance New balance of target token
+    /// @return mined The amount of CoFi which will be mind by this trade
     function estimate(
         address token,
         uint newBalance
     ) external view returns (uint mined);
+
+    /// @dev Add token information
+    /// @param poolIndex Index of pool
+    /// @param token Target token address
+    /// @param base Base of token
+    function addToken(
+        uint poolIndex, 
+        address token, 
+        uint96 base
+    ) external returns (address xtokenAddress);
 }

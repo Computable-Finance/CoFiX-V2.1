@@ -5,59 +5,54 @@ pragma solidity ^0.8.6;
 /// @dev This interface defines methods for CoFiXVaultForStaking
 interface ICoFiXVaultForStaking {
 
-    /// @dev CoFiXRouter configuration structure
-    struct Config {
-        // CoFi mining speed
-        uint96 cofiRate;
-    }
-
     /// @dev Modify configuration
-    /// @param config Configuration object
-    function setConfig(Config memory config) external;
+    /// @param cofiUnit CoFi mining unit
+    function setConfig(uint cofiUnit) external;
 
     /// @dev Get configuration
-    /// @return Configuration object
-    function getConfig() external view returns (Config memory);
+    /// @return cofiUnit CoFi mining unit
+    function getConfig() external view returns (uint cofiUnit);
 
-    /// @dev 初始化出矿权重
-    /// @param xtokens 份额代币地址数组
-    /// @param weights 出矿权重数组
-    function batchSetPoolWeight(address[] memory xtokens, uint[] memory weights) external;
+    /// @dev Initialize ore drawing weight
+    /// @param xtokens xtoken array
+    /// @param weights weight array
+    function batchSetPoolWeight(address[] calldata xtokens, uint[] calldata weights) external;
 
-    /// @dev 初始化锁仓参数
-    /// @param pair 目标交易对
-    /// @param cofiWeight CoFi出矿速度权重
-    function initStakingChannel(address pair, uint cofiWeight) external;
+    /// @dev Get total staked amount of xtoken
+    /// @param xtoken xtoken address (or CNode address)
+    /// @return totalStaked Total lock volume of target xtoken
+    /// @return cofiPerBlock Mining speed, cofi per block
+    function getChannelInfo(address xtoken) external view returns (uint totalStaked, uint cofiPerBlock);
+
+    /// @dev Get staked amount of target address
+    /// @param xtoken xtoken address (or CNode address)
+    /// @param addr Target address
+    /// @return Staked amount of target address
+    function balanceOf(address xtoken, address addr) external view returns (uint);
+
+    /// @dev Get the number of CoFi to be collected by the target address on the designated transaction pair lock
+    /// @param xtoken xtoken address (or CNode address)
+    /// @param addr Target address
+    /// @return The number of CoFi to be collected by the target address on the designated transaction lock
+    function earned(address xtoken, address addr) external view returns (uint);
+
+    /// @dev Stake xtoken to earn CoFi, this method is only for CoFiXRouter
+    /// @param xtoken xtoken address (or CNode address)
+    /// @param to Target address
+    /// @param amount Stake amount
+    function routerStake(address xtoken, address to, uint amount) external;
     
-    /// @dev 获取目标地址锁仓的数量
-    /// @param pair 目标交易对
-    /// @param addr 目标地址
-    /// @return 目标地址锁仓的数量
-    function balanceOf(address pair, address addr) external view returns (uint);
+    /// @dev Stake xtoken to earn CoFi
+    /// @param xtoken xtoken address (or CNode address)
+    /// @param amount Stake amount
+    function stake(address xtoken, uint amount) external;
 
-    /// @dev 获取目标地址在指定交易对锁仓上待领取的CoFi数量
-    /// @param pair 目标交易对
-    /// @param addr 目标地址
-    /// @return 目标地址在指定交易对锁仓上待领取的CoFi数量
-    function earned(address pair, address addr) external view returns (uint);
+    /// @dev Withdraw xtoken, and claim earned CoFi
+    /// @param xtoken xtoken address (or CNode address)
+    /// @param amount Withdraw amount
+    function withdraw(address xtoken, uint amount) external;
 
-    /// @dev 此接口仅共CoFiXRouter调用，来存入做市份额
-    /// @param pair 目标交易对
-    /// @param to 存入的目标地址
-    /// @param amount 存入数量
-    function routerStake(address pair, address to, uint amount) external;
-    
-    /// @dev 存入做市份额
-    /// @param pair 目标交易对
-    /// @param amount 存入数量
-    function stake(address pair, uint amount) external;
-
-    /// @dev 取回做市份额，并领取CoFi
-    /// @param pair 目标交易对
-    /// @param amount 取回数量
-    function withdraw(address pair, uint amount) external;
-
-    /// @dev 领取CoFi
-    /// @param pair 目标交易对
-    function getReward(address pair) external;
+    /// @dev Claim CoFi
+    /// @param xtoken xtoken address (or CNode address)
+    function getReward(address xtoken) external;
 }

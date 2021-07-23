@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();
         
@@ -25,7 +25,7 @@ describe("CoFiXRouter", function() {
             ethAnchor,
 
             pusd,
-            dai,
+            usdc,
             weth
         } = await deployer.deploy();
 
@@ -44,6 +44,10 @@ describe("CoFiXRouter", function() {
             return bi;
         }
 
+        console.log('ok');
+
+        console.log('usdt balance: ' + await usdt.balanceOf(owner.address));
+        return;
         // if (true) {
         //     console.log('0. 设置价格');
         //     await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
@@ -64,8 +68,8 @@ describe("CoFiXRouter", function() {
 
         console.log('xusdt: ' + await usdAnchor.getXToken(usdt.address));
         console.log('xpusd: ' + await usdAnchor.getXToken(pusd.address));
-        console.log('xdai: ' + await usdAnchor.getXToken(dai.address));
-        console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
+        console.log('xusdc: ' + await usdAnchor.getXToken(usdc.address));
+        //console.log('xweth: ' + await usdAnchor.getXToken(weth.address));
         
 
         // await usdt.transfer(owner.address, BigInt('10000000000000'));

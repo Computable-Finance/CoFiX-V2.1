@@ -9,26 +9,27 @@ import "hardhat/console.sol";
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
 
-    uint constant K_ALPHA = 0.00001 ether;
-    uint constant K_BETA = 10 ether;
+    // uint constant K_ALPHA = 0.00001 ether;
+    // uint constant K_BETA = 10 ether;
     uint constant BLOCK_TIME = 14;
 
-    // nest价格调用合约地址
-    address immutable NEST_PRICE_FADADE;
+    // Address of NestPriceFacade contract
+    address immutable NEST_PRICE_FACADE;
 
     constructor(address nestPriceFacade) {
-        NEST_PRICE_FADADE = nestPriceFacade;
+        NEST_PRICE_FACADE = nestPriceFacade;
     }
 
-    /// @dev 查询最新价格信息
-    /// @param tokenAddress token地址
-    /// @param payback 退回的手续费接收地址
-    /// @return blockNumber 价格所在区块号
-    /// @return priceEthAmount 预言机价格-eth数量
-    /// @return priceTokenAmount 预言机价格-token数量
-    /// @return avgPriceEthAmount 平均价格-eth数量
-    /// @return avgPriceTokenAmount 平均价格-token数量
-    /// @return sigmaSQ 波动率的平方（18位小数）
+    /// @dev Query latest price info
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return blockNumber Block number of price
+    /// @return priceEthAmount Oracle price - eth amount
+    /// @return priceTokenAmount Oracle price - token amount
+    /// @return avgPriceEthAmount Avg price - eth amount
+    /// @return avgPriceTokenAmount Avg price - token amount
+    /// @return sigmaSQ The square of the volatility (18 decimal places)
     function latestPriceInfo(address tokenAddress, address payback) 
     public 
     payable 
@@ -48,9 +49,11 @@ contract CoFiXController is ICoFiXController {
             ,//uint triggeredPriceValue,
             avgPriceTokenAmount,
             sigmaSQ
-        ) = INestPriceFacade(NEST_PRICE_FADADE).latestPriceAndTriggeredPriceInfo { 
+        ) = INestPriceFacade(NEST_PRICE_FACADE).latestPriceAndTriggeredPriceInfo { 
             value: msg.value 
         } (tokenAddress, payback);
+        
+        _checkPrice(priceTokenAmount, avgPriceTokenAmount);
         priceEthAmount = 1 ether;
         avgPriceEthAmount = 1 ether;
     }
@@ -60,12 +63,13 @@ contract CoFiXController is ICoFiXController {
     // In the near future, NEST could provide the variance of price directly. We will adopt it then.
     // We can make use of `data` bytes in the future
 
-    /// @dev 查询价格
-    /// @param tokenAddress 目标token地址
-    /// @param payback 手续费退回接收地址
-    /// @return ethAmount 价格-eth数量
-    /// @return tokenAmount 价格-token数量
-    /// @return blockNumber 价格所在区块
+    /// @dev Query price
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return ethAmount Oracle price - eth amount
+    /// @return tokenAmount Oracle price - token amount
+    /// @return blockNumber Block number of price
     function queryPrice(
         address tokenAddress,
         address payback
@@ -74,16 +78,40 @@ contract CoFiXController is ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     ) {
-        (blockNumber, tokenAmount) = INestPriceFacade(NEST_PRICE_FADADE).latestPrice { 
+        (blockNumber, tokenAmount) = INestPriceFacade(NEST_PRICE_FACADE).latestPrice { 
             value: msg.value 
         } (tokenAddress, payback);
         ethAmount = 1 ether;
+
+        // (
+        //     uint latestPriceBlockNumber, 
+        //     uint latestPriceValue,
+        //     ,//uint triggeredPriceBlockNumber,
+        //     ,//uint triggeredPriceValue,
+        //     uint triggeredAvgPrice,
+        //     //uint triggeredSigmaSQ
+        // ) = INestPriceFacade(NEST_PRICE_FACADE).latestPriceAndTriggeredPriceInfo { 
+        //     value: msg.value 
+        // } (tokenAddress, payback);
+        
+        // _checkPrice(latestPriceValue, triggeredAvgPrice);
+
+        // ethAmount = 1 ether;
+        // tokenAmount = latestPriceValue;
+        // blockNumber = latestPriceBlockNumber;
     }
 
-    // Calc variance of price and K in CoFiX is very expensive
-    // We use expected value of K based on statistical calculations here to save gas
-    // In the near future, NEST could provide the variance of price directly. We will adopt it then.
-    // We can make use of `data` bytes in the future
+    /// @dev Calc variance of price and K in CoFiX is very expensive
+    /// We use expected value of K based on statistical calculations here to save gas
+    /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
+    /// We can make use of `data` bytes in the future
+    /// @param tokenAddress Target address of token
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return k The K value(18 decimal places).
+    /// @return ethAmount Oracle price - eth amount
+    /// @return tokenAmount Oracle price - token amount
+    /// @return blockNumber Block number of price
     function queryOracle(
         address tokenAddress,
         address payback
@@ -93,41 +121,109 @@ contract CoFiXController is ICoFiXController {
         uint tokenAmount, 
         uint blockNumber
     ) {
-        uint sigmaSQ;
         (
-            blockNumber, 
-            ethAmount,
-            tokenAmount,
-            ,//uint avgPriceEthAmount,
-            ,//uint avgPriceTokenAmount,
-            sigmaSQ
-        ) = latestPriceInfo(tokenAddress, payback);
+            uint[] memory prices,
+            ,//uint triggeredPriceBlockNumber,
+            ,//uint triggeredPriceValue,
+            uint triggeredAvgPrice,
+            uint triggeredSigmaSQ
+        ) = INestPriceFacade(NEST_PRICE_FACADE).lastPriceListAndTriggeredPriceInfo {
+            value: msg.value  
+        } (tokenAddress, 2, payback);
 
-        k = calcK(sigmaSQ, blockNumber);
+        tokenAmount = prices[1];
+        _checkPrice(tokenAmount, triggeredAvgPrice);
+        blockNumber = prices[0];
+        ethAmount = 1 ether;
+
+        k = calcRevisedK(triggeredSigmaSQ, prices[3], prices[2], tokenAmount, blockNumber);
     }
 
-    // TODO: 注意K值是18位小数
-   /**
-    * @notice Calc K value
-    * @param sigmaSQ The square of the volatility (18 decimal places).
-    * @param bn The block number when (ETH, TOKEN) price takes into effective
-    * @return k The K value
-    */
-    function calcK(uint sigmaSQ, uint bn) public view override returns (uint k) {
-        // TODO: 修改算法为配置
-        uint sigma = sqrt(sigmaSQ / 1e4) * 1e11;
-        uint gamma = 1 ether;
-        if (sigma > 0.0005 ether) {
-            gamma = 2 ether;
-        } else if (sigma > 0.0003 ether) {
-            gamma = 1.5 ether;
+    /// @dev K value is calculated by revised volatility
+    /// @param sigmaSQ The square of the volatility (18 decimal places).
+    /// @param p0 Last price (number of tokens equivalent to 1 ETH)
+    /// @param bn0 Block number of the last price
+    /// @param p Latest price (number of tokens equivalent to 1 ETH)
+    /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
+        k = _calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
+    }
+
+    // TODO: 为了测试方便写成public的，发布时需要改为private的
+    // Calculate the corrected volatility
+    function _calcRevisedSigmaSQ(
+        uint sigmaSQ,
+        uint p0, 
+        uint bn0, 
+        uint p, 
+        uint bn
+    ) public pure returns (uint revisedSigmaSQ) {
+        // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
+        // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
+        // 1. 
+        // rq2 <= 4 * dt * sq1
+        // sqt = sq2
+        // 2. rq2 > 4 * dt * sq1 && rq2 <= 9 * dt * sq1
+        // sqt = (sq1 + rq2 * dt) / 2
+        // 3. rq2 > 9 * dt * sq1
+        // sqt = sq1 * 0.2 + rq2 * dt * 0.8
+
+        // sq表示波动率，sq2表示nest返回的最新波动率，sq1表示nest的上一个波动率
+        // dt表示最新两个价格的时间间隔
+        // rq2表示最新的收益率（根据最新两个价格和价格的时间间隔计算）
+        // sqt表示修正波动率
+
+        uint rq2 = p * 1 ether / p0;
+        if (rq2 > 1 ether) {
+            rq2 -= 1 ether;
+        } else {
+            rq2 = 1 ether - rq2;
+        }
+        rq2 = rq2 * rq2 / 1 ether;
+
+        uint dt = (bn - bn0) * BLOCK_TIME;
+        uint sq1 = 0;
+        uint rq2dt = rq2 / dt;
+        if (sigmaSQ * 10 > rq2dt) {
+            sq1 = (sigmaSQ * 10 - rq2dt) / 9;
         }
 
-        k = (K_ALPHA * (block.number - bn) * 14 ether + K_BETA * sigma) * gamma / 1e36;
+        uint dds = dt * dt * dt * sq1;
+        if (rq2 <= (dds << 2)) {
+            revisedSigmaSQ = sigmaSQ;
+        } else if (rq2 <= 9 * dds) {
+            revisedSigmaSQ = (sq1 + rq2dt) >> 1;
+        } else {
+            revisedSigmaSQ = (sq1 + (rq2dt << 2)) / 5;
+        }
+    }
+
+    // TODO: Note that the value of K is 18 decimal places
+    /// @dev Calc K value
+    /// @param sigmaSQ The square of the volatility (18 decimal places).
+    /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    /// @return k The K value
+    function _calcK(uint sigmaSQ, uint bn) private view returns (uint k) {
+        // uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
+        // uint gamma = 1 ether;
+        // if (sigma > 0.0005 ether) {
+        //     gamma = 2 ether;
+        // } else if (sigma > 0.0003 ether) {
+        //     gamma = 1.5 ether;
+        // }
+
+        // k = (K_ALPHA * (block.number - bn) * BLOCK_TIME * 1 ether + K_BETA * sigma) * gamma / 1e36;
+
+        // k = 0.002 + 2 * D^0.5 * σ
+     
+        k = 0.002 ether + _sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ / 1e4) * 2e11;
+        
+        // TODO: 删除此代码
+        //k -= 0.002 ether;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    function sqrt(uint y) private pure returns (uint z) {
+    function _sqrt(uint y) private pure returns (uint z) {
         if (y > 3) {
             z = y;
             uint x = (y >> 1) + 1;
@@ -138,5 +234,14 @@ contract CoFiXController is ICoFiXController {
         } else if (y != 0) {
             z = 1;
         }
+    }
+
+    // Check price
+    function _checkPrice(uint price, uint avgPrice) private pure {
+        require(
+            price <= avgPrice * 11 / 10 &&
+            price >= avgPrice * 9 / 10, 
+            "CoFiXController: price deviation"
+        );
     }
 }

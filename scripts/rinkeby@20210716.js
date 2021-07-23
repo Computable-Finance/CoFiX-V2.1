@@ -20,94 +20,114 @@ exports.deploy = async function () {
     const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
     const NestPriceFacade = await ethers.getContractFactory('NestPriceFacade');
 
-    //nestPriceFacade: 0xDda3801487a8Bb5ec19dD1E3510b6340BA435863
-    //cnode: 0x6E9c1edACe6Fc03f9666769f09D557b1383f7F57
-    //usdt: 0x0f4014fbA3D4fcb56d2653Bf3d51664dCcCF42f6
-    //nest: 0x4c6DC3Fa867c3c96B1C8F51CE7Fa975b886d882f
-    //cofi: 0x4c4F8Bfa7835089D176C1ec24e845f784F3045c1
-    //cofixGovernance: 0x9964C60E19FA2F5426821643a5195920cE83f454
-    //usdtPair: 0xb7719040D4357A2a58D1293a52511b57bCbd533D
-    //nestPair: 0x91025AF7C4699473C9f9Cae7876c86e4ef715107
-    //cofixDAO: 0xba7ba7e89ad593727e3eF694e5c9Db1C9f95B58d
-    //cofixRouter: 0x2651171EeB0Ec9357c27A8CdB8B7dF4500534F34
-    //cofixController: 0x45456aE6aCD697F9661a962716e105393d4CF8c4
-    //cofixVaultForStaking: 0x6075560428330b0DeE19F6D5606d564E0B768cd6
-    // peth: 0x885629c3784C4e7cEaa82b83F3aeD2F991d197C6
-    // weth: 0x628b25c7658287c2829EE7a3E5D34b0158d2fdB5
-    // pusd: 0x0f03cd5CeBe21D1E7307588b9844D10ad0F4A394
-    // usdc: 0xe86dD41fEb8594D083f9dC364e530c0B8D208feA
-    // ethAnchor: 0xbbd6b432B280dea51f137F8234a5D0Ac36D17fdf
-    // usdAnchor: 0x08B79267ff01393925081396b328B6d6f82a4250
-    // xeth: 0x1Be9CdBbf78389D2075F528730B87b82551A59D7
-    // xpeth: 0x0FC0551C43915b652b646b277d883B8aC2Cd3C58
-    // xweth: 0x0Ea19Bf07e6F09124CeefbDBa41C9c0e58430316
-    // xusdt: 0xbff7C46F7825207A3e9cF8C459f2410C7e38aF43
-    // xpusd: 0x08cD68990E084eD3FC4f7bF18b119F5581D2bAf6
-    // xusdc: 0xC9F6c5a57451d39AC4F19F81B35A569714C87a93
+    // ***** .deploy.rinkeby@20210716.js *****
+    // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
+    // usdt: 0x20125a7256EFafd0d4Eec24048E08C5045BC5900
+    // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
+    // nestGovernance: 0xa52936bD3848567Fbe4bA24De3370ABF419fC1f7
+    // nestLedger: 0x005103e352f86e4C32a3CE4B684fe211eB123210
+    // nTokenController: 0xb75Fd1a678dAFE00cEafc8d9e9B1ecf75cd6afC5
+    // nestVote: 0xF9539C7151fC9E26362170FADe13a4e4c250D720
+    // nestMining: 0x50E911480a01B9cF4826a87BD7591db25Ac0727F
+    // ntokenMining: 0xb984cCe9fdA423c5A18DFDE4a7bCdfC150DC1012
+    // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
+    // nestRedeeming: 0xeD859B5f5A2e19bC36C14096DC05Fe9192CeFa31
+    // nnIncome: 0x82307CbA43f05D632aB835AFfD30ED0073dC4bd9
+    // nhbtc: 0xe6bf6Bd50b07D577a22FEA5b1A205Cf21642b198
+    // nn: 0x52Ab1592d71E20167EB657646e86ae5FC04e9E01
 
-    console.log('** 开始部署合约 rinkeby@20210702.js **');
+    // ** 开始部署合约 rinkeby@20210716 **
+    // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
+    // cnode: 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64
+    // usdt: 0x20125a7256EFafd0d4Eec24048E08C5045BC5900
+    // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
+    // cofi: 0xBd98Ec485d7f54979FC0Ef19365ABFFC63099755
+    // cofixGovernance: 0xAc12D0CbA1E1a2ffb34326115c2A9926435Dd694
+    // usdtPair: 0x7756f374E19E1528454B5291282D6C9e33eCBC69
+    // nestPair: 0xEC38914c82969716C5E271a63087D365B0E259b2
+    // cofiPair: 0x47380B7cd1a7c482Bc2416FB0171AD2A10c8258A
+    // cofixDAO: 0xCD0E336D483511840D3002E4aE1518bd3681cdaC
+    // cofixRouter: 0xFd759970c8B4A6EfE5525EA9A03732Ef04F1C5F4
+    // cofixController: 0xEf1673bda89C0c1827680467BdfB6d22F18F8498
+    // cofixVaultForStaking: 0x974E819Fa74683c3dAc7C4bc4041d6B2E042e1D7
+    // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
+    // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
+    // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+    // ethAnchor: 0xA5fF74B6BcF816AA3e13857a68c231DE6EEAF4eA
+    // usdAnchor: 0x5Ed0d53442415BE2Ac4d1bA5e289721c4e3A8ce1
+    // xeth: 0xEb780f8711A0D99DA20B05A5C5c903D8E1091834
+    // xpeth: 0x6f67bF655225D32a1a0d9fbE25147259cBAA917c
+    // xusdt: 0x38967b00B27629E0a944D8004b18b97A203d6d49
+    // xpusd: 0x670aa8399aF49620AB542Dc1d71a3Cd1662a92fd
+    // xusdc: 0xb6c01dF109bE84d29Ef570f8D2FBEa00413681F2
+
+    console.log('** 开始部署合约 rinkeby@20210716 **');
     
     //const nestPriceFacade = await NestPriceFacade.deploy();
-    const nestPriceFacade = await NestPriceFacade.attach('0xDda3801487a8Bb5ec19dD1E3510b6340BA435863');
+    const nestPriceFacade = await NestPriceFacade.attach('0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838');
     console.log('nestPriceFacade: ' + nestPriceFacade.address);
     
     //let cnode = await TestERC20.deploy('CNode', 'CNode', 0);
-    const cnode = await TestERC20.attach('0x6E9c1edACe6Fc03f9666769f09D557b1383f7F57');
+    const cnode = await TestERC20.attach('0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64');
     console.log('cnode: ' + cnode.address);
     
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
-    const usdt = await TestERC20.attach('0x0f4014fbA3D4fcb56d2653Bf3d51664dCcCF42f6');
+    const usdt = await TestERC20.attach('0x20125a7256EFafd0d4Eec24048E08C5045BC5900');
     console.log('usdt: ' + usdt.address);
 
     //const nest = await TestERC20.deploy('NEST', 'NEST', 18);
-    const nest = await TestERC20.attach('0x4c6DC3Fa867c3c96B1C8F51CE7Fa975b886d882f');
+    const nest = await TestERC20.attach('0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25');
     console.log('nest: ' + nest.address);
     
     //const cofi = await CoFiToken.deploy();
-    const cofi = await CoFiToken.attach('0x4c4F8Bfa7835089D176C1ec24e845f784F3045c1');
+    const cofi = await CoFiToken.attach('0xBd98Ec485d7f54979FC0Ef19365ABFFC63099755');
     console.log('cofi: ' + cofi.address);
 
     //const cofixGovernance = await upgrades.deployProxy(CoFiXGovernance, ['0x0000000000000000000000000000000000000000'], { initializer: 'initialize' });
-    const cofixGovernance = await CoFiXGovernance.attach('0x9964C60E19FA2F5426821643a5195920cE83f454');
+    const cofixGovernance = await CoFiXGovernance.attach('0xAc12D0CbA1E1a2ffb34326115c2A9926435Dd694');
     console.log('cofixGovernance: ' + cofixGovernance.address);
     
     //const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('3')], { initializer: 'init' });
-    const usdtPair = await CoFiXPair.attach('0xb7719040D4357A2a58D1293a52511b57bCbd533D');
+    const usdtPair = await CoFiXPair.attach('0x7756f374E19E1528454B5291282D6C9e33eCBC69');
     console.log('usdtPair: ' + usdtPair.address);
     //cnode = usdtPair;
 
     //const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-2', 'XToken-2', nest.address, BigInt('1'), BigInt('20000')], { initializer: 'init' });
-    const nestPair = await CoFiXPair.attach('0x91025AF7C4699473C9f9Cae7876c86e4ef715107');
+    const nestPair = await CoFiXPair.attach('0xEC38914c82969716C5E271a63087D365B0E259b2');
     console.log('nestPair: ' + nestPair.address);
 
+    //const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt('1'), BigInt('1000')], { initializer: 'init' });
+    const cofiPair = await CoFiXPair.attach('0x47380B7cd1a7c482Bc2416FB0171AD2A10c8258A');
+    console.log('cofiPair: ' + cofiPair.address);
+
     //const cofixDAO = await upgrades.deployProxy(CoFiXDAO, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixDAO = await CoFiXDAO.attach('0xba7ba7e89ad593727e3eF694e5c9Db1C9f95B58d');
+    const cofixDAO = await CoFiXDAO.attach('0xCD0E336D483511840D3002E4aE1518bd3681cdaC');
     console.log('cofixDAO: ' + cofixDAO.address);
     
     //const cofixRouter = await upgrades.deployProxy(CoFiXRouter, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixRouter = await CoFiXRouter.attach('0x2651171EeB0Ec9357c27A8CdB8B7dF4500534F34');
+    const cofixRouter = await CoFiXRouter.attach('0xFd759970c8B4A6EfE5525EA9A03732Ef04F1C5F4');
     console.log('cofixRouter: ' + cofixRouter.address);
     
     //const cofixController = await CoFiXController.deploy(nestPriceFacade.address);
-    const cofixController = await CoFiXController.attach('0x45456aE6aCD697F9661a962716e105393d4CF8c4');
+    const cofixController = await CoFiXController.attach('0xEf1673bda89C0c1827680467BdfB6d22F18F8498');
     console.log('cofixController: ' + cofixController.address);
     
     //const cofixVaultForStaking = await upgrades.deployProxy(CoFiXVaultForStaking, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0x6075560428330b0DeE19F6D5606d564E0B768cd6');
+    const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0x974E819Fa74683c3dAc7C4bc4041d6B2E042e1D7');
     console.log('cofixVaultForStaking: ' + cofixVaultForStaking.address);
     
-    // console.log('1. cofixGovernance.initialize');
-    // await cofixGovernance.initialize(cofixGovernance.address);
-    //console.log('2. cofixRouter.initialize');
-    //await cofixRouter.initialize(cofixGovernance.address);
-    //console.log('3. cofixDAO.initialize');
-    //await cofixDAO.initialize(cofixGovernance.address);
-    // console.log('4. cofixVaultForStaking.initialize');
-    // await cofixVaultForStaking.initialize(cofixGovernance.address);
-    //console.log('5. usdtPair.initialize');
-    //await usdtPair.init(cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('3'));
-    //console.log('6. nestPair.initialize');
-    //await nestPair.init(cofixGovernance.address, 'XT-2', 'XToken-2', nest.address, BigInt('1'), BigInt('20000'));
+    // // console.log('1. cofixGovernance.initialize');
+    // // await cofixGovernance.initialize(cofixGovernance.address);
+    // //console.log('2. cofixRouter.initialize');
+    // //await cofixRouter.initialize(cofixGovernance.address);
+    // //console.log('3. cofixDAO.initialize');
+    // //await cofixDAO.initialize(cofixGovernance.address);
+    // // console.log('4. cofixVaultForStaking.initialize');
+    // // await cofixVaultForStaking.initialize(cofixGovernance.address);
+    // //console.log('5. usdtPair.initialize');
+    // //await usdtPair.init(cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt('1000000000'), BigInt('3'));
+    // //console.log('6. nestPair.initialize');
+    // //await nestPair.init(cofixGovernance.address, 'XT-2', 'XToken-2', nest.address, BigInt('1'), BigInt('20000'));
 
     // console.log('7. cofixGovernance.setBuiltinAddress');
     // await cofixGovernance.setBuiltinAddress(
@@ -127,8 +147,10 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.update(cofixGovernance.address);
     // console.log('11. usdtPair.update');
     // await usdtPair.update(cofixGovernance.address);
-    // console.log('12. usdtPair.update');
+    // console.log('12. nestPair.update');
     // await nestPair.update(cofixGovernance.address);
+    // console.log('12.1. cofiPair.update');
+    // await cofiPair.update(cofixGovernance.address);
 
     // console.log('13. cofixVaultForStaking.setConfig');
     // await cofixVaultForStaking.setConfig({
@@ -140,15 +162,19 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.batchSetPoolWeight([usdtPair.address], [100000]);
     // console.log('16. cofixVaultForStaking.batchSetPoolWeight(nestPair.address)');
     // await cofixVaultForStaking.batchSetPoolWeight([nestPair.address], [20000]);
+    // console.log('17. cofixVaultForStaking.batchSetPoolWeight(cofiPair.address)');
+    // await cofixVaultForStaking.batchSetPoolWeight([cofiPair.address], [20000]);
 
     // // console.log('17. cofixRouter.setConfig');
     // // await cofixRouter.setConfig({
     // //     cnodeRewardRate: 1000
     // // });
-    // console.log('18. cofixRouter.addPair(usdt.address, usdtPair.address)');
-    // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
-    // console.log('19. cofixRouter.addPair(nest.address, nestPair.address)');
-    // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // // console.log('18. cofixRouter.addPair(usdt.address, usdtPair.address)');
+    // // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
+    // // console.log('19. cofixRouter.addPair(nest.address, nestPair.address)');
+    // // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // // console.log('19.1. cofixRouter.addPair(cofi.address, cofitPair.address)');
+    // // await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
     // console.log('20. cofi.addMinter(cofixRouter.address)');
     // await cofi.addMinter(cofixRouter.address);
     // console.log('21. cofi.addMinter(cofixVaultForStaking.addres)');
@@ -160,34 +186,38 @@ exports.deploy = async function () {
     //     usdt.address
     // ]);
 
-    // peth: 0x885629c3784C4e7cEaa82b83F3aeD2F991d197C6
-    // weth: 0x628b25c7658287c2829EE7a3E5D34b0158d2fdB5
-    // pusd: 0x0f03cd5CeBe21D1E7307588b9844D10ad0F4A394
-    // usdc: 0xe86dD41fEb8594D083f9dC364e530c0B8D208feA
-    // ethAnchor: 0xbbd6b432B280dea51f137F8234a5D0Ac36D17fdf
-    // usdAnchor: 0x08B79267ff01393925081396b328B6d6f82a4250
+    // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
+    // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
+    // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+    // ethAnchor: 0xA5fF74B6BcF816AA3e13857a68c231DE6EEAF4eA
+    // usdAnchor: 0x5Ed0d53442415BE2Ac4d1bA5e289721c4e3A8ce1
+    // xeth: 0xEb780f8711A0D99DA20B05A5C5c903D8E1091834
+    // xpeth: 0x6f67bF655225D32a1a0d9fbE25147259cBAA917c
+    // xusdt: 0x38967b00B27629E0a944D8004b18b97A203d6d49
+    // xpusd: 0x670aa8399aF49620AB542Dc1d71a3Cd1662a92fd
+    // xusdc: 0xb6c01dF109bE84d29Ef570f8D2FBEa00413681F2
+
     // 部署PETH, WETH
     //let peth = await TestERC20.deploy('PETH', 'PETH', 18);
-    let peth = await TestERC20.attach('0x885629c3784C4e7cEaa82b83F3aeD2F991d197C6');
+    let peth = await TestERC20.attach('0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588');
     console.log('peth: ' + peth.address);
-    //let weth = await TestERC20.deploy('WETH', 'WETH', 18);
-    let weth = await TestERC20.attach('0x628b25c7658287c2829EE7a3E5D34b0158d2fdB5');
-    console.log('weth: ' + weth.address);
+    // let weth = await TestERC20.deploy('WETH', 'WETH', 18);
+    // console.log('weth: ' + weth.address);
     // 部署PUSD, USDC
     //let pusd = await TestERC20.deploy('PUSD', 'PUSD', 18);
-    let pusd = await TestERC20.attach('0x0f03cd5CeBe21D1E7307588b9844D10ad0F4A394');
+    let pusd = await TestERC20.attach('0x01A8088947B1222a5dC5a13C45b845E0361EEFF7');
     console.log('pusd: ' + pusd.address);
     //let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
-    let usdc = await TestERC20.attach('0xe86dD41fEb8594D083f9dC364e530c0B8D208feA');
+    let usdc = await TestERC20.attach('0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92');
     console.log('usdc: ' + usdc.address);
     // 部署ETH锚定池
     // let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
     //     0, 
-    //     [eth.address, peth.address, weth.address],
-    //     ['1000000000000000000', '1000000000000000000', '1000000000000000000']
+    //     [eth.address, peth.address],
+    //     ['1000000000000000000', '1000000000000000000']
     // ], { initializer: 'init' });
-    let ethAnchor = await CoFiXAnchorPool.attach('0xbbd6b432B280dea51f137F8234a5D0Ac36D17fdf');
+    let ethAnchor = await CoFiXAnchorPool.attach('0xA5fF74B6BcF816AA3e13857a68c231DE6EEAF4eA');
     console.log('ethAnchor: ' + ethAnchor.address);
     // 部署USD锚定池
     // let usdAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
@@ -196,7 +226,7 @@ exports.deploy = async function () {
     //     [usdt.address, pusd.address, usdc.address],
     //     ['1000000', '1000000000000000000', '1000000000000000000']
     // ], { initializer: 'init' });
-    let usdAnchor = await CoFiXAnchorPool.attach('0x08B79267ff01393925081396b328B6d6f82a4250');
+    let usdAnchor = await CoFiXAnchorPool.attach('0x5Ed0d53442415BE2Ac4d1bA5e289721c4e3A8ce1');
     console.log('usdAnchor: ' + usdAnchor.address);
 
     // // 注册usdt和nest交易对
@@ -204,13 +234,16 @@ exports.deploy = async function () {
     // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
     // console.log('23. registerPair(eth.address, nest.address, nestPair.address)');
     // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // console.log('23.1. registerPair(eth.address, cofi.address, cofiPair.address)');
+    // await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
+
     // // 注册ETH锚定池
     // console.log('24. registerPair(eth.address, peth.address, ethAnchor.address)');
     // await cofixRouter.registerPair(eth.address, peth.address, ethAnchor.address);
-    // console.log('25. registerPair(eth.address, weth.address, ethAnchor.address)');
-    // await cofixRouter.registerPair(eth.address, weth.address, ethAnchor.address);
-    // console.log('26. registerPair(peth.address, weth.address, ethAnchor.address)');
-    // await cofixRouter.registerPair(peth.address, weth.address, ethAnchor.address);
+    // // console.log('25. registerPair(eth.address, weth.address, ethAnchor.address)');
+    // // await cofixRouter.registerPair(eth.address, weth.address, ethAnchor.address);
+    // // console.log('26. registerPair(peth.address, weth.address, ethAnchor.address)');
+    // // await cofixRouter.registerPair(peth.address, weth.address, ethAnchor.address);
     // // 注册USD锚定池
     // console.log('27. registerPair(usdt.address, pusd.address, usdAnchor.address)');
     // await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
@@ -218,21 +251,22 @@ exports.deploy = async function () {
     // await cofixRouter.registerPair(usdt.address, usdc.address, usdAnchor.address);
     // console.log('29. registerPair(pusd.address, usdc.address, usdAnchor.address)');
     // await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
+
     // // 注册路由路径
     // console.log('30. registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address])');
     // await cofixRouter.registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address]);
     // console.log('31. registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address])');
     // await cofixRouter.registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address]);
-    // console.log('32. registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address])');
-    // await cofixRouter.registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address]);
+    // // console.log('32. registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address])');
+    // // await cofixRouter.registerRouterPath(usdt.address, weth.address, [usdt.address, eth.address, weth.address]);
     
-    // // eth, nest, usdt, pusd, usdc, peth, weth
+    // // eth, nest, usdt, pusd, usdc, peth, cofi
     // console.log('33. registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address])');
     // await cofixRouter.registerRouterPath(pusd.address, eth.address, [pusd.address, usdt.address, eth.address]);
     // console.log('34. registerRouterPath(pusd.address, peth.address, [pusd.address, usdt.address, eth.address, peth.address])');
     // await cofixRouter.registerRouterPath(pusd.address, peth.address, [pusd.address, usdt.address, eth.address, peth.address]);
-    // console.log('35. registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address])');
-    // await cofixRouter.registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address]);
+    // // console.log('35. registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address])');
+    // // await cofixRouter.registerRouterPath(pusd.address, weth.address, [pusd.address, usdt.address, eth.address, weth.address]);
     // console.log('36. registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address])');
     // await cofixRouter.registerRouterPath(pusd.address, nest.address, [pusd.address, usdt.address, eth.address, nest.address]);
 
@@ -240,26 +274,37 @@ exports.deploy = async function () {
     // await cofixRouter.registerRouterPath(usdc.address, eth.address, [usdc.address, usdt.address, eth.address]);
     // console.log('38. registerRouterPath(usdc.address, peth.address, [usdc.address, usdt.address, eth.address, peth.address])');
     // await cofixRouter.registerRouterPath(usdc.address, peth.address, [usdc.address, usdt.address, eth.address, peth.address]);
-    // console.log('39. registerRouterPath(usdc.address, weth.address, [usdc.address, usdt.address, eth.address, weth.address])');
-    // await cofixRouter.registerRouterPath(usdc.address, weth.address, [usdc.address, usdt.address, eth.address, weth.address]);
+    // // console.log('39. registerRouterPath(usdc.address, weth.address, [usdc.address, usdt.address, eth.address, weth.address])');
+    // // await cofixRouter.registerRouterPath(usdc.address, weth.address, [usdc.address, usdt.address, eth.address, weth.address]);
     // console.log('40. registerRouterPath(usdc.address, nest.address, [usdc.address, usdt.address, eth.address, nest.address])');
     // await cofixRouter.registerRouterPath(usdc.address, nest.address, [usdc.address, usdt.address, eth.address, nest.address]);
 
     // console.log('41. registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address])');
     // await cofixRouter.registerRouterPath(peth.address, nest.address, [peth.address, eth.address, nest.address]);
-    // console.log('42. registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address])');
-    // await cofixRouter.registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address]);
+    // // console.log('42. registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address])');
+    // // await cofixRouter.registerRouterPath(weth.address, nest.address, [weth.address, eth.address, nest.address]);
 
-    // console.log('43. ethAnchor.init(cofixGovernance.address)');
-    // await ethAnchor.init(cofixGovernance.address, 0, 
-    //     [eth.address, peth.address, weth.address],
-    //     ['1000000000000000000', '1000000000000000000', '1000000000000000000']
-    // );
-    // console.log('44. usdAnchor.init(cofixGovernance.address)');
-    // await usdAnchor.init(cofixGovernance.address, 1,
-    //     [usdt.address, pusd.address, usdc.address],
-    //     ['1000000', '1000000000000000000', '1000000000000000000']
-    // );
+    // console.log('42. registerRouterPath(cofi.address, nest.address, [cofi.address, eth.address, nest.address])');
+    // await cofixRouter.registerRouterPath(cofi.address, nest.address, [cofi.address, eth.address, nest.address]);
+    // console.log('43. registerRouterPath(cofi.address, usdt.address, [cofi.address, eth.address, usdt.address])');
+    // await cofixRouter.registerRouterPath(cofi.address, usdt.address, [cofi.address, eth.address, usdt.address]);
+    // console.log('44. registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address])');
+    // await cofixRouter.registerRouterPath(cofi.address, pusd.address, [cofi.address, eth.address, usdt.address, pusd.address]);
+    // console.log('45. registerRouterPath(cofi.address, usdc.address, [cofi.address, eth.address, usdt.address, usdc.address])');
+    // await cofixRouter.registerRouterPath(cofi.address, usdc.address, [cofi.address, eth.address, usdt.address, usdc.address]);
+    // console.log('46. registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address])');
+    // await cofixRouter.registerRouterPath(cofi.address, peth.address, [cofi.address, eth.address, peth.address]);
+
+    // // console.log('43. ethAnchor.init(cofixGovernance.address)');
+    // // await ethAnchor.init(cofixGovernance.address, 0, 
+    // //     [eth.address, peth.address, weth.address],
+    // //     ['1000000000000000000', '1000000000000000000', '1000000000000000000']
+    // // );
+    // // console.log('44. usdAnchor.init(cofixGovernance.address)');
+    // // await usdAnchor.init(cofixGovernance.address, 1,
+    // //     [usdt.address, pusd.address, usdc.address],
+    // //     ['1000000', '1000000000000000000', '1000000000000000000']
+    // // );
     // console.log('45. ethAnchor.update(cofixGovernance.address)');
     // await ethAnchor.update(cofixGovernance.address);
     // console.log('46. usdAnchor.update(cofixGovernance.address)');
@@ -269,8 +314,8 @@ exports.deploy = async function () {
     console.log('xeth: ' + xeth.address);
     let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
     console.log('xpeth: ' + xpeth.address);
-    let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
-    console.log('xweth: ' + xweth.address);
+    // let xweth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(weth.address));
+    // console.log('xweth: ' + xweth.address);
 
     let xusdt = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdt.address));
     console.log('xusdt: ' + xusdt.address);
@@ -283,8 +328,8 @@ exports.deploy = async function () {
     // await cofixVaultForStaking.batchSetPoolWeight([xeth.address], [20000]);
     // console.log('48. cofixVaultForStaking.batchSetPoolWeight(xpeth.address, 20000)');
     // await cofixVaultForStaking.batchSetPoolWeight([xpeth.address], [20000]);
-    // console.log('49. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
-    // await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
+    // // console.log('49. cofixVaultForStaking.batchSetPoolWeight(xweth.address, 20000)');
+    // // await cofixVaultForStaking.batchSetPoolWeight([xweth.address], [20000]);
 
     // console.log('50. cofixVaultForStaking.batchSetPoolWeight(xusdt.address, 20000)');
     // await cofixVaultForStaking.batchSetPoolWeight([xusdt.address], [20000]);
@@ -296,6 +341,7 @@ exports.deploy = async function () {
     // console.log('53. setConfig');
     // await usdtPair.setConfig(20, 1, 1000);
     // await nestPair.setConfig(20, 100, 1000);
+    // await cofiPair.setConfig(20, 100, 1000);
     // await ethAnchor.setConfig(20, 0, 1000);
     // await usdAnchor.setConfig(20, 0, 1000);
 
@@ -321,7 +367,7 @@ exports.deploy = async function () {
 
     // await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
     // await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
-    // await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
+    // //await cofixDAO.setTokenExchange(weth.address, eth.address, BigInt('1000000000000000000'));
 
     const contracts = {
         cofi: cofi,
@@ -336,19 +382,20 @@ exports.deploy = async function () {
         usdt: usdt,
         nest: nest,
         peth: peth,
-        weth: weth,
+        //weth: weth,
         pusd: pusd,
         usdc: usdc,
 
         xeth: xeth,
         xpeth: xpeth,
-        xweth: xweth,
+        //xweth: xweth,
         xusdt: xusdt,
         xpusd: xpusd,
         xusdc: xusdc,
 
         usdtPair: usdtPair,
         nestPair: nestPair,
+        cofiPair: cofiPair,
         ethAnchor: ethAnchor,
         usdAnchor: usdAnchor
     };

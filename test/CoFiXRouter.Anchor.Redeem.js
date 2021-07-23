@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         var [owner, addr1, addr2] = await ethers.getSigners();
         //console.log('owner: ' + owner.address);
@@ -24,14 +24,14 @@ describe("CoFiXRouter", function() {
             peth,
             weth,
             pusd,
-            dai,
+            usdc,
     
             xeth,
             xpeth,
             xweth,
             xusdt,
             xpusd,
-            xdai,
+            xusdc,
 
             usdtPair,
             nestPair,
@@ -45,7 +45,7 @@ describe("CoFiXRouter", function() {
             val = val * 1000000;
             decimals -= 6;
             let bi = BigInt(val.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             while (decimals > 0) {
                 bi *= BASE;
                 --decimals;
@@ -62,7 +62,7 @@ describe("CoFiXRouter", function() {
             decimals = decimals || 18;
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
@@ -83,10 +83,10 @@ describe("CoFiXRouter", function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                dai: toDecimal(await dai.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account)),
                 xusdt: toDecimal(await xusdt.balanceOf(account)),
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
-                xdai: toDecimal(await xdai.balanceOf(account)),
+                xusdc: toDecimal(await xusdc.balanceOf(account)),
                 //staked: toDecimal(await cofixVaultForStaking.balanceOf(usdtPair.address, account)),
                 //earned: toDecimal(await cofixVaultForStaking.earned(usdtPair.address, account))
             };
@@ -116,17 +116,17 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('0. 设置价格');
-            await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
-            await nestPriceFacade.setPrice(cofi.address, toBigInt('2051', 18), 1);
-            await nestPriceFacade.setPrice(nest.address, toBigInt('192307'), 1);
+            await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
+            await nestPriceFacade.setPrice(cofi.address, toBigInt(2051, 18), 1);
+            await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
 
         let status;
         let p;
 
         if (true) {
-            await dai.transfer(addr1.address, toBigInt(10000000));
-            await dai.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
+            await usdc.transfer(addr1.address, toBigInt(10000000));
+            await usdc.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
 
             await usdt.transfer(owner.address, toBigInt(10000000, 6));
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
@@ -134,8 +134,8 @@ describe("CoFiXRouter", function() {
             await nest.approve(cofixRouter.address, toBigInt(10000000));
             await pusd.transfer(owner.address, toBigInt(10000000));
             await pusd.approve(cofixRouter.address, toBigInt(10000000));
-            await dai.transfer(owner.address, toBigInt(10000000));
-            await dai.approve(cofixRouter.address, toBigInt(10000000));
+            await usdc.transfer(owner.address, toBigInt(10000000));
+            await usdc.approve(cofixRouter.address, toBigInt(10000000));
         }
 
         if (true) {
@@ -145,7 +145,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt(2),
-                toBigInt(6000, 6),
+                toBigInt(4000, 6),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -164,7 +164,7 @@ describe("CoFiXRouter", function() {
                 nestPair.address,
                 nest.address,
                 toBigInt(2),
-                toBigInt(40000),
+                toBigInt(200000),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -213,10 +213,10 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('5. anchorPool做市50000dai');
+            console.log('5. anchorPool做市50000usdc');
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
-                dai.address,
+                usdc.address,
                 0,
                 toBigInt(50000),
                 0,
@@ -232,8 +232,9 @@ describe("CoFiXRouter", function() {
 
         if (true) {
 
-            console.log('6. 使用路由dai->usdt->eth->nest兑换1000usdt');
-            let path = await cofixRouter.getRouterPath(dai.address, nest.address);
+            console.log('6. 使用路由usdc->usdt->eth->nest兑换1000usdt');
+            //let path = await cofixRouter.getRouterPath(usdc.address, nest.address);
+            let path = [usdc.address, usdt.address, '0x0000000000000000000000000000000000000000', nest.address];
             console.log(path);
             console.log('usdtPair: ' + usdtPair.address);
             console.log('nestPair: ' + nestPair.address);
@@ -258,8 +259,9 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             await nest.connect(addr1).approve(cofixRouter.address, toBigInt(900));
-            console.log('7. 使用路由nest->eth->usdt->dai兑换900nest');
-            let path = await cofixRouter.getRouterPath(nest.address, dai.address);
+            console.log('7. 使用路由nest->eth->usdt->usdc兑换900nest');
+            //let path = await cofixRouter.getRouterPath(nest.address, usdc.address);
+            let path = [nest.address, '0x0000000000000000000000000000000000000000', usdt.address, usdc.address];
             console.log(path);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,
@@ -278,11 +280,11 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('8. owner使用22000usdt兑换xdai');
+            console.log('8. owner使用22000usdt兑换usdc');
             await usdt.approve(cofixRouter.address, toBigInt(22000, 6));
-            let receipt = await cofixRouter.swap(
-                usdt.address, 
-                dai.address, 
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                [usdt.address, 
+                usdc.address], 
                 toBigInt(22000, 6),
                 toBigInt(0),
                 owner.address,
@@ -298,11 +300,11 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('9. owner使用18000pusd兑换xdai');
+            console.log('9. owner使用18000pusd兑换usdc');
             await pusd.approve(cofixRouter.address, toBigInt(18000));
-            let receipt = await cofixRouter.swap(
-                pusd.address, 
-                dai.address, 
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                [pusd.address, 
+                usdc.address], 
                 toBigInt(18000),
                 toBigInt(0),
                 owner.address,
@@ -318,14 +320,14 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('10. owner赎回29999 xdai份额');
-            await xdai.approve(cofixRouter.address, toBigInt('29999'));
+            console.log('10. owner赎回29999 xusdc份额');
+            await xusdc.approve(cofixRouter.address, toBigInt(29999));
             let receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
                 usdAnchor.address,
                 // 要移除的token对
-                dai.address,
+                usdc.address,
                 // 移除的额度
-                toBigInt('29999'),
+                toBigInt(29999),
                 // 预期最少可以获得的eth数量
                 toBigInt(0),
                 // 接收地址
@@ -342,9 +344,9 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('11. addr1回购0.02个CoFi');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.02));
-            let receipt = await cofixDAO.connect(addr1).redeemToken(usdt.address, toBigInt(0.02), addr1.address, {
+            console.log('11. addr1回购0.0002个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.0002));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(usdt.address, toBigInt(0.0002), addr1.address, {
                 value: BigInt('20000000000000000')
             });
             await showReceipt(receipt);
@@ -353,9 +355,9 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            console.log('12. addr1回购5个CoFi');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(5));
-            let receipt = await cofixDAO.connect(addr1).redeemToken(dai.address, toBigInt(5), addr1.address, {
+            console.log('12. addr1回购0.003个CoFi');
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt(0.003));
+            let receipt = await cofixDAO.connect(addr1).redeemToken(usdc.address, toBigInt(0.003), addr1.address, {
                 value: BigInt('20000000000000000')
             });
             await showReceipt(receipt);
@@ -364,7 +366,7 @@ describe("CoFiXRouter", function() {
         }
 
         if (true) {
-            await dai.transfer(usdAnchor.address, toBigInt(30000));
+            await usdc.transfer(usdAnchor.address, toBigInt(30000));
             await pusd.transfer(usdAnchor.address, toBigInt(10000));
             console.log('13. addr1.skim()');
             let receipt = await usdAnchor.connect(addr1).skim();
@@ -375,15 +377,15 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('14. addr1.redeem()');
-            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.1'));
-            await cofixDAO.connect(addr1).redeem(toBigInt('0.01'), addr1.address, { value: toBigInt('0.1')});
+            await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.0001'));
+            await cofixDAO.connect(addr1).redeem(toBigInt('0.0001'), addr1.address, { value: toBigInt('0.1')});
             status = await getStatus();
             console.log(status);
             console.log('quotaOf: ' + await cofixDAO.quotaOf());
         }
 
         // for(var i = 0; i < 200; ++i) {
-        //     await dai.transfer(usdAnchor.address, toBigInt(0));
+        //     await usdc.transfer(usdAnchor.address, toBigInt(0));
         //     console.log('quotaOf: ' + await cofixDAO.quotaOf());
         // }
         console.log('totalETHRewards: ' + await cofixDAO.totalETHRewards('0x0000000000000000000000000000000000000000'));
@@ -435,12 +437,11 @@ describe("CoFiXRouter", function() {
 
             console.log('usdt.exchange: ' + await cofixDAO.getTokenExchange(usdt.address));
             console.log('pusd.exchange: ' + await cofixDAO.getTokenExchange(pusd.address));
-            console.log('dai.exchange: ' + await cofixDAO.getTokenExchange(dai.address));
+            console.log('usdc.exchange: ' + await cofixDAO.getTokenExchange(usdc.address));
 
             console.log('eth.exchange: ' + await cofixDAO.getTokenExchange('0x0000000000000000000000000000000000000000'));
             console.log('peth.exchange: ' + await cofixDAO.getTokenExchange(peth.address));
-            console.log('weth.exchange: ' + await cofixDAO.getTokenExchange(weth.address));
-
+            //console.log('weth.exchange: ' + await cofixDAO.getTokenExchange(weth.address));
         }
     });
 });

@@ -10,7 +10,7 @@
 ```javascript
     /// @dev Modify configuration
     /// @param config Configuration object
-    function setConfig(Config memory config) external;
+    function setConfig(Config calldata config) external;
 ```
 
 ### 2.2. Get configuration
@@ -43,7 +43,7 @@
 
 ```javascript
     /// @dev 设置token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token 目标token
     /// @param target 目标锚定币
     /// @param exchange token和锚定目标币价格的兑换比例
@@ -54,7 +54,7 @@
 
 ```javascript
     /// @dev 获取token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
     /// @param token 目标token
     /// @return target 目标锚定币
     /// @return exchange token和锚定目标币价格的兑换比例
@@ -65,41 +65,30 @@
 
 ```javascript
     /// @dev Add reward
-    /// @param pair Destination pair
-    function addETHReward(address pair) external payable;
+    /// @param pool Destination pool
+    function addETHReward(address pool) external payable;
 ```
 
 ### 2.8. The function returns eth rewards of specified ntoken
 
 ```javascript
     /// @dev The function returns eth rewards of specified ntoken
-    /// @param pair Destination pair
-    function totalETHRewards(address pair) external view returns (uint);
+    /// @param pool Destination pool
+    function totalETHRewards(address pool) external view returns (uint);
 ```
 
-### 2.9. Pay
-
-```javascript
-    /// @dev Pay
-    /// @param pair Destination pair. Indicates which ntoken to pay with
-    /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    /// @param to Address to receive
-    /// @param value Amount to receive
-    function pay(address pair, address tokenAddress, address to, uint value) external;
-```
-
-### 2.10. Settlement
+### 2.9. Settlement
 
 ```javascript
     /// @dev Settlement
-    /// @param pair Destination pair. Indicates which ntoken to pay with
+    /// @param pool Destination pool. Indicates which ntoken to pay with
     /// @param tokenAddress Token address of receiving funds (0 means ETH)
     /// @param to Address to receive
     /// @param value Amount to receive
-    function settle(address pair, address tokenAddress, address to, uint value) external payable;
+    function settle(address pool, address tokenAddress, address to, uint value) external payable;
 ```
 
-### 2.11. Redeem CoFi for ethers
+### 2.10. Redeem CoFi for ethers
 
 ```javascript
     /// @dev Redeem CoFi for ethers
@@ -109,7 +98,7 @@
     function redeem(uint amount, address payback) external payable;
 ```
 
-### 2.12. Redeem CoFi for Token
+### 2.11. Redeem CoFi for Token
 
 ```javascript
     /// @dev Redeem CoFi for Token
@@ -120,7 +109,7 @@
     function redeemToken(address token, uint amount, address payback) external payable;
 ```
 
-### 2.13. Get the current amount available for repurchase
+### 2.12. Get the current amount available for repurchase
 
 ```javascript
     /// @dev Get the current amount available for repurchase

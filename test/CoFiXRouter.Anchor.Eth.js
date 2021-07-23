@@ -1,8 +1,8 @@
-const { expect } = require("chai");
-const deployer = require("../scripts/deploy.js");
+const { expect } = require('chai');
+const deployer = require('../scripts/deploy.js');
 
-describe("CoFiXRouter", function() {
-    it("test1", async function() {
+describe('CoFiXRouter', function() {
+    it('test1', async function() {
 
         var [owner, addr1, addr2] = await ethers.getSigners();
         //console.log('owner: ' + owner.address);
@@ -24,14 +24,14 @@ describe("CoFiXRouter", function() {
             peth,
             weth,
             pusd,
-            dai,
+            usdc,
     
             xeth,
             xpeth,
             xweth,
             xusdt,
             xpusd,
-            xdai,
+            xusdc,
 
             usdtPair,
             nestPair,
@@ -45,7 +45,7 @@ describe("CoFiXRouter", function() {
             val = val * 1000000;
             decimals -= 6;
             let bi = BigInt(val.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             while (decimals > 0) {
                 bi *= BASE;
                 --decimals;
@@ -62,7 +62,7 @@ describe("CoFiXRouter", function() {
             decimals = decimals || 18;
             decimals = BigInt(decimals.toString());
             bi = BigInt(bi.toString());
-            let BASE = BigInt('10');
+            let BASE = BigInt(10);
             let r = '';
             while (decimals > 0) {
                 let c = (bi % BASE).toString();
@@ -83,12 +83,12 @@ describe("CoFiXRouter", function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                dai: toDecimal(await dai.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account)),
                 xusdt: toDecimal(await xusdt.balanceOf(account)),
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
-                xdai: toDecimal(await xdai.balanceOf(account)),
+                xusdc: toDecimal(await xusdc.balanceOf(account)),
                 peth: toDecimal(await peth.balanceOf(account)),
-                weth: toDecimal(await weth.balanceOf(account)),
+                //weth: toDecimal(await weth.balanceOf(account)),
             };
         }
         const getStatus = async function() {
@@ -116,8 +116,8 @@ describe("CoFiXRouter", function() {
 
         if (true) {
             console.log('0. 设置价格');
-            await nestPriceFacade.setPrice(usdt.address, toBigInt('2051', 6), 1);
-            await nestPriceFacade.setPrice(nest.address, toBigInt('192307'), 1);
+            await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
+            await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
 
         let status;
@@ -131,8 +131,8 @@ describe("CoFiXRouter", function() {
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
             await nest.transfer(owner.address, toBigInt(10000000));
             await nest.approve(cofixRouter.address, toBigInt(10000000));
-            await weth.transfer(owner.address, toBigInt(10000000));
-            await weth.approve(cofixRouter.address, toBigInt(10000000));
+            //await weth.transfer(owner.address, toBigInt(10000000));
+            //await weth.approve(cofixRouter.address, toBigInt(10000000));
             await peth.transfer(owner.address, toBigInt(10000000));
             await peth.approve(cofixRouter.address, toBigInt(10000000));
         }
@@ -144,7 +144,7 @@ describe("CoFiXRouter", function() {
                 usdtPair.address,
                 usdt.address,
                 toBigInt(2),
-                toBigInt(6000, 6),
+                toBigInt(4000, 6),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -163,7 +163,7 @@ describe("CoFiXRouter", function() {
                 nestPair.address,
                 nest.address,
                 toBigInt(2),
-                toBigInt(40000),
+                toBigInt(200000),
                 toBigInt(0.9),
                 owner.address,
                 BigInt('1800000000000'), {
@@ -185,104 +185,13 @@ describe("CoFiXRouter", function() {
                 0,
                 owner.address,
                 BigInt('1800000000000'), {
-                    value: toBigInt('1700')
+                    value: toBigInt(1700)
                 }
             );
             showReceipt(receipt);
             status = await getStatus();
             console.log(status);
+            return;
         }
-
-        if (true) {
-            console.log('4. ethAnthor做市20000peth');
-            let receipt = await cofixRouter.addLiquidity(
-                ethAnchor.address,
-                peth.address,
-                0,
-                toBigInt(20000),
-                0,
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('5. ethAnchor做市30000weth');
-            let receipt = await cofixRouter.addLiquidity(
-                ethAnchor.address,
-                weth.address,
-                0,
-                toBigInt(30000),
-                0,
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('6. 使用700weth兑换peth');
-            let receipt = await cofixRouter.swap(
-                weth.address, 
-                peth.address, 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('7. 使用700peth兑换eth');
-            let receipt = await cofixRouter.swap(
-                peth.address, 
-                '0x0000000000000000000000000000000000000000', 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        if (true) {
-            console.log('8. 使用700eth兑换weth');
-            let receipt = await cofixRouter.swap(
-                '0x0000000000000000000000000000000000000000', 
-                weth.address, 
-                toBigInt(700), 
-                toBigInt(680),
-                owner.address, 
-                owner.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('700000000000000000000')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-        }
-
-        return;
     });
 });

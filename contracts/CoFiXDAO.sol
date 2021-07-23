@@ -14,10 +14,10 @@ import "./CoFiToken.sol";
 
 import "hardhat/console.sol";
 
-/// @dev CoFiX公共资金的管理
+/// @dev Management of cofix public funds
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
-    /// @dev 锚定币兑换的价格转换信息
+    /// @dev Price conversion information of anchor currency exchange
     struct TokenPriceExchange {
         address target;
         uint96 exchange;
@@ -35,10 +35,10 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     // DAO applications
     mapping(address=>uint) _applications;
 
-    // token和锚定币兑换的价格转换信息
+    // Price conversion information of token and anchor currency exchange
     mapping(address=>TokenPriceExchange) _tokenExchanges;
 
-    /// @dev Create CoFiXDAO
+    /// @dev Create CoFiXDAO contract
     constructor() {
     }
 
@@ -52,7 +52,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 
     /// @dev Modify configuration
     /// @param config Configuration object
-    function setConfig(Config memory config) external override onlyGovernance {
+    function setConfig(Config calldata config) external override onlyGovernance {
         _config = config;
     }
 
@@ -77,21 +77,23 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         return _applications[addr];
     }
 
-    /// @dev 设置token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
-    /// @param token 目标token
-    /// @param target 目标锚定币
-    /// @param exchange token和锚定目标币价格的兑换比例
+    /// @dev Set the exchange relationship between the token and the price of the anchored target currency.
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
+    /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token Address of origin token
+    /// @param target Address of target anchor token
+    /// @param exchange Exchange rate of token and target
     function setTokenExchange(address token, address target, uint exchange) external override {
         require(exchange <= 0xFFFFFFFFFFFFFFFFFFFFFFFF, "CoFiXDAO: exchange value overflow");
         _tokenExchanges[token] = TokenPriceExchange(target, uint96(exchange));
     }
 
-    /// @dev 获取token和锚定目标币价格的兑换关系。
-    /// 例如，设置DAI锚定USDT，由于DAI是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
-    /// @param token 目标token
-    /// @return target 目标锚定币
-    /// @return exchange token和锚定目标币价格的兑换比例
+    /// @dev Get the exchange relationship between the token and the price of the anchored target currency.
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
+    /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token Address of origin token
+    /// @return target Address of target anchor token
+    /// @return exchange Exchange rate of token and target
     function getTokenExchange(address token) external view override returns (address target, uint exchange) {
         TokenPriceExchange memory e = _tokenExchanges[token];
         return (e.target, uint(e.exchange));
@@ -103,36 +105,15 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         //require(pool != address(0));
     }
 
-    /// @dev The function returns eth rewards of specified ntoken
+    /// @dev The function returns eth rewards of specified pool
     /// @param pool Destination pool
     function totalETHRewards(address pool) external view override returns (uint) {
         //require(pool != address(0));
         return address(this).balance;
     }
 
-    // /// @dev Pay
-    // /// @param pool Destination pool. Indicates which ntoken to pay with
-    // /// @param tokenAddress Token address of receiving funds (0 means ETH)
-    // /// @param to Address to receive
-    // /// @param value Amount to receive
-    // function pay(address pool, address tokenAddress, address to, uint value) external override {
-    //     //require(pool != address(0));
-    //     require(_applications[msg.sender] == 1, "CoFiXDAO:!app");
-
-    //     // Pay eth from ledger
-    //     if (tokenAddress == address(0)) {
-    //         // pay
-    //         payable(to).transfer(value);
-    //     }
-    //     // Pay token
-    //     else {
-    //         // pay
-    //         TransferHelper.safeTransfer(tokenAddress, to, value);
-    //     }
-    // }
-
     /// @dev Settlement
-    /// @param pool Destination pool. Indicates which ntoken to pay with
+    /// @param pool Destination pool. Indicates which pool to pay with
     /// @param tokenAddress Token address of receiving funds (0 means ETH)
     /// @param to Address to receive
     /// @param value Amount to receive
@@ -153,9 +134,10 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Redeem CoFi for ethers
-    /// @notice Ethfee will be charged
-    /// @param amount The amount of ntoken
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    /// @notice Eth fee will be charged
+    /// @param amount The amount of CoFi
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
     function redeem(uint amount, address payback) external payable override {
         
         // 1. Load configuration
@@ -183,7 +165,6 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
             uint avgPriceTokenAmount
         ) = _queryPrice(_cofixController, COFI_TOKEN_ADDRESS, msg.value, payback);
 
-        // TODO: 检查价格偏差
         // 4. Check the redeeming amount and price deviation
         require(
             priceTokenAmount * 10000 <= avgPriceTokenAmount * (10000 + uint(config.priceDeviationLimit)) && 
@@ -198,16 +179,17 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         (uint quota, uint scale) = _quotaOf(config, _redeemed);
         _redeemed = scale - (quota - amount);
 
-        // 7. 转入CoFi并转出eth
+        // 7. Transfer in CoFi and transfer out eth
         TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         payable(msg.sender).transfer(value);
     }
 
     /// @dev Redeem CoFi for Token
-    /// @notice Ethfee will be charged
+    /// @notice Eth fee will be charged
     /// @param token The target token
-    /// @param amount The amount of ntoken
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    /// @param amount The amount of CoFi
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
     function redeemToken(address token, uint amount, address payback) external payable override {
         
         // 1. Load configuration
@@ -219,7 +201,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         TokenPriceExchange memory exchange = _tokenExchanges[token];
         require(exchange.exchange > 0, "CoFiXDAO: Token not allowed");
 
-        // eth的价格是1:1
+        // The price of eth is 1:1
         uint fee = msg.value;
         uint tokenPriceTokenAmount = 1 ether;
         uint tokenAvgPriceTokenAmount = 1 ether;
@@ -238,7 +220,6 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
             uint cofiAvgPriceTokenAmount
         ) = _queryPrice(cofixController, COFI_TOKEN_ADDRESS, fee, payback);
 
-        // TODO: 检查价格偏差
         // 4. Check the redeeming amount and price deviation
         require(
             cofiPriceTokenAmount * tokenAvgPriceTokenAmount * 10000 
@@ -257,12 +238,12 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
         // 5. Calculate the number of eth that can be exchanged for redeem
         uint value = amount * tokenPriceTokenAmount / cofiPriceTokenAmount;
 
-        // 7. 转入CoFi并转出etoken
+        // 7. Transfer in CoFi and transfer out token
         TransferHelper.safeTransferFrom(COFI_TOKEN_ADDRESS, msg.sender, address(this), amount);
         TransferHelper.safeTransfer(token, msg.sender, value);
     }
 
-    // 查询价格并按照标准价格返回（相对于1 ether的价格）
+    // Query the price and return it according to the standard price (relative to the price of 1 ether)
     function _queryPrice(
         address cofixController, 
         address tokenAddress, 

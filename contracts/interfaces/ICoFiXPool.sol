@@ -2,50 +2,52 @@
 
 pragma solidity ^0.8.6;
 
-/// @dev 此接口定义了资金池的方法和事件
+/// @dev This interface defines methods and events for CoFiXPool
 interface ICoFiXPool {
 
-    /*
-    ETH交易对: ETU/USDT, ETH/HBTC, ETH/NEST, ETH/COFI
-    稳定币交易池：USDT|DAI|TUSD|PUSD, ETH|PETH
-     */
+    /* ******************************************************************************************
+     * Note: In order to unify the authorization entry, all transferFrom operations are carried
+     * out in the CoFiXRouter, and the CoFiXPool needs to be fixed, CoFiXRouter does trust and 
+     * needs to be taken into account when calculating the pool balance before and after rollover
+     * ******************************************************************************************/
 
-    /// @dev 做市出矿事件
-    /// @param token 目标token地址
-    /// @param to 份额接收地址
-    /// @param amountETH 要添加的eth数量
-    /// @param amountToken 要添加的token数量
-    /// @param liquidity 获得的流动性份额
+    /// @dev Add liquidity and mining xtoken event
+    /// @param token Target token address
+    /// @param to The address to receive xtoken
+    /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
+    /// @param amountToken The amount of Token added to pool
+    /// @param liquidity The real liquidity or XToken minted from pool
     event Mint(address token, address to, uint amountETH, uint amountToken, uint liquidity);
     
-    /// @dev 移除流动性并销毁
-    /// @param token 目标token地址
-    /// @param to 资金接收地址
-    /// @param liquidity 需要移除的流动性份额
-    /// @param amountETHOut 获得的eth数量
-    /// @param amountTokenOut 获得的token数量
+    /// @dev Remove liquidity and burn xtoken event
+    /// @param token The address of ERC20 Token
+    /// @param to The target address receiving the Token
+    /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
+    /// @param amountETHOut The real amount of ETH transferred from the pool
+    /// @param amountTokenOut The real amount of Token transferred from the pool
     event Burn(address token, address to, uint liquidity, uint amountETHOut, uint amountTokenOut);
 
-    /// @dev 设置参数
-    /// @param theta 手续费，万分制。20
-    /// @param gamma 冲击成本系数。
-    /// @param nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function setConfig(uint16 theta, uint16 gamma, uint32 nt) external;
+    /// @dev Set configuration
+    /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param impactCostVOL Impact cost threshold
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external;
 
-    /// @dev 获取参数
-    /// @return theta 手续费，万分制。20
-    /// @return gamma 冲击成本系数。
-    /// @return nt 每一单位token（对于二元池，指单位eth）标准出矿量，万分制。1000
-    function getConfig() external view returns (uint16 theta, uint16 gamma, uint32 nt);
+    /// @dev Get configuration
+    /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return impactCostVOL Impact cost threshold
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+    function getConfig() external view returns (uint16 theta, uint16 impactCostVOL, uint56 nt);
 
-    /// @dev 添加流动性并增发份额
-    /// @param token 目标token地址
-    /// @param to 份额接收地址
-    /// @param amountETH 要添加的eth数量
-    /// @param amountToken 要添加的token数量
-    /// @param payback 退回的手续费接收地址
-    /// @return xtoken 获得的流动性份额代币地址
-    /// @return liquidity 获得的流动性份额
+    /// @dev Add liquidity and mint xtoken
+    /// @param token Target token address
+    /// @param to The address to receive xtoken
+    /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
+    /// @param amountToken The amount of Token added to pool
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return xtoken The liquidity share token address obtained
+    /// @return liquidity The real liquidity or XToken minted from pool
     function mint(
         address token,
         address to, 
@@ -57,31 +59,33 @@ interface ICoFiXPool {
         uint liquidity
     );
 
-    /// @dev 移除流动性并销毁
-    /// @param token 目标token地址
-    /// @param to 资金接收地址
-    /// @param liquidity 需要移除的流动性份额
-    /// @param payback 退回的手续费接收地址
-    /// @return amountTokenOut 获得的token数量
-    /// @return amountETHOut 获得的eth数量
+    /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
+    /// @param token The address of ERC20 Token
+    /// @param to The target address receiving the Token
+    /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountETHOut The real amount of ETH transferred from the pool
+    /// @return amountTokenOut The real amount of Token transferred from the pool
     function burn(
         address token,
         address to, 
         uint liquidity, 
         address payback
     ) external payable returns (
-        uint amountTokenOut, 
-        uint amountETHOut
+        uint amountETHOut,
+        uint amountTokenOut 
     );
     
-    /// @dev 执行兑换交易
-    /// @param src 源资产token地址
-    /// @param dest 目标资产token地址
-    /// @param amountIn 输入源资产数量
-    /// @param to 兑换资金接收地址
-    /// @param payback 退回的手续费接收地址
-    /// @return amountOut 兑换到的目标资产数量
-    /// @return mined 出矿量
+    /// @dev Swap token
+    /// @param src Src token address
+    /// @param dest Dest token address
+    /// @param amountIn The exact amount of Token a trader want to swap into pool
+    /// @param to The target address receiving the ETH
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
+    /// @return amountOut The real amount of ETH transferred out of pool
+    /// @return mined The amount of CoFi which will be mind by this trade
     function swap(
         address src, 
         address dest, 
@@ -93,8 +97,8 @@ interface ICoFiXPool {
         uint mined
     );
 
-    /// @dev 获取指定token做市获得的份额代币地址
-    /// @param token 目标token
-    /// @return 如果资金池支持指定的token，返回做市份额代币地址
+    /// @dev Gets the token address of the share obtained by the specified token market making
+    /// @param token Target token address
+    /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view returns (address);
 }

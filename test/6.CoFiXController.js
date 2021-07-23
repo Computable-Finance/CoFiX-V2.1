@@ -124,18 +124,23 @@ describe('CoFiXRouter', function() {
         let p;
 
         if (true) {
-            let config = await cofixDAO.getConfig();
-            console.log(config);
-   
-            await cofixDAO.setConfig({
-                status: 2,
-                cofiPerBlock: 10,
-                cofiLimit: 40000,
-                priceDeviationLimit: 7000
+            let pi = await nestPriceFacade.lastPriceListAndTriggeredPriceInfoView(usdt.address, 2);
+            console.log({
+                sigmaSQ: toDecimal(pi.triggeredSigmaSQ.toString()),
+                p0: toDecimal(pi.prices[3].toString(), 6),
+                bn0: pi.prices[2].toString(),
+                p: toDecimal(pi.prices[1].toString(), 6),
+                bn: pi.prices[0].toString()
             });
 
-            config = await cofixDAO.getConfig();
-            console.log(config);
+            let rs = await cofixController._calcRevisedSigmaSQ(
+                pi.triggeredSigmaSQ, 
+                pi.prices[3], 
+                pi.prices[2], 
+                pi.prices[1], 
+                pi.prices[0]
+            );
+            console.log('rs=' + toDecimal(rs));
         }
     });
 });
