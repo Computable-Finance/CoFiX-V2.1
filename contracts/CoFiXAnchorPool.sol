@@ -250,9 +250,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             payable(payback).transfer(msg.value);
         }
 
-        // TODO: 赎回时需要计算冲击成本
-        // TODO: 确定赎回的时候是否有手续费逻辑
-
         // 2. Load tokenInfo
         TokenInfo storage tokenInfo = _tokens[_tokenMapping[token] - 1];
         uint base = uint(tokenInfo.base);

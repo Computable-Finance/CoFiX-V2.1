@@ -168,11 +168,6 @@ contract CoFiXController is ICoFiXController {
         // 3. rq2 > 9 * dt * sq1
         // sqt = sq1 * 0.2 + rq2 * dt * 0.8
 
-        // sq表示波动率，sq2表示nest返回的最新波动率，sq1表示nest的上一个波动率
-        // dt表示最新两个价格的时间间隔
-        // rq2表示最新的收益率（根据最新两个价格和价格的时间间隔计算）
-        // sqt表示修正波动率
-
         uint rq2 = p * 1 ether / p0;
         if (rq2 > 1 ether) {
             rq2 -= 1 ether;
@@ -198,28 +193,12 @@ contract CoFiXController is ICoFiXController {
         }
     }
 
-    // TODO: Note that the value of K is 18 decimal places
     /// @dev Calc K value
     /// @param sigmaSQ The square of the volatility (18 decimal places).
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value
     function _calcK(uint sigmaSQ, uint bn) private view returns (uint k) {
-        // uint sigma = _sqrt(sigmaSQ / 1e4) * 1e11;
-        // uint gamma = 1 ether;
-        // if (sigma > 0.0005 ether) {
-        //     gamma = 2 ether;
-        // } else if (sigma > 0.0003 ether) {
-        //     gamma = 1.5 ether;
-        // }
-
-        // k = (K_ALPHA * (block.number - bn) * BLOCK_TIME * 1 ether + K_BETA * sigma) * gamma / 1e36;
-
-        // k = 0.002 + 2 * D^0.5 * σ
-     
         k = 0.002 ether + _sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ / 1e4) * 2e11;
-        
-        // TODO: 删除此代码
-        //k -= 0.002 ether;
     }
 
     // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)

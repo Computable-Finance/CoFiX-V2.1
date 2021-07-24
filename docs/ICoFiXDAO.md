@@ -1,7 +1,7 @@
 # ICoFiXDAO
 
 ## 1. Interface Description
-    This interface defines the DAO methods
+    This interface defines the DAO methods.
 
 ## 2. Method Description
 
@@ -39,25 +39,27 @@
     function checkApplication(address addr) external view returns (uint);
 ```
 
-### 2.5. 设置token和锚定目标币价格的兑换关系
+### 2.5. Set the exchange relationship
 
 ```javascript
-    /// @dev 设置token和锚定目标币价格的兑换关系。
-    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
-    /// @param token 目标token
-    /// @param target 目标锚定币
-    /// @param exchange token和锚定目标币价格的兑换比例
+    /// @dev Set the exchange relationship between the token and the price of the anchored target currency.
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
+    /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token Address of origin token
+    /// @param target Address of target anchor token
+    /// @param exchange Exchange rate of token and target
     function setTokenExchange(address token, address target, uint exchange) external;
 ```
 
-### 2.6. 获取token和锚定目标币价格的兑换关系
+### 2.6. Get the exchange relationship
 
 ```javascript
-    /// @dev 获取token和锚定目标币价格的兑换关系。
-    /// 例如，设置USDC锚定USDT，由于USDC是18位小数，USDT是6位小数，因此exchange = 1e6 * 1 ether / 1e18 = 1e6
-    /// @param token 目标token
-    /// @return target 目标锚定币
-    /// @return exchange token和锚定目标币价格的兑换比例
+    /// @dev Get the exchange relationship between the token and the price of the anchored target currency.
+    /// For example, set USDC to anchor usdt, because USDC is 18 decimal places and usdt is 6 decimal places. 
+    /// so exchange = 1e6 * 1 ether / 1e18 = 1e6
+    /// @param token Address of origin token
+    /// @return target Address of target anchor token
+    /// @return exchange Exchange rate of token and target
     function getTokenExchange(address token) external view returns (address target, uint exchange);
 ```
 
@@ -92,9 +94,10 @@
 
 ```javascript
     /// @dev Redeem CoFi for ethers
-    /// @notice Ethfee will be charged
-    /// @param amount The amount of ntoken
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    /// @notice Eth fee will be charged
+    /// @param amount The amount of CoFi
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
     function redeem(uint amount, address payback) external payable;
 ```
 
@@ -102,10 +105,11 @@
 
 ```javascript
     /// @dev Redeem CoFi for Token
-    /// @notice Ethfee will be charged
+    /// @notice Eth fee will be charged
     /// @param token The target token
-    /// @param amount The amount of ntoken
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    /// @param amount The amount of CoFi
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
+    /// and the excess fees will be returned through this address
     function redeemToken(address token, uint amount, address payback) external payable;
 ```
 

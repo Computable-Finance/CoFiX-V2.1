@@ -25,7 +25,6 @@ contract NestPriceFacade is INestPriceFacade {
     /// @return blockNumber The block number of price
     /// @return price The token price. (1eth equivalent to (price) token)
     function latestPriceView(address tokenAddress) public view returns (uint blockNumber, uint price) {
-        // TODO:
         //require(tokenAddress != address(0));
         //return (block.number - 1, 2700 * 1000000);
 

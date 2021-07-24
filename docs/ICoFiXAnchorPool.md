@@ -1,36 +1,36 @@
 # ICoFiXAnchorPool
 
 ## 1. Interface Description
-    锚定资金池（有关锚定资金池的逻辑请参考产品文档）。
+    Anchor pool (please refer to the product documentation for the logic of anchoring the fund pool).
 
 ## 2. Method Description
 
-### 2.1. 将资金池内超过总份额的多余资金转走
+### 2.1. Transfer the excess funds that exceed the total share in the fund pool
 
 ```javascript
-        /// @dev 将资金池内超过总份额的多余资金转走
+    /// @dev Transfer the excess funds that exceed the total share in the fund pool
     function skim() external;
 ```
 
-### 2.2. 预估出矿量
+### 2.2. Estimate mining amount
 
 ```javascript
-    /// @dev 预估出矿量
-    /// @param token 目标token地址
-    /// @param newBalance 新的token余额
-    /// @return mined 预计出矿量
+    /// @dev Estimate mining amount
+    /// @param token Target token address
+    /// @param newBalance New balance of target token
+    /// @return mined The amount of CoFi which will be mind by this trade
     function estimate(
         address token,
         uint newBalance
     ) external view returns (uint mined);
 ```
 
-### 2.3. 获取指定token做市获得的份额代币地址
+### 2.3. Gets the token address of the share obtained by the specified token market making
 
 ```javascript
-    /// @dev 获取指定token做市获得的份额代币地址
-    /// @param token 目标token
-    /// @return 如果资金池支持指定的token，返回做市份额代币地址
+    /// @dev Gets the token address of the share obtained by the specified token market making
+    /// @param token Target token address
+    /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view returns (address);
 ```
 

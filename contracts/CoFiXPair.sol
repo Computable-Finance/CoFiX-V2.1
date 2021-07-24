@@ -229,7 +229,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             uint balance0 = address(this).balance;
             uint balance1 = IERC20(token).balanceOf(address(this));
 
-            // TODO: Pt此处没有引入K值，后续需要引入
             // There are no cost shocks to market making
             // When the circulation is not zero, the normal issue share
             liquidity = amountETH * total / _calcTotalValue(
@@ -319,7 +318,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint initToken0Amount = uint(_initToken0Amount);
         uint initToken1Amount = uint(_initToken1Amount);
         if (total > 0) {
-            // TODO: Pt此处没有引入K值，后续需要引入
             navps = _calcTotalValue(
                 balance0, 
                 balance1, 
@@ -330,8 +328,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             ) * 1 ether / total;
         }
 
-        // TODO: 赎回时需要计算冲击成本
-        // TODO: 确定赎回的时候是否有手续费逻辑
         amountETHOut = navps * liquidity / 1 ether;
         amountTokenOut = amountETHOut * initToken1Amount / initToken0Amount;
 
@@ -420,7 +416,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             payback
         );
 
-        // TODO: 公式需要确认
         // 2. Calculate the trade result
         uint fee = amountIn * uint(_theta) / 10000;
         amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
@@ -430,7 +425,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 3. Transfer transaction fee
         _collect(fee);
 
-        // TODO: 如果不检查重入，可能存在通过重入来挖矿的行为
         // 4. Mining logic
         mined = _cofiMint(_calcD(
             address(this).balance, 

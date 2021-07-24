@@ -31,7 +31,6 @@ contract CoFiXBase {
     // algorithm is used to deduce and convert the CoFi, and the new algorithm is used to mine the CoFiX2.1
     // on-line flow, the actual block is 11040688
     //uint constant COFI_GENESIS_BLOCK = 11040688;
-    // TODO: 确定CoFi创世区块号
     uint constant COFI_GENESIS_BLOCK = 0;
 
     /// @dev ICoFiXGovernance implementation contract address
