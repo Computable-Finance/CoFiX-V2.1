@@ -251,7 +251,7 @@ exports.deploy = async function () {
         // 9. 开通挖矿权限
         console.log('25. cofi.addMinter(cofixRouter.address)');
         await cofi.addMinter(cofixRouter.address);
-        console.log('26. cofi.addMinter(cofixVaultForStaking.addres)');
+        console.log('26. cofi.addMinter(cofixVaultForStaking.address)');
         await cofi.addMinter(cofixVaultForStaking.address);
 
         // 10. 注册交易对

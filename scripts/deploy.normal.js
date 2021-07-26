@@ -146,7 +146,7 @@ exports.deploy = async function () {
     // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
     console.log('20. cofi.addMinter(cofixRouter.address)');
     await cofi.addMinter(cofixRouter.address);
-    console.log('21. cofi.addMinter(cofixVaultForStaking.addres)');
+    console.log('21. cofi.addMinter(cofixVaultForStaking.address)');
     await cofi.addMinter(cofixVaultForStaking.address);
 
     // await cofixRouter.registerRouterPath(nest.address, usdt.address, [
