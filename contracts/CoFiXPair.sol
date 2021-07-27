@@ -171,10 +171,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // Make sure the proportions are correct
         uint initToken0Amount = uint(_initToken0Amount);
         uint initToken1Amount = uint(_initToken1Amount);
-        require(
-            amountETH * initToken1Amount == amountToken * initToken0Amount, 
-            "CoFiXPair: invalid asset ratio"
-        );
+        require(amountETH * initToken1Amount == amountToken * initToken0Amount, "CoFiXPair: invalid asset ratio");
 
         // 2. Calculate net worth and share
         uint total = totalSupply;

@@ -17,10 +17,12 @@ contract CoFiXBase {
 
     // // Address of CoFiToken contract
     // address constant COFI_TOKEN_ADDRESS = 0x1a23a6BfBAdB59fa563008c0fB7cf96dfCF34Ea1;
+    // TODO:
     address COFI_TOKEN_ADDRESS;
 
     // // Address of CoFiNode contract
     // address constant CNODE_TOKEN_ADDRESS = 0x558201DC4741efc11031Cdc3BC1bC728C23bF512
+    // TODO:
     address CNODE_TOKEN_ADDRESS;
 
     // Genesis block number of CoFi
@@ -31,6 +33,7 @@ contract CoFiXBase {
     // algorithm is used to deduce and convert the CoFi, and the new algorithm is used to mine the CoFiX2.1
     // on-line flow, the actual block is 11040688
     //uint constant COFI_GENESIS_BLOCK = 11040688;
+    // TODO:
     uint constant COFI_GENESIS_BLOCK = 0;
 
     /// @dev ICoFiXGovernance implementation contract address
@@ -52,6 +55,7 @@ contract CoFiXBase {
         require(governance == msg.sender || ICoFiXGovernance(governance).checkGovernance(msg.sender, 0), "CoFiX:!gov");
         _governance = newGovernance;
 
+        // TODO:
         (
             COFI_TOKEN_ADDRESS,
             CNODE_TOKEN_ADDRESS,
