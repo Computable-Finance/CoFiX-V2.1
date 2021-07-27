@@ -28,23 +28,16 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
-    // // Scale of impact cost base
-    // uint constant VOL_BASE = 50 ether;
-    uint constant VOL_UNIT = 0.1 ether;
-
     // // α=0
     // uint constant C_BUYIN_ALPHA = 0; 
 
-    // β=2e-05*1e18
-    //uint constant C_BUYIN_BETA = 20000000000000; 
+    // β=1e-03*1e18
     uint constant C_BUYIN_BETA = 0.001 ether; 
 
     // Target token address
     address _tokenAddress; 
-
     // Initial asset ratio - eth
     uint48 _initToken0Amount;
-    
     // Initial asset ratio - token
     uint48 _initToken1Amount;
 
@@ -56,32 +49,25 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     // Address of CoFiXDAO
     address _cofixDAO;
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    uint96 _nt;
 
     // Address of CoFiXRouter
     address _cofixRouter;
-
+    // Lock flag
+    bool _locked;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
-    
-    // Impact cost threshold
-    //uint16 _gamma;
-    uint16 _impactCostVOL;
-
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    uint56 _nt;
-
-    // Lock flag
-    uint8 _locked;
 
     // Address of CoFiXController
     address _cofixController;
+    // Impact cost threshold
+    uint96 _impactCostVOL;
 
     // Total mined
     uint112 _Y;
-
     // Adjusting to a balanced trade size
     uint112 _D;
-
     // Last update block
     uint32 _lastblock;
 
@@ -108,7 +94,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         super.initialize(governance);
         name = name_;
         symbol = symbol_;
-        //_locked = 0;
         _tokenAddress = tokenAddress;
         _initToken0Amount = initToken0Amount;
         _initToken1Amount = initToken1Amount;
@@ -116,31 +101,30 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
-        require(_locked == 0, "CoFiXPair: LOCKED");
-        _locked = 1;
+        require(!_locked, "CoFiXPair: LOCKED");
+        _locked = true;
         _;
-        _locked = 0;
-        //_update();
+        _locked = false;
     }
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param impactCostVOL Impact cost threshold
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external override onlyGovernance {
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Impact cost threshold
         _impactCostVOL = impactCostVOL;
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
         _nt = nt;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return impactCostVOL Impact cost threshold
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function getConfig() external override view returns (uint16 theta, uint16 impactCostVOL, uint56 nt) {
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function getConfig() external override view returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
         return (_theta, _impactCostVOL, _nt);
     }
 
@@ -505,7 +489,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
+        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1 ether;
 
         _Y = uint112(Y);
         _D = uint112(D1);
@@ -543,7 +527,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 1e9;
+        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 1 ether;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -572,7 +556,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint D0 = uint(_D);
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
+            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1 ether;
             mined = Y * (D0 - D1) / D0;
         }
     }
@@ -674,7 +658,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // }
         // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
         // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
-        if (vol >= impactCostVOL * VOL_UNIT) {
+        if (vol >= impactCostVOL) {
             impactCost = vol * C_BUYIN_BETA / 1 ether;
         }
     }
@@ -687,7 +671,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // }
         // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
         // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
-        if (vol >= impactCostVOL * VOL_UNIT) {
+        if (vol >= impactCostVOL) {
             impactCost = vol * C_BUYIN_BETA / 1 ether;
         }
     }

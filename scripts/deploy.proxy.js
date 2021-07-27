@@ -179,17 +179,17 @@ exports.deploy = async function () {
 
     // 6. 初始化资金池参数
     console.log('13. usdtPair.setConfig()');
-    await usdtPair.setConfig(20, 1000, 1e8);
+    await usdtPair.setConfig(20, '100000000000000000000', '100000000000000000');
     console.log('14. hbtcPair.setConfig()');
-    await hbtcPair.setConfig(20, 1000, 1e8);
+    await hbtcPair.setConfig(20, '100000000000000000000', '100000000000000000');
     console.log('15. nestPair.setConfig()');
-    await nestPair.setConfig(20, 50, 1e8);
+    await nestPair.setConfig(20, '5000000000000000000', '100000000000000000');
     console.log('16. cofiPair.setConfig()');
-    await cofiPair.setConfig(20, 50, 1e8);
+    await cofiPair.setConfig(20, '5000000000000000000', '100000000000000000');
     console.log('17. ethAnchor.setConfig()');
-    await ethAnchor.setConfig(20, 0, 1e8);
+    await ethAnchor.setConfig(20, 0, '100000000000000000');
     console.log('18. usdAnchor.setConfig()');
-    await usdAnchor.setConfig(20, 0, 50000);
+    await usdAnchor.setConfig(20, 0, '50000000000000');
 
     // 7. 初始化锁仓挖矿参数
     console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
