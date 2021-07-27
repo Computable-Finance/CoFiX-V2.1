@@ -51,6 +51,7 @@ contract CoFiXBase {
         address governance = _governance;
         require(governance == msg.sender || ICoFiXGovernance(governance).checkGovernance(msg.sender, 0), "CoFiX:!gov");
         _governance = newGovernance;
+
         (
             COFI_TOKEN_ADDRESS,
             CNODE_TOKEN_ADDRESS,
