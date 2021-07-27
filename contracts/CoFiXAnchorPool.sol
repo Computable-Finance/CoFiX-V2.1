@@ -79,8 +79,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         uint96[] calldata bases
     ) external {
         super.initialize(governance);
-        //_locked = 0;
-        //string memory si = _getAddressStr(index);
         // Traverse the token and initialize the corresponding data
         for (uint i = 0; i < tokens.length; ++i) {
             addToken(index, tokens[i], bases[i]);
@@ -93,7 +91,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         _locked = true;
         _;
         _locked = false;
-        //_update();
     }
 
     /// @dev Set configuration
@@ -311,7 +308,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
                 // The token cannot be the same as the token just processed
                 if (ta != token) {
                     // Find the token with the largest balance and update it
-                    //uint b = IERC20(ta).balanceOf(address(this));
                     uint b = _balanceOf(ta);
                     uint bs = uint(ti.base);
                     if (max < b * 1 ether / bs) {
@@ -347,7 +343,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             address ta = ti.tokenAddress;
 
             // Find the token with the largest balance and update it
-            //uint b = IERC20(ta).balanceOf(address(this));
             uint b = _balanceOf(ta);
             uint bs = uint(ti.base);
             uint stdBalance = b * 1 ether / bs;

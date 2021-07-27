@@ -28,12 +28,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
-    // // α=0
-    // uint constant C_BUYIN_ALPHA = 0; 
-
-    // β=1e-03*1e18
-    uint constant C_BUYIN_BETA = 0.001 ether; 
-
     // Target token address
     address _tokenAddress; 
     // Initial asset ratio - eth
@@ -175,8 +169,10 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 1. Check token address
         require(token == _tokenAddress, "CoFiXPair: invalid token address");
         // Make sure the proportions are correct
+        uint initToken0Amount = uint(_initToken0Amount);
+        uint initToken1Amount = uint(_initToken1Amount);
         require(
-            amountETH * uint(_initToken1Amount) == amountToken * uint(_initToken0Amount), 
+            amountETH * initToken1Amount == amountToken * initToken0Amount, 
             "CoFiXPair: invalid asset ratio"
         );
 
@@ -184,18 +180,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint total = totalSupply;
         if (total > 0) {
             // 3. Query oracle
-            // (
-            //     uint ethAmount, 
-            //     uint tokenAmount, 
-            //     //uint blockNumber, 
-            // ) = ICoFiXController(_cofixController).queryPrice { 
-            //     // Any amount over the amountETH will be charged as the seer call fee
-            //     value: msg.value - amountETH
-            // } (
-            //     token,
-            //     payback
-            // );
-
             (
                 ,//uint blockNumber, 
                 uint ethAmount,
@@ -229,15 +213,14 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 ethAmount, 
                 // Oracle price - token amount
                 tokenAmount,
-                uint(_initToken0Amount),
-                uint(_initToken1Amount)
+                initToken0Amount,
+                initToken1Amount
             );
 
             // 6. Update mining state
             _updateMiningState(balance0, balance1, ethAmount, tokenAmount);
         } else {
             payable(payback).transfer(msg.value - amountETH);
-            //liquidity = _calcLiquidity(amountETH, navps) - MINIMUM_LIQUIDITY;
             liquidity = amountETH - MINIMUM_LIQUIDITY;
             // permanently lock the first MINIMUM_LIQUIDITY tokens
             _mint(address(0), MINIMUM_LIQUIDITY); 
@@ -269,17 +252,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 1. Check token address
         require(token == _tokenAddress, "CoFiXPair: invalid token address");
         // 2. Query oracle
-        // (
-        //     uint ethAmount, 
-        //     uint tokenAmount, 
-        //     //uint blockNumber, 
-        // ) = ICoFiXController(_cofixController).queryPrice { 
-        //     value: msg.value 
-        // } (
-        //     token,
-        //     payback
-        // );
-
         (
             ,//uint blockNumber, 
             uint ethAmount,
@@ -628,14 +600,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint initToken0Amount,
         uint initToken1Amount
     ) private pure returns (uint totalValue) {
-        // k = Ut / Et
-        // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
-        // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
-        // NV = (Et + Ut / Pt) / ( (1 + (U0 / Pt * E0)) * Ft )
-        // NV = (Et * E0 + Ut * E0  / Pt) / ( (E0 + U0 / Pt) * Ft )
-        //navps = (ethBalance * _initToken0Amount * tokenAmount + tokenBalance * _initToken0Amount * ethAmount) * 1 ether
-        //        / totalSupply / (_initToken0Amount * tokenAmount + _initToken1Amount * ethAmount);
-
         // NV=(E_t+U_t/P_t)/((1+k_0/P_t ))
         totalValue = (
             balance0 * tokenAmount 
@@ -647,32 +611,26 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     }
 
     // impact cost
-    // - C = 0, if VOL < 500 / γ
-    // - C = (α + β * VOL) * γ, if VOL >= 500 / γ
+    // - C = 0, if VOL < impactCostVOL
+    // - C = β * VOL, if VOL >= impactCostVOL
 
     // α=0，β=2e-06
     function _impactCostForBuyInETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
-        // //uint gamma = uint(_gamma); //CGammaMap[token];
-        // if (vol * gamma < VOL_BASE) {
-        //     return 0;
-        // }
-        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
+        // β=1e-03*1e18
+        // uint constant C_BUYIN_BETA = 0.001 ether; 
         if (vol >= impactCostVOL) {
-            impactCost = vol * C_BUYIN_BETA / 1 ether;
+            //impactCost = vol * C_BUYIN_BETA / 1 ether;
+            impactCost = vol / 1000;
         }
     }
 
     // α=0，β=2e-06
     function _impactCostForSellOutETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
-        // //uint gamma = uint(_gamma); //CGammaMap[token];
-        // if (vol * gamma < VOL_BASE) {
-        //     return 0;
-        // }
-        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
+        // β=1e-03*1e18
+        // uint constant C_BUYIN_BETA = 0.001 ether; 
         if (vol >= impactCostVOL) {
-            impactCost = vol * C_BUYIN_BETA / 1 ether;
+            //impactCost = vol * C_BUYIN_BETA / 1 ether;
+            impactCost = vol / 1000;
         }
     }
 
