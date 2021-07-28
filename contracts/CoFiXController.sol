@@ -14,9 +14,12 @@ contract CoFiXController is ICoFiXController {
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
-    address immutable NEST_PRICE_FACADE;
+    //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
+    // TODO:
+    address NEST_PRICE_FACADE;
 
-    constructor(address nestPriceFacade) {
+    /// @dev To support open-zeppelin/upgrades
+    function initialize(address nestPriceFacade) external {
         NEST_PRICE_FACADE = nestPriceFacade;
     }
 
@@ -222,5 +225,13 @@ contract CoFiXController is ICoFiXController {
             price >= avgPrice * 9 / 10, 
             "CoFiXController: price deviation"
         );
+    }
+    
+    // TODO: This method is for testing, it should be deleted for mainnet
+    /// @return adm The admin slot.
+    function getAdmin() external view returns (address adm) {
+        assembly {
+            adm := sload(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103)
+        }
     }
 }

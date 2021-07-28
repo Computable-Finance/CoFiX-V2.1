@@ -146,7 +146,7 @@ describe('CoFiXRouter', function() {
         //     triggeredAvgPrice: pi.triggeredAvgPrice.toString(),
         //     triggeredSigmaSQ: pi.triggeredSigmaSQ.toString()
         // });
-
+        return;
         if (false) {
             console.log('1. 初始化资金');
             await cofi.addMinter(owner.address);
