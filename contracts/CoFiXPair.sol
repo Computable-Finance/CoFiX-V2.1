@@ -574,7 +574,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 tokenAmount,
                 _initToken0Amount,
                 _initToken1Amount
-            ) * 1 ether / totalSupply;
+            ) * 1 ether / total;
         }
         return 1 ether;
     }

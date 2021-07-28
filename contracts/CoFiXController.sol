@@ -220,7 +220,6 @@ contract CoFiXController is ICoFiXController {
         );
     }
     
-    // TODO: This method is for testing, it should be deleted for mainnet
     /// @return adm The admin slot.
     function getAdmin() external view returns (address adm) {
         assembly {
