@@ -31,21 +31,12 @@
     ) external view returns (uint mined);
 ```
 
-### 2.3. Calculate net worth
+### 2.3. Get eth balance of this pool
 
 ```javascript
-    /// @dev Calculate net worth
-    /// @param balance0 Balance of eth
-    /// @param balance1 Balance of token
-    /// @param ethAmount Oracle price - eth amount
-    /// @param tokenAmount Oracle price - token amount
-    /// @return navps Net worth
-    function calcNAVPerShare(
-        uint balance0, 
-        uint balance1, 
-        uint ethAmount, 
-        uint tokenAmount
-    ) external view returns (uint navps);
+    /// @dev Get eth balance of this pool
+    /// @return eth balance of this pool
+    function ethBalance() external view returns (uint);
 ```
 
 ### 2.4. Get net worth
@@ -86,4 +77,18 @@
     /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view returns (address);
+```
+
+### 2.8. Settle trade fee to DAO
+
+```javascript
+    /// @dev Settle trade fee to DAO
+    function settle() external;
+```
+
+### 2.9. Get total trade fee which not settled
+
+```javascript
+    /// @dev Get total trade fee which not settled
+    function totalFee() external view returns (uint);
 ```

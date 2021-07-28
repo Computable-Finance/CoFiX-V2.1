@@ -39,18 +39,15 @@ interface ICoFiXPair is ICoFiXPool {
         uint tokenAmount
     ) external view returns (uint mined);
     
-    /// @dev Calculate net worth
-    /// @param balance0 Balance of eth
-    /// @param balance1 Balance of token
-    /// @param ethAmount Oracle price - eth amount
-    /// @param tokenAmount Oracle price - token amount
-    /// @return navps Net worth
-    function calcNAVPerShare(
-        uint balance0, 
-        uint balance1, 
-        uint ethAmount, 
-        uint tokenAmount
-    ) external view returns (uint navps);
+    /// @dev Settle trade fee to DAO
+    function settle() external;
+
+    /// @dev Get eth balance of this pool
+    /// @return eth balance of this pool
+    function ethBalance() external view returns (uint);
+
+    /// @dev Get total trade fee which not settled
+    function totalFee() external view returns (uint);
     
     /// @dev Get net worth
     /// @param ethAmount Oracle price - eth amount

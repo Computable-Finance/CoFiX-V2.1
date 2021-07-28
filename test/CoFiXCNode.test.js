@@ -53,9 +53,10 @@ describe('CoFiXRouter', function() {
             return bi;
         }
         const getAccountInfo = async function(account) {
+            let acc = account;
             account = account.address;
             return {
-                eth: toDecimal(await ethers.provider.getBalance(account)),
+                eth: toDecimal(acc.ethBalance ? await acc.ethBalance() : await ethers.provider.getBalance(account)),
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 xtoken: toDecimal(await usdtPair.balanceOf(account)),
@@ -69,10 +70,10 @@ describe('CoFiXRouter', function() {
             let navps = 0;
             if (pairStatus.eth != '0.000000000000000000' || pairStatus.usdt != '0.000000') {
             let p = await nestPriceFacade.latestPriceView(usdt.address);
-                navps = toDecimal(await usdtPair.calcNAVPerShare(
-                    await ethers.provider.getBalance(usdtPair.address),
+                navps = toDecimal(await usdtPair.getNAVPerShare(
+                    //await ethers.provider.getBalance(usdtPair.address),
                     //toBigInt(pairStatus.eth), 
-                    toBigInt(pairStatus.usdt, 6), 
+                    //toBigInt(pairStatus.usdt, 6), 
                     toBigInt(1), 
                     p.price
                 ));

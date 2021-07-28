@@ -52,6 +52,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     bool _locked;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
+    // Total trade fee
+    uint72 _totalFee;
 
     // Address of CoFiXController
     address _cofixController;
@@ -191,7 +193,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 payback
             );
 
-            uint balance0 = address(this).balance;
+            uint balance0 = ethBalance();
             uint balance1 = IERC20(token).balanceOf(address(this));
 
             // There are no cost shocks to market making
@@ -264,7 +266,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // 3. Calculate the net value and calculate the equal proportion fund according to the net value
-        uint balance0 = address(this).balance;
+        uint balance0 = ethBalance();
         uint balance1 = IERC20(token).balanceOf(address(this));
         uint navps = 1 ether;
         uint total = totalSupply;
@@ -376,11 +378,11 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // 3. Transfer transaction fee
-        _collect(fee);
+        fee = _collect(fee);
 
         // 4. Mining logic
         mined = _cofiMint(_calcD(
-            address(this).balance, 
+            address(this).balance - fee, 
             IERC20(token).balanceOf(address(this)) - amountTokenOut, 
             ethAmount, 
             tokenAmount
@@ -431,11 +433,11 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         amountETHOut = amountETHOut - fee;
 
         // 3. Transfer transaction fee
-        _collect(fee);
+        fee = _collect(fee);
 
         // 4. Mining logic
         mined = _cofiMint(_calcD(
-            address(this).balance - amountETHOut, 
+            address(this).balance - fee - amountETHOut, 
             IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
@@ -450,7 +452,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Update mining state
     function _updateMiningState(uint balance0, uint balance1, uint ethAmount, uint tokenAmount) private {
         uint D1 = _calcD(
-            balance0, //address(this).balance, 
+            balance0, //ethBalance(), 
             balance1, //IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
@@ -531,39 +533,30 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     }
 
     // Deposit transaction fee
-    function _collect(uint fee) private {
-        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
+    function _collect(uint fee) private returns (uint total) {
+        total = uint(_totalFee) + fee;
+        if (total >= 1 ether) {
+            ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
+            total = 0;
+        } 
+        _totalFee = uint72(total);
     }
 
-    // Calculate net worth
-    // navps = calcNAVPerShare(reserve0, reserve1, _op.ethAmount, _op.tokenAmount);
-    // calc Net Asset Value Per Share (no K)
-    // use it in this contract, for optimized gas usage
+    /// @dev Settle trade fee to DAO
+    function settle() external override {
+        ICoFiXDAO(_cofixDAO).addETHReward { value: uint(_totalFee) } (address(this));
+        _totalFee = uint72(0);
+    }
 
-    /// @dev Calculate net worth
-    /// @param balance0 Balance of eth
-    /// @param balance1 Balance of token
-    /// @param ethAmount Oracle price - eth amount
-    /// @param tokenAmount Oracle price - token amount
-    /// @return navps Net worth
-    function calcNAVPerShare(
-        uint balance0, 
-        uint balance1, 
-        uint ethAmount, 
-        uint tokenAmount
-    ) external view override returns (uint navps) {
-        uint total = totalSupply;
-        if (total > 0) {
-            return _calcTotalValue(
-                balance0, 
-                balance1, 
-                ethAmount, 
-                tokenAmount,
-                _initToken0Amount,
-                _initToken1Amount
-            ) * 1 ether / totalSupply;
-        }
-        return 1 ether;
+    /// @dev Get eth balance of this pool
+    /// @return eth balance of this pool
+    function ethBalance() public view override returns (uint) {
+        return address(this).balance - uint(_totalFee);
+    }
+
+    /// @dev Get total trade fee which not settled
+    function totalFee() external view override returns (uint) {
+        return uint(_totalFee);
     }
 
     /// @dev Get net worth
@@ -577,7 +570,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint total = totalSupply;
         if (total > 0) {
             return _calcTotalValue(
-                address(this).balance, 
+                ethBalance(), 
                 IERC20(_tokenAddress).balanceOf(address(this)), 
                 ethAmount, 
                 tokenAmount,
