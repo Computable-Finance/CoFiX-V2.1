@@ -13,8 +13,6 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXAnchorToken.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Anchor pool
 contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     

@@ -14,8 +14,6 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Binary pool: eth/token
 contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 

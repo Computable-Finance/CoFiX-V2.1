@@ -11,8 +11,6 @@ import "./interfaces/ICoFiXRouter.sol";
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Stake xtoken or CNode, earn CoFi
 contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
 

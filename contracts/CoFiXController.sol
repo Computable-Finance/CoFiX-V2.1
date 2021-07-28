@@ -4,23 +4,17 @@ pragma solidity ^0.8.6;
 
 import "./interfaces/ICoFiXController.sol";
 
-import "hardhat/console.sol";
-
 /// @dev This interface defines the methods for price call entry
 contract CoFiXController is ICoFiXController {
 
-    // uint constant K_ALPHA = 0.00001 ether;
-    // uint constant K_BETA = 10 ether;
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
-    //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
-    // TODO:
-    address NEST_PRICE_FACADE;
+    address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
 
     /// @dev To support open-zeppelin/upgrades
     function initialize(address nestPriceFacade) external {
-        NEST_PRICE_FACADE = nestPriceFacade;
+        //NEST_PRICE_FACADE = nestPriceFacade;
     }
 
     /// @dev Query latest price info
@@ -152,7 +146,6 @@ contract CoFiXController is ICoFiXController {
         k = _calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
     }
 
-    // TODO: 为了测试方便写成public的，发布时需要改为private的
     // Calculate the corrected volatility
     function _calcRevisedSigmaSQ(
         uint sigmaSQ,
@@ -160,7 +153,7 @@ contract CoFiXController is ICoFiXController {
         uint bn0, 
         uint p, 
         uint bn
-    ) public pure returns (uint revisedSigmaSQ) {
+    ) private pure returns (uint revisedSigmaSQ) {
         // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
         // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
         // 1. 

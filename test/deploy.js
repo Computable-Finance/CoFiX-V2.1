@@ -19,8 +19,11 @@ describe('CoFiXRouter', function() {
 
             nest,
             usdt,
+            hbtc,
             usdtPair,
+            hbtcPair,
             nestPair,
+            cofiPair,
             usdAnchor,
             ethAnchor,
 
@@ -44,9 +47,23 @@ describe('CoFiXRouter', function() {
             return bi;
         }
 
-        console.log('ok');
+        // // 1. cofi转账
+        // await cofi.mint(owner.address, toBigInt(10000000));
 
-        console.log('usdt balance: ' + await usdt.balanceOf(owner.address));
+        // // 2. 开通cofi挖矿
+        // const nTokenController = await ethers.getContractAt('INTokenController', '0xb75Fd1a678dAFE00cEafc8d9e9B1ecf75cd6afC5');
+        // await cofi.approve(nTokenController.address, 1);
+        // await nTokenController.open(cofi.address);
+
+        // 3. cofi报价
+        // const ntokenMining = await ethers.getContractAt('INestMining', '0xb984cCe9fdA423c5A18DFDE4a7bCdfC150DC1012');
+        // //await cofi.approve(ntokenMining.address, toBigInt(10000000));
+        // await ntokenMining.post(cofi.address, 10, toBigInt(2565), {
+        //     value: toBigInt(10.1)
+        // });
+
+        console.log('ok');
+        
         return;
         // if (true) {
         //     console.log('0. 设置价格');

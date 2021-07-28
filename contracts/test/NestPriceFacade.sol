@@ -4,8 +4,6 @@ pragma solidity ^0.8.6;
 
 import "../interfaces/INestPriceFacade.sol";
 
-import "hardhat/console.sol";
-
 /// @dev This interface defines the methods for price call entry
 contract NestPriceFacade is INestPriceFacade {
 

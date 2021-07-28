@@ -179,7 +179,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -198,7 +198,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -217,7 +217,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -236,7 +236,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -254,7 +254,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -273,7 +273,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -292,7 +292,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -311,7 +311,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -330,7 +330,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
+            await showReceipt(receipt);
             //status = await getStatus();
             //console.log(status);
         }
@@ -341,7 +341,7 @@ describe('CoFiXRouter', function() {
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',
             ];
-            //await usdt.approve(cofixRouter.address, toBigInt(10, 6));
+            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 path,
                 toBigInt(10, 6),
@@ -352,7 +352,7 @@ describe('CoFiXRouter', function() {
                     value: BigInt('80000000000000000')
                 }
             );
-            await showReceipt(receipt);
+            await await showReceipt(receipt);
             status = await getStatus();
             console.log(status);
         }
@@ -380,14 +380,14 @@ describe('CoFiXRouter', function() {
         }
 
         if (false) {
-            console.log('13. 路由兑换0.004509758596359381eth');
+            console.log('13. 路由兑换0.004453177502524911eth');
             let path = [
                 '0x0000000000000000000000000000000000000000',
                 usdt.address,
             ];
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 path,
-                BigInt('4509758596359381'),
+                BigInt('4453177502524911'),
                 0,
                 owner.address,
                 owner.address,
@@ -402,6 +402,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
             console.log('11. 路由兑换1000usdt');
+            await usdt.approve(cofixRouter.address, toBigInt(1000, 6));
             let path = [
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',
@@ -433,6 +434,7 @@ describe('CoFiXRouter', function() {
             status = await getStatus();
             console.log(status);
         }
+        return;
         // ** rinkeby@20210720 **
         // usdt: 0x20125a7256EFafd0d4Eec24048E08C5045BC5900
         // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
