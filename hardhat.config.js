@@ -30,6 +30,13 @@ module.exports = {
     }
   },
   networks: {
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${config.alchemy.mainnet.apiKey}`,
+      accounts: [config.account.mainnet.key, config.account.mainnet.userA, config.account.mainnet.userB],
+      gasPrice: 25e9,
+      gas: 6e6,
+      timeout: 2000000000
+    },
     ropsten: {
       url: `https://eth-ropsten.alchemyapi.io/v2/${config.alchemy.ropsten.apiKey}`,
       accounts: [config.account.ropsten.key, config.account.ropsten.userA, config.account.ropsten.userB],

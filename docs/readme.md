@@ -1,29 +1,37 @@
 # CoFiX v2.1 Contract Specification
 
 ## 1. Background
-CoFiX v2.1添加了锚定池逻辑和其他一些功能性修改，并对合约结构和代码进行了优化设计。
+CoFiX v2.1 adds an anchor pool on the basis of v2.0, supports multi currency repurchase of CoFi, and introduces 
+a modified volatility. In addition to the above adjustments, v2.1 also reconstructs the contract code after 
+coding test and code inspection in the previous period.
 
 ## 2. Contract Structure
 
 ![avatar](CoFiX2.1.svg)
 
-The contract relationship is shown in the figure above. The green contract is the contract that needs to be actually deployed, and the others are interface definitions or abstract contracts. The main points are as follows:
+The contract relationship is shown in the figure above. The green contract is the contract that needs to be 
+actually deployed, and the others are interface definitions or abstract contracts. The main points are as follows:
 
-1. The contracts of the CoFiX system all inherit the CoFiXBase contract. The CoFiXBase contract mainly implements the logic that the contracts belonging to the CoFiX governance system which need to cooperate with the governance.
+1. The contracts of the CoFiX system all inherit the CoFiXBase contract. The CoFiXBase contract mainly implements 
+the logic that the contracts belonging to the CoFiX governance system which need to cooperate with the governance.
 
-2. CoFiXGovernance is a CoFiX governance contract, which includes governance-related functions and realizes the mapping management of the built-in contract address in the CoFiX system.
+2. CoFiXGovernance is a CoFiX governance contract, which includes governance-related functions and realizes the 
+mapping management of the built-in contract address in the CoFiX system.
 
-3. CoFiXController合约用于处理和价格相关的逻辑。
+3. CoFiXController Used to process logic related to price.
 
-4. CoFiXRouter合约是做市和交易的入口，系统的主要功能从这里开始。
+4. CoFiXRouter is the entrance to market making and trading. The main functions of the system start from here.
 
-5. CoFiXPair合约提供了二元资金池的实现，二元资金池同时也是一个交易对。
+5. CoFiXPair provides the implementation of dual fund pool, which is also a transaction pair.
 
-6. CoFiXAnchorPool合约提供了锚定资金池的实现，锚定资金池可以有多个资产，并提供n*(n-1)/2个交易对。
+6. CoFiXAnchorPool provides the implementation of anchored fund pool, which can have multiple assets and 
+provide n * (n-1) / 2 transaction pairs.
 
-7. CoFiXAnchorToken是锚定资金池的做市份额，铆钉资金池中的每中资金对应一个锚定资金池份额。
+7. CoFiXAnchorToken is the market making share of the anchored fund pool. Each fund in the rivet fund pool 
+corresponds to one anchored fund pool share.
 
-8. CoFiXVaultForStaking提供了做市和CNode出矿的逻辑，做市份额和CNode通过此合约提供的接口来存入和领取CoFi。
+8. CoFiXVaultForStaking provides the logic of market making and CNode ore drawing. The market making share and 
+CNode deposit and receive COFI through the interface provided by this contract.
 
 ## 3. Interface Description
 
@@ -31,50 +39,49 @@ The contract relationship is shown in the figure above. The green contract is th
 
 ## 4. Data Structure
 
-### 4.1. 锚定池代币信息
+### 4.1. Defines the structure of a token channel
 
 ```javascript
-    /// @dev 锚定池代币信息
+    /// @dev Defines the structure of a token channel
     struct TokenInfo {
-        // token地址
+        // Address of token
         address tokenAddress;
-        // token单位（等于10^decimals）
+        // Base of token (value is 10^decimals)
         uint96 base;
-        // 对应的xtoken地址
+        // Address of corresponding xtoken
         address xtokenAddress;
 
-        // 累计出矿量
+        // Total mined
         uint112 _Y;
-        // 调整到平衡的交易规模
+        // Adjusting to a balanced trade size
         uint112 _D;
-        // 最后更新区块
+        // Last update block
         uint32 _lastblock;
     }
 ```
 
-### 4.2. Stake通道信息
+### 4.2. Stake channel information
 
 ```javascript
-    /// @dev Stake通道信息
+    /// @dev Stake channel information
     struct StakeChannel{
 
-        // 配置
-        // 出矿权重
+        // Mining amount weight
         uint cofiWeight;
-        // stake数量
+        // Total staked amount
         uint totalStaked;
 
-        // pair全局挖矿标记
-        // 已结算的交易出矿总量标记
+        // xtoken global sign
+        // Total ore drawing mark of settled transaction
         uint128 tradeReward;
-        // 已结算的总出矿量标记
+        // Total settled ore output mark
         //uint128 totalReward;
-        // 已结算的单位token可以领取的分红标记
+        // The dividend mark that the settled company token can receive
         uint96 rewardPerToken;
-        // 结算区块标记
+        // Settlement block mark
         uint32 blockCursor;
 
-        // 账户标记
+        // Accounts
         // address=>balance
         mapping(address=>Account) accounts;
     }

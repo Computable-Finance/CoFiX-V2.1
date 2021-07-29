@@ -12,8 +12,6 @@ import "./interfaces/ICoFiXController.sol";
 import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Management of cofix public funds
 contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
 

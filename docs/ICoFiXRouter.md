@@ -5,58 +5,60 @@
 
 ## 2. Method Description
 
-### 2.1. 注册交易对
+### 2.1. Register trade pair
 
 ```javascript
-    /// @dev 注册交易对
-    /// @param token0 交易对token0。（0地址表示eth）
-    /// @param token1 交易对token1。（0地址表示eth）
-    /// @param pool 交易对资金池
+    /// @dev Register trade pair
+    /// @param token0 pair-token0. 0 address means eth
+    /// @param token1 pair-token1. 0 address means eth
+    /// @param pool Pool for the trade pair
     function registerPair(address token0, address token1, address pool) external;
 ```
 
-### 2.2. 根据token地址获取交易对
+### 2.2. Get pool address for trade pair
 
 ```javascript
-    /// @dev 根据token地址对获取交易资金池
-    /// @param token0 交易对token0。（0地址表示eth）
-    /// @param token1 交易对token1。（0地址表示eth）
-    /// @return pool 交易资金池
+    /// @dev Get pool address for trade pair
+    /// @param token0 pair-token0. 0 address means eth
+    /// @param token1 pair-token1. 0 address means eth
+    /// @return pool Pool for the trade pair
     function pairFor(address token0, address token1) external view returns (address pool);
 ```
 
-### 2.3. 注册路由路径
+### 2.3. Register routing path
 
 ```javascript
-    /// @dev 注册路由路径
-    /// @param src 源token地址
-    /// @param dest 目标token地址
-    /// @param path 路由地址
+    /// @dev Register routing path
+    /// @param src Src token address
+    /// @param dest Dest token address
+    /// @param path Routing path
     function registerRouterPath(address src, address dest, address[] calldata path) external;
 ```
 
-### 2.4. 查找从源token地址到目标token地址的路由路径
+### 2.4. Get routing path from src token address to dest token address
 
 ```javascript
-    /// @dev 查找从源token地址到目标token地址的路由路径
-    /// @param src 源token地址
-    /// @param dest 目标token地址
-    /// @return path 如果找到，返回路由路径，数组中的每一个地址表示兑换过程中经历的token地址。
+    /// @dev Get routing path from src token address to dest token address
+    /// @param src Src token address
+    /// @param dest Dest token address
+    /// @return path If success, return the routing path, 
+    /// each address in the array represents the token address experienced during the trading
     function getRouterPath(address src, address dest) external view returns (address[] memory path);
 ```
 
 ### 2.5. Maker add liquidity to pool
 
 ```javascript
-    /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) (notice: msg.value = amountETH + oracle fee)
+    /// @dev Maker add liquidity to pool, get pool token (mint XToken to maker) 
+    /// (notice: msg.value = amountETH + oracle fee)
     /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
     /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
-    /// @return xtoken 获得的流动性份额代币地址
+    /// @param  deadline The deadline of this request
+    /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidity(
         address pool,
@@ -68,20 +70,24 @@
         uint deadline
     ) external payable returns (address xtoken, uint liquidity);
 ```
-    Note: 当前有两种资金池：二元池和锚定池，给二元池添加流动性需要按比例同时提供eth和token，给锚定池添加流动性则需要单个资产添加，因此在给锚定池添加流动性时，amountETH应当为0（对于ETH锚定池，添加流动性时，amountETH为0，amountToken为eth数量，token为0地址）。
+    Note: At present, there are two kinds of fund pools: binary pool and anchor pool. Adding liquidity to 
+    binary pool requires both Eth and token to be provided proportionally. Adding liquidity to anchor pool 
+    requires adding a single asset. Therefore, when adding liquidity to anchor pool, amounteth should be 0 
+    (for eth anchor pool, when adding liquidity, amounteth is 0, amounttoken is eth quantity, token is 0 address).
 
 ### 2.6. Maker add liquidity to pool and stake
 
 ```javascript
-    /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically (notice: msg.value = amountETH + oracle fee)
+    /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically 
+    /// (notice: msg.value = amountETH + oracle fee)
     /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
     /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
     /// @param  amountToken The amount of Token added to pool
     /// @param  liquidityMin The minimum liquidity maker wanted
     /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The dealine of this request
-    /// @return xtoken 获得的流动性份额代币地址
+    /// @param  deadline The deadline of this request
+    /// @return xtoken The liquidity share token address obtained
     /// @return liquidity The real liquidity or XToken minted from pool
     function addLiquidityAndStake(
         address pool,
@@ -97,13 +103,14 @@
 ### 2.7. Maker remove liquidity from pool
 
 ```javascript
-    /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) (notice: msg.value = oracle fee)
+    /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
+    /// (notice: msg.value = oracle fee)
     /// @param  pool The address of pool
     /// @param  token The address of ERC20 Token
     /// @param  liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
     /// @param  amountETHMin The minimum amount of ETH wanted to get from pool
     /// @param  to The target address receiving the Token
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountETH The real amount of ETH transferred from the pool
     /// @return amountToken The real amount of Token transferred from the pool
     function removeLiquidityGetTokenAndETH(
@@ -116,17 +123,17 @@
     ) external payable returns (uint amountETH, uint amountToken);
 ```
 
-### 2.8. 兑换代币
+### 2.8. Swap exact tokens for tokens
 
 ```javascript
     /// @dev Swap exact tokens for tokens
     /// @param  path Routing path. If you need to exchange through multi-level routes, you need to write down all 
     /// token addresses (ETH address is represented by 0) of the exchange path
     /// @param  amountIn The exact amount of Token a trader want to swap into pool
-    /// @param  amountOutMin The mininum amount of ETH a trader want to swap out of pool
+    /// @param  amountOutMin The minimum amount of ETH a trader want to swap out of pool
     /// @param  to The target address receiving the ETH
     /// @param  rewardTo The target address receiving the CoFi Token as rewards
-    /// @param  deadline The dealine of this request
+    /// @param  deadline The deadline of this request
     /// @return amountOut The real amount of Token transferred out of pool
     function swapExactTokensForTokens(
         address[] calldata path,
@@ -137,13 +144,14 @@
         uint deadline
     ) external payable returns (uint amountOut);
 ```
-    Note: 多级路由兑换，path可以通过getRouterPath()查询，也可以前端缓存交易对数据，自行生成。
+    Note: For multi-level route exchange, the path can be queried through getrouterpath(), 
+    or the transaction pair data can be cached at the front end and generated by itself.
 
-### 2.9. 获取目标pair的交易挖矿分成
+### 2.9. Acquire the transaction mining share of the target XToken
 
 ```javascript
-    /// @dev 获取目标xtoken的交易挖矿分成
-    /// @param xtoken 目标xtoken地址
-    /// @return 目标xtoken的交易挖矿分成
+    /// @dev Acquire the transaction mining share of the target XToken
+    /// @param xtoken The destination XToken address
+    /// @return Target XToken's transaction mining share
     function getTradeReward(address xtoken) external view returns (uint);
 ```

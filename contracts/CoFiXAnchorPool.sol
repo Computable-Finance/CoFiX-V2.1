@@ -13,8 +13,6 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXAnchorToken.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Anchor pool
 contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     
@@ -43,21 +41,18 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
     // Address of CoFiXDAO
     address _cofixDAO;
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    uint96 _nt;
 
     // Address of CoFiXRouter
     address _cofixRouter;
-
+    // Lock flag
+    bool _locked;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
     // Impact cost threshold
-    //uint16 _impactCostVOL;
-
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    uint56 _nt;
-
-    // Lock flag
-    uint8 _locked;
+    //uint96 _impactCostVOL;
 
     // Array of TokenInfo
     TokenInfo[] _tokens;
@@ -82,8 +77,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         uint96[] calldata bases
     ) external {
         super.initialize(governance);
-        //_locked = 0;
-        string memory si = _getAddressStr(index);
         // Traverse the token and initialize the corresponding data
         for (uint i = 0; i < tokens.length; ++i) {
             addToken(index, tokens[i], bases[i]);
@@ -92,33 +85,32 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXAnchorPool: Only for CoFiXRouter");
-        require(_locked == 0, "CoFiXAnchorPool: LOCKED");
-        _locked = 1;
+        require(!_locked, "CoFiXAnchorPool: LOCKED");
+        _locked = true;
         _;
-        _locked = 0;
-        //_update();
+        _locked = false;
     }
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param impactCostVOL Impact cost threshold
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external override onlyGovernance {
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Impact cost threshold
         //_impactCostVOL = impactCostVOL;
-        require(impactCostVOL == 0, "CoFiXAnchorPool: impactCostVOL must be 0");
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+        require(uint(impactCostVOL) == 0, "CoFiXAnchorPool: impactCostVOL must be 0");
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
         _nt = nt;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return impactCostVOL Impact cost threshold
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function getConfig() external override view returns (uint16 theta, uint16 impactCostVOL, uint56 nt) {
-        return (_theta, 0, _nt);
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function getConfig() external override view returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
+        return (_theta, uint96(0), _nt);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -250,9 +242,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             payable(payback).transfer(msg.value);
         }
 
-        // TODO: 赎回时需要计算冲击成本
-        // TODO: 确定赎回的时候是否有手续费逻辑
-
         // 2. Load tokenInfo
         TokenInfo storage tokenInfo = _tokens[_tokenMapping[token] - 1];
         uint base = uint(tokenInfo.base);
@@ -317,7 +306,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
                 // The token cannot be the same as the token just processed
                 if (ta != token) {
                     // Find the token with the largest balance and update it
-                    //uint b = IERC20(ta).balanceOf(address(this));
                     uint b = _balanceOf(ta);
                     uint bs = uint(ti.base);
                     if (max < b * 1 ether / bs) {
@@ -353,7 +341,6 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
             address ta = ti.tokenAddress;
 
             // Find the token with the largest balance and update it
-            //uint b = IERC20(ta).balanceOf(address(this));
             uint b = _balanceOf(ta);
             uint bs = uint(ti.base);
             uint stdBalance = b * 1 ether / bs;
@@ -456,7 +443,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1e9;
+        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1 ether;
 
         // 5. Update ore drawing parameters
         tokenInfo._Y = uint112(Y);
@@ -481,7 +468,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1e9;
+        uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1 ether;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -518,7 +505,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number - uint(tokenInfo._lastblock)) / 1e9;
+            uint Y = uint(tokenInfo._Y) + D0 * uint(_nt) * (block.number - uint(tokenInfo._lastblock)) / 1 ether;
             mined = Y * (D0 - D1) / D0;
         }
     }

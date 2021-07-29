@@ -20,38 +20,66 @@ exports.deploy = async function () {
     const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
     const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
 
-    console.log('** rinkeby@20210720 **');
-    
-    // ** rinkeby@20210720 **
-    // usdt: 0x20125a7256EFafd0d4Eec24048E08C5045BC5900
+    console.log('** rinkeby@20210726.1.js **');
+
+    // usdt: 0x2d750210c0b5343a0b79beff8F054C9add7d2411
     // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
-    // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
-    // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
-    // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+    // peth: 0x4D4B378eFbeb7eE15Aa498F3383C9949391557e0
+    // pusd: 0x740ed84037E5d2F650b585759623EBC4de849021
+    // usdc: 0xB64825a6bA80d65886b5123f5170ddffc935D9DE
     // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
     // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
-    // cnode: 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64
-    // cofi: 0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695
-    // cofixGovernance: 0x6843dA9a5DB73f68dDC97079fEeaaC6ca474EcbF
-    // cofixDAO: 0x1F4B92d91D803c6f90A36A01168721d048E2b0d6
-    // cofixRouter: 0xD2A6D4744027aBCE6781955674ffc04DcdEA7570
-    // cofixVaultForStaking: 0xf952Cb518BD7F72F600c6aEA0A8CcFBeabe7c9C0
-    // cofixController: 0xC18B1feb7F41521cDAaa4ad5E0e5a8c54D0FF4a5
-    // usdtPair: 0x5930c58d71b83bc4586D13f5767aa921ca8B4143
-    // hbtcPair: 0xF91809d869082DaEc8ed4fa36cB9423C2132726B
-    // nestPair: 0x9eD5c27a4527927a4eF8cAa36547CAb502631A69
-    // cofiPair: 0xF3Ef9e8Cbdd0424E0B152709358749155697C2d6
-    // ethAnchor: 0x6Bba09C78b7CB6f559341BfFacCF19f5FD8AdAE6
-    // usdAnchor: 0x4Ac7ea8AfF091D12C38b5A7Cf049482298656DE6
-    // xeth: 0xF6992866092c2E85711aedBCDcEDa7ceE6eBbdb1
-    // xpeth: 0x4034e0afC49f6ed8bE2E144A5240DaA993C87F88
-    // xusdt: 0x927e7d1deaC7C2c9bCB74Df28e62eA8e7d3dDF18
-    // xpusd: 0xB9a8cD49ba5BA661c490cFeADAC50A76b0c37367
-    // xusdc: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
+
+    // cofi: 0x6e2C8D93a67C4A6bf0Be14ee48f2b8cFE708bca7
+    // cn: 0xa1F92f2F51E998ec54d81879f79018F5E7eA2271
+
+    //     ** rinkeby@20210726.1.js **
+    // usdt: 0x2d750210c0b5343a0b79beff8F054C9add7d2411
+    // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
+    // peth: 0x4D4B378eFbeb7eE15Aa498F3383C9949391557e0
+    // pusd: 0x740ed84037E5d2F650b585759623EBC4de849021
+    // usdc: 0xB64825a6bA80d65886b5123f5170ddffc935D9DE
+    // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
+    // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
+    // cnode: 0xa1F92f2F51E998ec54d81879f79018F5E7eA2271
+    // cofi: 0x6e2C8D93a67C4A6bf0Be14ee48f2b8cFE708bca7
+    // cofixGovernance: 0x50e9787E7111f09d09B6E0A2Fd9d2Bf30b1edd99
+    // cofixDAO: 0x2906c41Bfa96e54b407525f5E783989742659A4f
+    // cofixRouter: 0xB70BF1e054E9a2DF667BfBf198aC7f0F69375728
+    // cofixVaultForStaking: 0x3FD3375D5eDB05E1A117D9A61b9f1C6B436c7eCD
+    // cofixController: 0x7A44d6dAAE4bafc8908f7913b275f88a63D833f8
+    // usdtPair: 0x5A51c246232e4212948554b8161f44e4b735AcF7
+
+    //     ** rinkeby@20210726.1.js **
+    // usdt: 0x2d750210c0b5343a0b79beff8F054C9add7d2411
+    // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
+    // peth: 0x4D4B378eFbeb7eE15Aa498F3383C9949391557e0
+    // pusd: 0x740ed84037E5d2F650b585759623EBC4de849021
+    // usdc: 0xB64825a6bA80d65886b5123f5170ddffc935D9DE
+    // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
+    // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
+    // cnode: 0xa1F92f2F51E998ec54d81879f79018F5E7eA2271
+    // cofi: 0x6e2C8D93a67C4A6bf0Be14ee48f2b8cFE708bca7
+    // cofixGovernance: 0x50e9787E7111f09d09B6E0A2Fd9d2Bf30b1edd99
+    // cofixDAO: 0x2906c41Bfa96e54b407525f5E783989742659A4f
+    // cofixRouter: 0xB70BF1e054E9a2DF667BfBf198aC7f0F69375728
+    // cofixVaultForStaking: 0x3FD3375D5eDB05E1A117D9A61b9f1C6B436c7eCD
+    // cofixController: 0x7A44d6dAAE4bafc8908f7913b275f88a63D833f8
+    // usdtPair: 0x5A51c246232e4212948554b8161f44e4b735AcF7
+    // hbtcPair: 0xf643511AcfdE4577A2e05aD7c44d14ca0F3E8d8c
+    // nestPair: 0x48a3504d2173495843e6A71719b29c2Ba0342f00
+    // cofiPair: 0x77d954ED22A55A870bB9C07963A0cC37C76C47F8
+    // ethAnchor: 0x2d605e6365568304C21146783E4B59619EE406C4
+    // usdAnchor: 0x8A86207F5bd49265C4F0421102bc26DC91157b0d
+    // xeth: 0x84358F78Bed6a560F8F4edE23161039BE34cF9aC
+    // xpeth: 0x73b196C7659Ab400b3A2bC9fAa3f56AcE0D9b672
+    // xusdt: 0xBd7ee64e719e519B4607C581Bf181d2C34E32992
+    // xpusd: 0xbcf93EEbcEc302926110E207974C37B9E878d701
+    // xusdc: 0x818C8B17929a58F9e2093517eD4D594023EbA0c8
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
-    const usdt = await TestERC20.attach('0x20125a7256EFafd0d4Eec24048E08C5045BC5900');
+    const usdt = await TestERC20.attach('0x2d750210c0b5343a0b79beff8F054C9add7d2411');
     console.log('usdt: ' + usdt.address);
 
     //const hbtc = await TestERC20.deploy('HBTC', 'HBTC', 18);
@@ -59,15 +87,15 @@ exports.deploy = async function () {
     console.log('hbtc: ' + hbtc.address);
 
     //let peth = await TestERC20.deploy('PETH', 'PETH', 18);
-    const peth = await TestERC20.attach('0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588');
+    const peth = await TestERC20.attach('0x4D4B378eFbeb7eE15Aa498F3383C9949391557e0');
     console.log('peth: ' + peth.address);
 
     //let pusd = await TestERC20.deploy('PUSD', 'PUSD', 18);
-    const pusd = await TestERC20.attach('0x01A8088947B1222a5dC5a13C45b845E0361EEFF7');
+    const pusd = await TestERC20.attach('0x740ed84037E5d2F650b585759623EBC4de849021');
     console.log('pusd: ' + pusd.address);
 
     //let usdc = await TestERC20.deploy('USDC', 'USDC', 6);
-    const usdc = await TestERC20.attach('0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92');
+    const usdc = await TestERC20.attach('0xB64825a6bA80d65886b5123f5170ddffc935D9DE');
     console.log('usdc: ' + usdc.address);
 
     //const nest = await TestERC20.deploy('NEST', 'NEST', 18);
@@ -79,71 +107,71 @@ exports.deploy = async function () {
     console.log('nestPriceFacade: ' + nestPriceFacade.address);
     
     //const cnode = await TestERC20.deploy('CNode', 'CNode', 0);
-    const cnode = await TestERC20.attach('0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64');
+    const cnode = await TestERC20.attach('0xa1F92f2F51E998ec54d81879f79018F5E7eA2271');
     console.log('cnode: ' + cnode.address);
 
     //const cofi = await CoFiToken.deploy();
-    const cofi = await CoFiToken.attach('0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695');
+    const cofi = await CoFiToken.attach('0x6e2C8D93a67C4A6bf0Be14ee48f2b8cFE708bca7');
     console.log('cofi: ' + cofi.address);
 
     // 2. 部署结构合约
     //const cofixGovernance = await upgrades.deployProxy(CoFiXGovernance, ['0x0000000000000000000000000000000000000000'], { initializer: 'initialize' });
-    const cofixGovernance = await CoFiXGovernance.attach('0x6843dA9a5DB73f68dDC97079fEeaaC6ca474EcbF');
+    const cofixGovernance = await CoFiXGovernance.attach('0x50e9787E7111f09d09B6E0A2Fd9d2Bf30b1edd99');
     console.log('cofixGovernance: ' + cofixGovernance.address);
     
     //const cofixDAO = await upgrades.deployProxy(CoFiXDAO, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixDAO = await CoFiXDAO.attach('0x1F4B92d91D803c6f90A36A01168721d048E2b0d6');
+    const cofixDAO = await CoFiXDAO.attach('0x2906c41Bfa96e54b407525f5E783989742659A4f');
     console.log('cofixDAO: ' + cofixDAO.address);
     
     //const cofixRouter = await upgrades.deployProxy(CoFiXRouter, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixRouter = await CoFiXRouter.attach('0xD2A6D4744027aBCE6781955674ffc04DcdEA7570');
+    const cofixRouter = await CoFiXRouter.attach('0xB70BF1e054E9a2DF667BfBf198aC7f0F69375728');
     console.log('cofixRouter: ' + cofixRouter.address);
         
     //const cofixVaultForStaking = await upgrades.deployProxy(CoFiXVaultForStaking, [cofixGovernance.address], { initializer: 'initialize' });
-    const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0xf952Cb518BD7F72F600c6aEA0A8CcFBeabe7c9C0');
+    const cofixVaultForStaking = await CoFiXVaultForStaking.attach('0x3FD3375D5eDB05E1A117D9A61b9f1C6B436c7eCD');
     console.log('cofixVaultForStaking: ' + cofixVaultForStaking.address);
     
     //const cofixController = await CoFiXController.deploy(nestPriceFacade.address);
-    const cofixController = await CoFiXController.attach('0xC18B1feb7F41521cDAaa4ad5E0e5a8c54D0FF4a5');
+    const cofixController = await CoFiXController.attach('0x7A44d6dAAE4bafc8908f7913b275f88a63D833f8');
     console.log('cofixController: ' + cofixController.address);
 
     // 3. 部署资金池合约
     //const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt(1000000000), BigInt(2)], { initializer: 'init' });
-    const usdtPair = await CoFiXPair.attach('0x5930c58d71b83bc4586D13f5767aa921ca8B4143');
+    const usdtPair = await CoFiXPair.attach('0x5A51c246232e4212948554b8161f44e4b735AcF7');
     console.log('usdtPair: ' + usdtPair.address);
 
     //const hbtcPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-2', 'XToken-2', hbtc.address, BigInt(20), BigInt(1)], { initializer: 'init' });
-    const hbtcPair = await CoFiXPair.attach('0xF91809d869082DaEc8ed4fa36cB9423C2132726B');
+    const hbtcPair = await CoFiXPair.attach('0xf643511AcfdE4577A2e05aD7c44d14ca0F3E8d8c');
     console.log('hbtcPair: ' + hbtcPair.address);
 
     //const nestPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-3', 'XToken-3', nest.address, BigInt(1), BigInt(100000)], { initializer: 'init' });
-    const nestPair = await CoFiXPair.attach('0x9eD5c27a4527927a4eF8cAa36547CAb502631A69');
+    const nestPair = await CoFiXPair.attach('0x48a3504d2173495843e6A71719b29c2Ba0342f00');
     console.log('nestPair: ' + nestPair.address);
 
     //const cofiPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-4', 'XToken-4', cofi.address, BigInt(1), BigInt(2000)], { initializer: 'init' });
-    const cofiPair = await CoFiXPair.attach('0xF3Ef9e8Cbdd0424E0B152709358749155697C2d6');
+    const cofiPair = await CoFiXPair.attach('0x77d954ED22A55A870bB9C07963A0cC37C76C47F8');
     console.log('cofiPair: ' + cofiPair.address);
 
     // 部署ETH锚定池
     // let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
-    //     0, 
+    //     1, 
     //     [eth.address, peth.address],
     //     ['1000000000000000000', '1000000000000000000']
     // ], { initializer: 'init' });
-    const ethAnchor = await CoFiXAnchorPool.attach('0x6Bba09C78b7CB6f559341BfFacCF19f5FD8AdAE6');
+    const ethAnchor = await CoFiXAnchorPool.attach('0x2d605e6365568304C21146783E4B59619EE406C4');
     console.log('ethAnchor: ' + ethAnchor.address);
 
     // 部署USD锚定池
     // let usdAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
-    //     1,
+    //     2,
     //     [usdt.address, pusd.address, usdc.address],
     //     [1000000, '1000000000000000000', '1000000000000000000']
     // ], { initializer: 'init' });
-    const usdAnchor = await CoFiXAnchorPool.attach('0x4Ac7ea8AfF091D12C38b5A7Cf049482298656DE6');
+    const usdAnchor = await CoFiXAnchorPool.attach('0x8A86207F5bd49265C4F0421102bc26DC91157b0d');
     console.log('usdAnchor: ' + usdAnchor.address);
-
+    
     let xeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(eth.address));
     console.log('xeth: ' + xeth.address);
     let xpeth = await CoFiXAnchorToken.attach(await ethAnchor.getXToken(peth.address));
@@ -155,128 +183,124 @@ exports.deploy = async function () {
     let xusdc = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdc.address));
     console.log('xusdc: ' + xusdc.address);
 
-    if (false) {
-        // 4. 更新合约
-        console.log('1. cofixGovernance.setBuiltinAddress');
-        await cofixGovernance.setBuiltinAddress(
-            cofi.address,
-            cnode.address,
-            cofixDAO.address,
-            cofixRouter.address,
-            cofixController.address,
-            cofixVaultForStaking.address
-        );
-        console.log('2. cofixDAO.update');
-        await cofixDAO.update(cofixGovernance.address);
-        console.log('3. cofixRouter.update');
-        await cofixRouter.update(cofixGovernance.address);
-        console.log('4. cofixVaultForStaking.update');
-        await cofixVaultForStaking.update(cofixGovernance.address);
-        console.log('5. usdtPair.update');
-        await usdtPair.update(cofixGovernance.address);
-        console.log('6. hbtcPair.update');
-        await hbtcPair.update(cofixGovernance.address);
-        console.log('7. nestPair.update');
-        await nestPair.update(cofixGovernance.address);
-        console.log('8. cofiPair.update');
-        await cofiPair.update(cofixGovernance.address);
-        console.log('9. ethAnchor.update(cofixGovernance.address)');
-        await ethAnchor.update(cofixGovernance.address);
-        console.log('10. usdAnchor.update(cofixGovernance.address)');
-        await usdAnchor.update(cofixGovernance.address);
+    // // 4. 更新合约
+    // console.log('1. cofixGovernance.setBuiltinAddress');
+    // await cofixGovernance.setBuiltinAddress(
+    //     cofi.address,
+    //     cnode.address,
+    //     cofixDAO.address,
+    //     cofixRouter.address,
+    //     cofixController.address,
+    //     cofixVaultForStaking.address
+    // );
+    // console.log('2. cofixDAO.update');
+    // await cofixDAO.update(cofixGovernance.address);
+    // console.log('3. cofixRouter.update');
+    // await cofixRouter.update(cofixGovernance.address);
+    // console.log('4. cofixVaultForStaking.update');
+    // await cofixVaultForStaking.update(cofixGovernance.address);
+    // console.log('5. usdtPair.update');
+    // await usdtPair.update(cofixGovernance.address);
+    // console.log('6. hbtcPair.update');
+    // await hbtcPair.update(cofixGovernance.address);
+    // console.log('7. nestPair.update');
+    // await nestPair.update(cofixGovernance.address);
+    // console.log('8. cofiPair.update');
+    // await cofiPair.update(cofixGovernance.address);
+    // console.log('9. ethAnchor.update(cofixGovernance.address)');
+    // await ethAnchor.update(cofixGovernance.address);
+    // console.log('10. usdAnchor.update(cofixGovernance.address)');
+    // await usdAnchor.update(cofixGovernance.address);
 
-        // 5. 设置配置
-        console.log('11. setConfig');
-        await cofixDAO.setConfig({
-            // Redeem activate threshold, when the circulation of token exceeds this threshold, 
-            // 回购状态, 1表示启动
-            status: 1,
+    // // 5. 设置配置
+    // console.log('11. setConfig');
+    // await cofixDAO.setConfig({
+    //     // Redeem activate threshold, when the circulation of token exceeds this threshold, 
+    //     // 回购状态, 1表示启动
+    //     status: 1,
 
-            // The number of CoFi redeem per block. 100
-            cofiPerBlock: 500,
+    //     // The number of CoFi redeem per block. 100
+    //     cofiPerBlock: 500,
 
-            // The maximum number of CoFi in a single redeem. 30000
-            cofiLimit: 150000,
+    //     // The maximum number of CoFi in a single redeem. 30000
+    //     cofiLimit: 150000,
 
-            // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
-            priceDeviationLimit: 1000
-        });
+    //     // Price deviation limit, beyond this upper limit stop redeem (10000 based). 1000
+    //     priceDeviationLimit: 1000
+    // });
 
-        console.log('12. cofixVaultForStaking.setConfig');
-        await cofixVaultForStaking.setConfig({
-            cofiUnit: '10000000000000000'
-        });
+    // // console.log('12. cofixVaultForStaking.setConfig');
+    // // await cofixVaultForStaking.setConfig('10000000000000000');
 
-        // 6. 初始化资金池参数
-        console.log('13. usdtPair.setConfig()');
-        await usdtPair.setConfig(20, 1000, 1e8);
-        console.log('14. hbtcPair.setConfig()');
-        await hbtcPair.setConfig(20, 1000, 1e8);
-        console.log('15. nestPair.setConfig()');
-        await nestPair.setConfig(20, 50, 1e8);
-        console.log('16. cofiPair.setConfig()');
-        await cofiPair.setConfig(20, 50, 1e8);
-        console.log('17. ethAnchor.setConfig()');
-        await ethAnchor.setConfig(20, 0, 1e8);
-        console.log('18. usdAnchor.setConfig()');
-        await usdAnchor.setConfig(20, 0, 50000);
+    // // 6. 初始化资金池参数
+    // console.log('13. usdtPair.setConfig()');
+    // await usdtPair.setConfig(20, 1000, 1e8);
+    // console.log('14. hbtcPair.setConfig()');
+    // await hbtcPair.setConfig(20, 1000, 1e8);
+    // console.log('15. nestPair.setConfig()');
+    // await nestPair.setConfig(20, 50, 1e8);
+    // console.log('16. cofiPair.setConfig()');
+    // await cofiPair.setConfig(20, 50, 1e8);
+    // console.log('17. ethAnchor.setConfig()');
+    // await ethAnchor.setConfig(20, 0, 1e8);
+    // console.log('18. usdAnchor.setConfig()');
+    // await usdAnchor.setConfig(20, 0, 50000);
 
-        // 7. 初始化锁仓挖矿参数
-        console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
-        await cofixVaultForStaking.batchSetPoolWeight([
-            cnode.address,
-            usdtPair.address,
-            hbtcPair.address,
-            nestPair.address,
-            cofiPair.address,
-            xeth.address,
-            xpeth.address,
-            xusdt.address,
-            xpusd.address,
-            xusdc.address
-        ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
+    // // 7. 初始化锁仓挖矿参数
+    // console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
+    // await cofixVaultForStaking.batchSetPoolWeight([
+    //     cnode.address,
+    //     usdtPair.address,
+    //     hbtcPair.address,
+    //     nestPair.address,
+    //     cofiPair.address,
+    //     xeth.address,
+    //     xpeth.address,
+    //     xusdt.address,
+    //     xpusd.address,
+    //     xusdc.address
+    // ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
 
-        // 8. 设置资金兑换比例
-        console.log('20. cofixDAO.setTokenExchange(usdt.address, usdt.address)');
-        await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
-        console.log('21. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
-        await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
-        console.log('22. cofixDAO.setTokenExchange(usdc.address, usdt.address)');
-        await cofixDAO.setTokenExchange(usdc.address, usdt.address, BigInt(1000000));
-        console.log('23. cofixDAO.setTokenExchange(eth.address, eth.address)');
-        await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
-        console.log('24. cofixDAO.setTokenExchange(peth.address, eth.address)');
-        await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
+    // // 8. 设置资金兑换比例
+    // console.log('20. cofixDAO.setTokenExchange(usdt.address, usdt.address)');
+    // await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
+    // console.log('21. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
+    // await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
+    // console.log('22. cofixDAO.setTokenExchange(usdc.address, usdt.address)');
+    // await cofixDAO.setTokenExchange(usdc.address, usdt.address, BigInt(1000000));
+    // console.log('23. cofixDAO.setTokenExchange(eth.address, eth.address)');
+    // await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
+    // console.log('24. cofixDAO.setTokenExchange(peth.address, eth.address)');
+    // await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
 
-        // 9. 开通挖矿权限
-        console.log('25. cofi.addMinter(cofixRouter.address)');
-        await cofi.addMinter(cofixRouter.address);
-        console.log('26. cofi.addMinter(cofixVaultForStaking.address)');
-        await cofi.addMinter(cofixVaultForStaking.address);
+    // // // 9. 开通挖矿权限
+    // // console.log('25. cofi.addMinter(cofixRouter.address)');
+    // // await cofi.addMinter(cofixRouter.address);
+    // // console.log('26. cofi.addMinter(cofixVaultForStaking.address)');
+    // // await cofi.addMinter(cofixVaultForStaking.address);
 
-        // 10. 注册交易对
-        // 注册usdt和nest交易对
-        console.log('27. registerPair(eth.address, usdt.address, usdtPair.address)');
-        await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
-        console.log('28. registerPair(eth.address, hbtc.address, hbtcPair.address)');
-        await cofixRouter.registerPair(eth.address, hbtc.address, hbtcPair.address);
-        console.log('29. registerPair(eth.address, nest.address, nestPair.address)');
-        await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
-        console.log('30. registerPair(eth.address, cofi.address, cofiPair.address)');
-        await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
+    // // 10. 注册交易对
+    // // 注册usdt和nest交易对
+    // console.log('27. registerPair(eth.address, usdt.address, usdtPair.address)');
+    // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
+    // console.log('28. registerPair(eth.address, hbtc.address, hbtcPair.address)');
+    // await cofixRouter.registerPair(eth.address, hbtc.address, hbtcPair.address);
+    // console.log('29. registerPair(eth.address, nest.address, nestPair.address)');
+    // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
+    // console.log('30. registerPair(eth.address, cofi.address, cofiPair.address)');
+    // await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
 
-        // 注册ETH锚定池
-        console.log('31. registerPair(eth.address, peth.address, ethAnchor.address)');
-        await cofixRouter.registerPair(eth.address, peth.address, ethAnchor.address);
-        // 注册USD锚定池
-        console.log('32. registerPair(usdt.address, pusd.address, usdAnchor.address)');
-        await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
-        console.log('33. registerPair(usdt.address, usdc.address, usdAnchor.address)');
-        await cofixRouter.registerPair(usdt.address, usdc.address, usdAnchor.address);
-        console.log('34. registerPair(pusd.address, usdc.address, usdAnchor.address)');
-        await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
-    } else {
-    }
+    // // 注册ETH锚定池
+    // console.log('31. registerPair(eth.address, peth.address, ethAnchor.address)');
+    // await cofixRouter.registerPair(eth.address, peth.address, ethAnchor.address);
+    // // 注册USD锚定池
+    // console.log('32. registerPair(usdt.address, pusd.address, usdAnchor.address)');
+    // await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
+    // console.log('33. registerPair(usdt.address, usdc.address, usdAnchor.address)');
+    // await cofixRouter.registerPair(usdt.address, usdc.address, usdAnchor.address);
+    // console.log('34. registerPair(pusd.address, usdc.address, usdAnchor.address)');
+    // await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
+
     if (false) {
         // 11. 注册路由路径
         console.log('35. registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address])');

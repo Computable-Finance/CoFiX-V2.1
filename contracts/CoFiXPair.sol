@@ -14,8 +14,6 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
-import "hardhat/console.sol";
-
 /// @dev Binary pool: eth/token
 contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
@@ -28,23 +26,10 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
-    // // Scale of impact cost base
-    // uint constant VOL_BASE = 50 ether;
-    uint constant VOL_UNIT = 0.1 ether;
-
-    // // α=0
-    // uint constant C_BUYIN_ALPHA = 0; 
-
-    // β=2e-05*1e18
-    //uint constant C_BUYIN_BETA = 20000000000000; 
-    uint constant C_BUYIN_BETA = 0.001 ether; 
-
     // Target token address
     address _tokenAddress; 
-
     // Initial asset ratio - eth
     uint48 _initToken0Amount;
-    
     // Initial asset ratio - token
     uint48 _initToken1Amount;
 
@@ -56,32 +41,27 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     // Address of CoFiXDAO
     address _cofixDAO;
+    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    uint96 _nt;
 
     // Address of CoFiXRouter
     address _cofixRouter;
-
+    // Lock flag
+    bool _locked;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
-    
-    // Impact cost threshold
-    //uint16 _gamma;
-    uint16 _impactCostVOL;
-
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    uint56 _nt;
-
-    // Lock flag
-    uint8 _locked;
+    // Total trade fee
+    uint72 _totalFee;
 
     // Address of CoFiXController
     address _cofixController;
+    // Impact cost threshold
+    uint96 _impactCostVOL;
 
     // Total mined
     uint112 _Y;
-
     // Adjusting to a balanced trade size
     uint112 _D;
-
     // Last update block
     uint32 _lastblock;
 
@@ -108,7 +88,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         super.initialize(governance);
         name = name_;
         symbol = symbol_;
-        //_locked = 0;
         _tokenAddress = tokenAddress;
         _initToken0Amount = initToken0Amount;
         _initToken1Amount = initToken1Amount;
@@ -116,31 +95,30 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     modifier check() {
         require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
-        require(_locked == 0, "CoFiXPair: LOCKED");
-        _locked = 1;
+        require(!_locked, "CoFiXPair: LOCKED");
+        _locked = true;
         _;
-        _locked = 0;
-        //_update();
+        _locked = false;
     }
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param impactCostVOL Impact cost threshold
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function setConfig(uint16 theta, uint16 impactCostVOL, uint56 nt) external override onlyGovernance {
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Impact cost threshold
         _impactCostVOL = impactCostVOL;
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
+        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
         _nt = nt;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return impactCostVOL Impact cost threshold
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e9 based
-    function getConfig() external override view returns (uint16 theta, uint16 impactCostVOL, uint56 nt) {
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function getConfig() external override view returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
         return (_theta, _impactCostVOL, _nt);
     }
 
@@ -191,27 +169,14 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 1. Check token address
         require(token == _tokenAddress, "CoFiXPair: invalid token address");
         // Make sure the proportions are correct
-        require(
-            amountETH * uint(_initToken1Amount) == amountToken * uint(_initToken0Amount), 
-            "CoFiXPair: invalid asset ratio"
-        );
+        uint initToken0Amount = uint(_initToken0Amount);
+        uint initToken1Amount = uint(_initToken1Amount);
+        require(amountETH * initToken1Amount == amountToken * initToken0Amount, "CoFiXPair: invalid asset ratio");
 
         // 2. Calculate net worth and share
         uint total = totalSupply;
         if (total > 0) {
             // 3. Query oracle
-            // (
-            //     uint ethAmount, 
-            //     uint tokenAmount, 
-            //     //uint blockNumber, 
-            // ) = ICoFiXController(_cofixController).queryPrice { 
-            //     // Any amount over the amountETH will be charged as the seer call fee
-            //     value: msg.value - amountETH
-            // } (
-            //     token,
-            //     payback
-            // );
-
             (
                 ,//uint blockNumber, 
                 uint ethAmount,
@@ -226,10 +191,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 payback
             );
 
-            uint balance0 = address(this).balance;
+            uint balance0 = ethBalance();
             uint balance1 = IERC20(token).balanceOf(address(this));
 
-            // TODO: Pt此处没有引入K值，后续需要引入
             // There are no cost shocks to market making
             // When the circulation is not zero, the normal issue share
             liquidity = amountETH * total / _calcTotalValue(
@@ -246,15 +210,14 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
                 ethAmount, 
                 // Oracle price - token amount
                 tokenAmount,
-                uint(_initToken0Amount),
-                uint(_initToken1Amount)
+                initToken0Amount,
+                initToken1Amount
             );
 
             // 6. Update mining state
             _updateMiningState(balance0, balance1, ethAmount, tokenAmount);
         } else {
             payable(payback).transfer(msg.value - amountETH);
-            //liquidity = _calcLiquidity(amountETH, navps) - MINIMUM_LIQUIDITY;
             liquidity = amountETH - MINIMUM_LIQUIDITY;
             // permanently lock the first MINIMUM_LIQUIDITY tokens
             _mint(address(0), MINIMUM_LIQUIDITY); 
@@ -286,17 +249,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // 1. Check token address
         require(token == _tokenAddress, "CoFiXPair: invalid token address");
         // 2. Query oracle
-        // (
-        //     uint ethAmount, 
-        //     uint tokenAmount, 
-        //     //uint blockNumber, 
-        // ) = ICoFiXController(_cofixController).queryPrice { 
-        //     value: msg.value 
-        // } (
-        //     token,
-        //     payback
-        // );
-
         (
             ,//uint blockNumber, 
             uint ethAmount,
@@ -312,14 +264,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // 3. Calculate the net value and calculate the equal proportion fund according to the net value
-        uint balance0 = address(this).balance;
+        uint balance0 = ethBalance();
         uint balance1 = IERC20(token).balanceOf(address(this));
         uint navps = 1 ether;
         uint total = totalSupply;
         uint initToken0Amount = uint(_initToken0Amount);
         uint initToken1Amount = uint(_initToken1Amount);
         if (total > 0) {
-            // TODO: Pt此处没有引入K值，后续需要引入
             navps = _calcTotalValue(
                 balance0, 
                 balance1, 
@@ -330,8 +281,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             ) * 1 ether / total;
         }
 
-        // TODO: 赎回时需要计算冲击成本
-        // TODO: 确定赎回的时候是否有手续费逻辑
         amountETHOut = navps * liquidity / 1 ether;
         amountTokenOut = amountETHOut * initToken1Amount / initToken0Amount;
 
@@ -420,7 +369,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             payback
         );
 
-        // TODO: 公式需要确认
         // 2. Calculate the trade result
         uint fee = amountIn * uint(_theta) / 10000;
         amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
@@ -428,12 +376,11 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         );
 
         // 3. Transfer transaction fee
-        _collect(fee);
+        fee = _collect(fee);
 
-        // TODO: 如果不检查重入，可能存在通过重入来挖矿的行为
         // 4. Mining logic
         mined = _cofiMint(_calcD(
-            address(this).balance, 
+            address(this).balance - fee, 
             IERC20(token).balanceOf(address(this)) - amountTokenOut, 
             ethAmount, 
             tokenAmount
@@ -484,11 +431,11 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         amountETHOut = amountETHOut - fee;
 
         // 3. Transfer transaction fee
-        _collect(fee);
+        fee = _collect(fee);
 
         // 4. Mining logic
         mined = _cofiMint(_calcD(
-            address(this).balance - amountETHOut, 
+            address(this).balance - fee - amountETHOut, 
             IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
@@ -503,7 +450,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Update mining state
     function _updateMiningState(uint balance0, uint balance1, uint ethAmount, uint tokenAmount) private {
         uint D1 = _calcD(
-            balance0, //address(this).balance, 
+            balance0, //ethBalance(), 
             balance1, //IERC20(token).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
@@ -511,7 +458,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
+        uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1 ether;
 
         _Y = uint112(Y);
         _D = uint112(D1);
@@ -549,7 +496,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(_D);
         // When d0 < D1, the y value also needs to be updated
-        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 1e9;
+        uint Y = uint(_Y) + D0 * nt * (block.number - uint(_lastblock)) / 1 ether;
         if (D0 > D1) {
             mined = Y * (D0 - D1) / D0;
             Y = Y - mined;
@@ -578,45 +525,36 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint D0 = uint(_D);
         if (D0 > D1) {
             // When d0 < D1, the y value also needs to be updated
-            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1e9;
+            uint Y = uint(_Y) + D0 * uint(_nt) * (block.number - uint(_lastblock)) / 1 ether;
             mined = Y * (D0 - D1) / D0;
         }
     }
 
     // Deposit transaction fee
-    function _collect(uint fee) private {
-        ICoFiXDAO(_cofixDAO).addETHReward { value: fee } (address(this));
+    function _collect(uint fee) private returns (uint total) {
+        total = uint(_totalFee) + fee;
+        if (total >= 1 ether) {
+            ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
+            total = 0;
+        } 
+        _totalFee = uint72(total);
     }
 
-    // Calculate net worth
-    // navps = calcNAVPerShare(reserve0, reserve1, _op.ethAmount, _op.tokenAmount);
-    // calc Net Asset Value Per Share (no K)
-    // use it in this contract, for optimized gas usage
+    /// @dev Settle trade fee to DAO
+    function settle() external override {
+        ICoFiXDAO(_cofixDAO).addETHReward { value: uint(_totalFee) } (address(this));
+        _totalFee = uint72(0);
+    }
 
-    /// @dev Calculate net worth
-    /// @param balance0 Balance of eth
-    /// @param balance1 Balance of token
-    /// @param ethAmount Oracle price - eth amount
-    /// @param tokenAmount Oracle price - token amount
-    /// @return navps Net worth
-    function calcNAVPerShare(
-        uint balance0, 
-        uint balance1, 
-        uint ethAmount, 
-        uint tokenAmount
-    ) external view override returns (uint navps) {
-        uint total = totalSupply;
-        if (total > 0) {
-            return _calcTotalValue(
-                balance0, 
-                balance1, 
-                ethAmount, 
-                tokenAmount,
-                _initToken0Amount,
-                _initToken1Amount
-            ) * 1 ether / totalSupply;
-        }
-        return 1 ether;
+    /// @dev Get eth balance of this pool
+    /// @return eth balance of this pool
+    function ethBalance() public view override returns (uint) {
+        return address(this).balance - uint(_totalFee);
+    }
+
+    /// @dev Get total trade fee which not settled
+    function totalFee() external view override returns (uint) {
+        return uint(_totalFee);
     }
 
     /// @dev Get net worth
@@ -630,13 +568,13 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint total = totalSupply;
         if (total > 0) {
             return _calcTotalValue(
-                address(this).balance, 
+                ethBalance(), 
                 IERC20(_tokenAddress).balanceOf(address(this)), 
                 ethAmount, 
                 tokenAmount,
                 _initToken0Amount,
                 _initToken1Amount
-            ) * 1 ether / totalSupply;
+            ) * 1 ether / total;
         }
         return 1 ether;
     }
@@ -650,14 +588,6 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint initToken0Amount,
         uint initToken1Amount
     ) private pure returns (uint totalValue) {
-        // k = Ut / Et
-        // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
-        // NV = (Et + Ut / Pt) / ( (1 + k0 / Pt) * Ft )
-        // NV = (Et + Ut / Pt) / ( (1 + (U0 / Pt * E0)) * Ft )
-        // NV = (Et * E0 + Ut * E0  / Pt) / ( (E0 + U0 / Pt) * Ft )
-        //navps = (ethBalance * _initToken0Amount * tokenAmount + tokenBalance * _initToken0Amount * ethAmount) * 1 ether
-        //        / totalSupply / (_initToken0Amount * tokenAmount + _initToken1Amount * ethAmount);
-
         // NV=(E_t+U_t/P_t)/((1+k_0/P_t ))
         totalValue = (
             balance0 * tokenAmount 
@@ -669,32 +599,26 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     }
 
     // impact cost
-    // - C = 0, if VOL < 500 / γ
-    // - C = (α + β * VOL) * γ, if VOL >= 500 / γ
+    // - C = 0, if VOL < impactCostVOL
+    // - C = β * VOL, if VOL >= impactCostVOL
 
     // α=0，β=2e-06
     function _impactCostForBuyInETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
-        // //uint gamma = uint(_gamma); //CGammaMap[token];
-        // if (vol * gamma < VOL_BASE) {
-        //     return 0;
-        // }
-        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
-        if (vol >= impactCostVOL * VOL_UNIT) {
-            impactCost = vol * C_BUYIN_BETA / 1 ether;
+        // β=1e-03*1e18
+        // uint constant C_BUYIN_BETA = 0.001 ether; 
+        if (vol >= impactCostVOL) {
+            //impactCost = vol * C_BUYIN_BETA / 1 ether;
+            impactCost = vol / 1000;
         }
     }
 
     // α=0，β=2e-06
     function _impactCostForSellOutETH(uint vol, uint impactCostVOL) private pure returns (uint impactCost) {
-        // //uint gamma = uint(_gamma); //CGammaMap[token];
-        // if (vol * gamma < VOL_BASE) {
-        //     return 0;
-        // }
-        // // return C_BUYIN_ALPHA.add(C_BUYIN_BETA.mul(vol).div(1e18)).mul(1e8).div(1e18);
-        // return (C_BUYIN_ALPHA + C_BUYIN_BETA * vol / 1 ether) * gamma; // combine mul div
-        if (vol >= impactCostVOL * VOL_UNIT) {
-            impactCost = vol * C_BUYIN_BETA / 1 ether;
+        // β=1e-03*1e18
+        // uint constant C_BUYIN_BETA = 0.001 ether; 
+        if (vol >= impactCostVOL) {
+            //impactCost = vol * C_BUYIN_BETA / 1 ether;
+            impactCost = vol / 1000;
         }
     }
 

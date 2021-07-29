@@ -85,15 +85,16 @@ describe('CoFiXRouter', function() {
         }
 
         const getAccountInfo = async function(account) {
+            let acc = account;
             account = account.address;
             return {
-                eth: toDecimal(await ethers.provider.getBalance(account)),
+                eth: toDecimal(acc.ethBalance ? await acc.ethBalance() : await ethers.provider.getBalance(account)),
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 //hbtc: toDecimal(await hbtc.balanceOf(account)),
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                usdc: toDecimal(await usdc.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account), 6),
                 peth: toDecimal(await peth.balanceOf(account)),
                 usdtPair: await getXTokenInfo(account, usdtPair),
                 hbtcPair: await getXTokenInfo(account, hbtcPair),
@@ -107,14 +108,6 @@ describe('CoFiXRouter', function() {
         }
         const getStatus = async function() {
             let pairStatus = await getAccountInfo(usdtPair);
-            //let p = await cofixController.latestPriceView(usdt.address);
-            // let navps = toDecimal(await usdtPair.calcNAVPerShare(
-            //     await ethers.provider.getBalance(usdtPair.address),
-            //     //toBigInt(pairStatus.eth), 
-            //     toBigInt(pairStatus.usdt, 6), 
-            //     toBigInt(1), 
-            //     p.price
-            // ));
             return {
                 height: await ethers.provider.getBlockNumber(),
                 //navps: navps,

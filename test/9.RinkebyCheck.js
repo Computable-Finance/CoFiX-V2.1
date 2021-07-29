@@ -90,20 +90,20 @@ describe('CoFiXRouter', function() {
             return {
                 eth: toDecimal(acc.ethBalance ? await acc.ethBalance() : await ethers.provider.getBalance(account)),
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
-                hbtc: toDecimal(await hbtc.balanceOf(account)),
-                nest: toDecimal(await nest.balanceOf(account)),
-                cofi: toDecimal(await cofi.balanceOf(account)),
-                pusd: toDecimal(await pusd.balanceOf(account)),
-                usdc: toDecimal(await usdc.balanceOf(account), 6),
-                peth: toDecimal(await peth.balanceOf(account)),
-                usdtPair: await getXTokenInfo(account, usdtPair),
-                hbtcPair: await getXTokenInfo(account, hbtcPair),
-                nestPair: await getXTokenInfo(account, nestPair),
-                cofiPair: await getXTokenInfo(account, cofiPair),
-                xusdt: await getXTokenInfo(account, xusdt),
-                xpusd: await getXTokenInfo(account, xpusd),
-                xusdc : await getXTokenInfo(account, xusdc),
-                xpeth: await getXTokenInfo(account, peth),
+                //hbtc: toDecimal(await hbtc.balanceOf(account)),
+                // nest: toDecimal(await nest.balanceOf(account)),
+                // cofi: toDecimal(await cofi.balanceOf(account)),
+                // pusd: toDecimal(await pusd.balanceOf(account)),
+                // usdc: toDecimal(await usdc.balanceOf(account), 6),
+                // peth: toDecimal(await peth.balanceOf(account)),
+                // usdtPair: await getXTokenInfo(account, usdtPair),
+                // hbtcPair: await getXTokenInfo(account, hbtcPair),
+                // nestPair: await getXTokenInfo(account, nestPair),
+                // cofiPair: await getXTokenInfo(account, cofiPair),
+                // xusdt: await getXTokenInfo(account, xusdt),
+                // xpusd: await getXTokenInfo(account, xpusd),
+                // xusdc : await getXTokenInfo(account, xusdc),
+                // xpeth: await getXTokenInfo(account, peth),
             };
         }
         const getStatus = async function() {
@@ -112,28 +112,35 @@ describe('CoFiXRouter', function() {
                 height: await ethers.provider.getBlockNumber(),
                 //navps: navps,
                 usdtPair: pairStatus,
-                hbtcPair: await getAccountInfo(hbtcPair),
-                nestPair: await getAccountInfo(nestPair),
-                cofiPair: await getAccountInfo(cofiPair),
-                ethAnchor: await getAccountInfo(ethAnchor),
-                usdAnchor: await getAccountInfo(usdAnchor),
+                //hbtcPair: await getAccountInfo(hbtcPair),
+                //nestPair: await getAccountInfo(nestPair),
+                //cofiPair: await getAccountInfo(cofiPair),
+                //ethAnchor: await getAccountInfo(ethAnchor),
+                //usdAnchor: await getAccountInfo(usdAnchor),
                 owner: await getAccountInfo(owner),
-                addr1: await getAccountInfo(addr1),
+                //addr1: await getAccountInfo(addr1),
                 //dao: await getAccountInfo(cofixDAO),
                 //addr2: await getAccountInfo(addr2)
             };
         }
 
-        if (true) {
-            console.log('0. 设置价格');
-            await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
-            await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
-        }
-
         let status;
         let p;
 
-        if (true) {
+        // let nestQuery = await ethers.getContractAt('INestQuery', nestPriceFacade.address);
+        // let pi = await nestQuery.lastPriceListAndTriggeredPriceInfo(usdt.address, 2);
+        // console.log({
+        //     h0: pi.prices[0].toString(),
+        //     p0: pi.prices[1].toString(),
+        //     h1: pi.prices[2].toString(),
+        //     p1: pi.prices[3].toString(),
+        //     triggeredPriceBlockNumber: pi.triggeredPriceBlockNumber.toString(),
+        //     triggeredPriceValue: pi.triggeredPriceValue.toString(),
+        //     triggeredAvgPrice: pi.triggeredAvgPrice.toString(),
+        //     triggeredSigmaSQ: pi.triggeredSigmaSQ.toString()
+        // });
+        return;
+        if (false) {
             console.log('1. 初始化资金');
             await cofi.addMinter(owner.address);
             await usdt.transfer(addr1.address, toBigInt(10000000, 6));
@@ -158,7 +165,7 @@ describe('CoFiXRouter', function() {
             console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('2. 做市1eth|usdt');
             await usdt.approve(cofixRouter.address, toBigInt(2000, 6));
             let receipt = await cofixRouter.addLiquidity(
@@ -172,14 +179,14 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('3. 做市1eth|hbtc');
-            await hbtc.approve(cofixRouter.address, toBigInt(0.05));
+            (await hbtc.approve(cofixRouter.address, toBigInt(0.05))).wait();
             let receipt = await cofixRouter.addLiquidity(
                 hbtcPair.address,
                 hbtc.address,
@@ -191,12 +198,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('4. 做市1eth|nest');
             await nest.approve(cofixRouter.address, toBigInt(100000));
             let receipt = await cofixRouter.addLiquidity(
@@ -210,12 +217,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('5. 做市1eth|cofi');
             await cofi.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
@@ -229,12 +236,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('6. 做市1eth');
             let receipt = await cofixRouter.addLiquidity(
                 ethAnchor.address,
@@ -247,12 +254,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('1010000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('7. 做市1peth');
             await peth.approve(cofixRouter.address, toBigInt(1));
             let receipt = await cofixRouter.addLiquidity(
@@ -266,12 +273,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('8. 做市2000usdt');
             await usdt.approve(cofixRouter.address, toBigInt(2000, 6));
             let receipt = await cofixRouter.addLiquidity(
@@ -285,12 +292,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('9. 做市2000pusd');
             await pusd.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
@@ -304,12 +311,12 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
         }
 
-        if (true) {
+        if (false) {
             console.log('10. 做市2000usdc');
             await usdc.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
@@ -323,6 +330,71 @@ describe('CoFiXRouter', function() {
                     value: BigInt('10000000000000000')
                 }
             );
+            await showReceipt(receipt);
+            //status = await getStatus();
+            //console.log(status);
+        }
+
+        if (false) {
+            console.log('11. 路由兑换1000usdt');
+            let path = [
+                usdt.address,
+                '0x0000000000000000000000000000000000000000',
+            ];
+            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                path,
+                toBigInt(10, 6),
+                0,
+                owner.address,
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('80000000000000000')
+                }
+            );
+            await await showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (false) {
+            console.log('12. 路由兑换1000usdt');
+            let path = [
+                usdt.address,
+                '0x0000000000000000000000000000000000000000',
+            ];
+            await usdt.approve(cofixRouter.address, toBigInt(10, 6));
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                path,
+                toBigInt(10, 6),
+                0,
+                owner.address,
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('80000000000000000')
+                }
+            );
+            showReceipt(receipt);
+            status = await getStatus();
+            console.log(status);
+        }
+
+        if (false) {
+            console.log('13. 路由兑换0.004453177502524911eth');
+            let path = [
+                '0x0000000000000000000000000000000000000000',
+                usdt.address,
+            ];
+            let receipt = await cofixRouter.swapExactTokensForTokens(
+                path,
+                BigInt('4453177502524911'),
+                0,
+                owner.address,
+                owner.address,
+                BigInt('1800000000000'), {
+                    value: BigInt('80000000000000000')
+                }
+            );
             showReceipt(receipt);
             status = await getStatus();
             console.log(status);
@@ -330,6 +402,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
             console.log('11. 路由兑换1000usdt');
+            await usdt.approve(cofixRouter.address, toBigInt(1000, 6));
             let path = [
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',
@@ -346,13 +419,13 @@ describe('CoFiXRouter', function() {
                 '0x0000000000000000000000000000000000000000',
                 usdt.address
             ];
-            await usdt.connect(addr1).approve(cofixRouter.address, toBigInt(1000, 6));
-            let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
+            //await usdt.approve(cofixRouter.address, toBigInt(1000, 6));
+            let receipt = await cofixRouter.swapExactTokensForTokens(
                 path,
                 toBigInt(1000, 6),
                 0,
-                addr1.address,
-                addr1.address,
+                owner.address,
+                owner.address,
                 BigInt('1800000000000'), {
                     value: BigInt('80000000000000000')
                 }
@@ -361,33 +434,36 @@ describe('CoFiXRouter', function() {
             status = await getStatus();
             console.log(status);
         }
+        return;
+        // ** rinkeby@20210720 **
+        // usdt: 0x20125a7256EFafd0d4Eec24048E08C5045BC5900
+        // hbtc: 0xaE73d363Cb4aC97734E07e48B01D0a1FF5D1190B
+        // peth: 0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588
+        // pusd: 0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
+        // usdc: 0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92
+        // nest: 0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25
+        // nestPriceFacade: 0x40C3EB032f27fDa7AdcF1B753c75B84e27f26838
+        // cnode: 0xa818c471Ab162a1d7669Ab04b023Ebac38DDCA64
+        // cofi: 0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695
+        // cofixGovernance: 0x6843dA9a5DB73f68dDC97079fEeaaC6ca474EcbF
+        // cofixDAO: 0x1F4B92d91D803c6f90A36A01168721d048E2b0d6
+        // cofixRouter: 0xD2A6D4744027aBCE6781955674ffc04DcdEA7570
+        // cofixVaultForStaking: 0xf952Cb518BD7F72F600c6aEA0A8CcFBeabe7c9C0
+        // cofixController: 0xC18B1feb7F41521cDAaa4ad5E0e5a8c54D0FF4a5
+        // usdtPair: 0x5930c58d71b83bc4586D13f5767aa921ca8B4143
+        // hbtcPair: 0xF91809d869082DaEc8ed4fa36cB9423C2132726B
+        // nestPair: 0x9eD5c27a4527927a4eF8cAa36547CAb502631A69
+        // cofiPair: 0xF3Ef9e8Cbdd0424E0B152709358749155697C2d6
+        // ethAnchor: 0x6Bba09C78b7CB6f559341BfFacCF19f5FD8AdAE6
+        // usdAnchor: 0x4Ac7ea8AfF091D12C38b5A7Cf049482298656DE6
+        // xeth: 0xF6992866092c2E85711aedBCDcEDa7ceE6eBbdb1
+        // xpeth: 0x4034e0afC49f6ed8bE2E144A5240DaA993C87F88
+        // xusdt: 0x927e7d1deaC7C2c9bCB74Df28e62eA8e7d3dDF18
+        // xpusd: 0xB9a8cD49ba5BA661c490cFeADAC50A76b0c37367
+        // xusdc: 0x6683fBE911E71EEd849e2225E8FAe6CF9F8AAC9a
 
-        if (true) {
-            console.log('12. 交易0pusd');
-            await pusd.connect(addr1).transfer(usdAnchor.address, toBigInt(2));
-            await pusd.connect(addr1).approve(cofixRouter.address, toBigInt(0));
-            let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
-                [pusd.address, usdt.address],
-                toBigInt(0),
-                0,
-                addr1.address,
-                addr1.address,
-                BigInt('1800000000000'), {
-                    value: BigInt('0000000000000000')
-                }
-            );
-            showReceipt(receipt);
-            status = await getStatus();
-            console.log(status);
-            await usdAnchor.connect(addr1).skim();
-            status = await getStatus();
-            console.log(status);
-        }
-
-        let ci = await cofixVaultForStaking.getChannelInfo(cnode.address);
-        console.log({
-            totalStaked: ci.totalStaked.toString(),
-            cofiPerBlock: ci.cofiPerBlock.toString()
-        });
+        // usdt->eth->nest->eth->cofi->eth->peth->eth->usdt->usdc->pusd
+        // 0x20125a7256EFafd0d4Eec24048E08C5045BC5900->0x0000000000000000000000000000000000000000->0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25->0x0000000000000000000000000000000000000000->0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695->0x0000000000000000000000000000000000000000->0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588->0x0000000000000000000000000000000000000000->0x20125a7256EFafd0d4Eec24048E08C5045BC5900->0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92->0x01A8088947B1222a5dC5a13C45b845E0361EEFF7
+        // ['0x20125a7256EFafd0d4Eec24048E08C5045BC5900', '0x0000000000000000000000000000000000000000', '0xE313F3f49B647fBEDDC5F2389Edb5c93CBf4EE25', '0x0000000000000000000000000000000000000000', '0x6b3077dcEe0975017BDd1a7eA9E12d3D9F398695', '0x0000000000000000000000000000000000000000', '0xd5Dfe6355EeBE918a23d70f5399Bb08F8a1BD588', '0x0000000000000000000000000000000000000000', '0x20125a7256EFafd0d4Eec24048E08C5045BC5900', '0xFe027e6243Cd9b94772fA07c0b5fcD3D03D55c92', '0x01A8088947B1222a5dC5a13C45b845E0361EEFF7']
     });
 });

@@ -151,7 +151,7 @@ exports.deploy = async function () {
     // await cofixRouter.registerPair(eth.address, nest.address, nestPair.address);
     // console.log('20. cofi.addMinter(cofixRouter.address)');
     // await cofi.addMinter(cofixRouter.address);
-    // console.log('21. cofi.addMinter(cofixVaultForStaking.addres)');
+    // console.log('21. cofi.addMinter(cofixVaultForStaking.address)');
     // await cofi.addMinter(cofixVaultForStaking.address);
 
     // await cofixRouter.registerRouterPath(nest.address, usdt.address, [
@@ -177,7 +177,7 @@ exports.deploy = async function () {
     //let pusd = await TestERC20.deploy('PUSD', 'PUSD', 18);
     let pusd = await TestERC20.attach('0x0f03cd5CeBe21D1E7307588b9844D10ad0F4A394');
     console.log('pusd: ' + pusd.address);
-    //let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
+    //let usdc = await TestERC20.deploy('USDC', 'USDC', 6);
     let usdc = await TestERC20.attach('0xe86dD41fEb8594D083f9dC364e530c0B8D208feA');
     console.log('usdc: ' + usdc.address);
     // 部署ETH锚定池

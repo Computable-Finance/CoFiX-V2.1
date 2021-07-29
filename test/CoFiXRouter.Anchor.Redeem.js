@@ -76,14 +76,15 @@ describe('CoFiXRouter', function() {
         }
 
         const getAccountInfo = async function(account) {
+            let acc = account;
             account = account.address;
             return {
-                eth: toDecimal(await ethers.provider.getBalance(account)),
+                eth: toDecimal(acc.ethBalance ? await acc.ethBalance() : await ethers.provider.getBalance(account)),
                 usdt: toDecimal(await usdt.balanceOf(account), 6),
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                usdc: toDecimal(await usdc.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account), 6),
                 xusdt: toDecimal(await xusdt.balanceOf(account)),
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
                 xusdc: toDecimal(await xusdc.balanceOf(account)),
@@ -93,14 +94,6 @@ describe('CoFiXRouter', function() {
         }
         const getStatus = async function() {
             let pairStatus = await getAccountInfo(usdtPair);
-            //let p = await cofixController.latestPriceView(usdt.address);
-            // let navps = toDecimal(await usdtPair.calcNAVPerShare(
-            //     await ethers.provider.getBalance(usdtPair.address),
-            //     //toBigInt(pairStatus.eth), 
-            //     toBigInt(pairStatus.usdt, 6), 
-            //     toBigInt(1), 
-            //     p.price
-            // ));
             return {
                 height: await ethers.provider.getBlockNumber(),
                 //navps: navps,
@@ -125,8 +118,8 @@ describe('CoFiXRouter', function() {
         let p;
 
         if (true) {
-            await usdc.transfer(addr1.address, toBigInt(10000000));
-            await usdc.connect(addr1).approve(cofixRouter.address, toBigInt(10000000));
+            await usdc.transfer(addr1.address, toBigInt(10000000, 6));
+            await usdc.connect(addr1).approve(cofixRouter.address, toBigInt(10000000, 6));
 
             await usdt.transfer(owner.address, toBigInt(10000000, 6));
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
@@ -134,8 +127,8 @@ describe('CoFiXRouter', function() {
             await nest.approve(cofixRouter.address, toBigInt(10000000));
             await pusd.transfer(owner.address, toBigInt(10000000));
             await pusd.approve(cofixRouter.address, toBigInt(10000000));
-            await usdc.transfer(owner.address, toBigInt(10000000));
-            await usdc.approve(cofixRouter.address, toBigInt(10000000));
+            await usdc.transfer(owner.address, toBigInt(10000000, 6));
+            await usdc.approve(cofixRouter.address, toBigInt(10000000, 6));
         }
 
         if (true) {
@@ -218,7 +211,7 @@ describe('CoFiXRouter', function() {
                 usdAnchor.address,
                 usdc.address,
                 0,
-                toBigInt(50000),
+                toBigInt(50000, 6),
                 0,
                 owner.address,
                 BigInt('1800000000000'), {
@@ -243,7 +236,7 @@ describe('CoFiXRouter', function() {
             console.log('addr1: ' + addr1.address);
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(
                 path,
-                toBigInt(10),
+                toBigInt(10, 6),
                 toBigInt(0),
                 //[usdt.address, '0x0000000000000000000000000000000000000000', nest.address],
                 addr1.address,
@@ -366,7 +359,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            await usdc.transfer(usdAnchor.address, toBigInt(30000));
+            await usdc.transfer(usdAnchor.address, toBigInt(30000, 6));
             await pusd.transfer(usdAnchor.address, toBigInt(10000));
             console.log('13. addr1.skim()');
             let receipt = await usdAnchor.connect(addr1).skim();
@@ -377,6 +370,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
             console.log('14. addr1.redeem()');
+            await usdtPair.settle();
             await cofi.connect(addr1).approve(cofixDAO.address, toBigInt('0.0001'));
             await cofixDAO.connect(addr1).redeem(toBigInt('0.0001'), addr1.address, { value: toBigInt('0.1')});
             status = await getStatus();
@@ -385,7 +379,7 @@ describe('CoFiXRouter', function() {
         }
 
         // for(var i = 0; i < 200; ++i) {
-        //     await usdc.transfer(usdAnchor.address, toBigInt(0));
+        //     await usdc.transfer(usdAnchor.address, toBigInt(0, 6));
         //     console.log('quotaOf: ' + await cofixDAO.quotaOf());
         // }
         console.log('totalETHRewards: ' + await cofixDAO.totalETHRewards('0x0000000000000000000000000000000000000000'));
