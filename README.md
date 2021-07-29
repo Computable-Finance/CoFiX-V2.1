@@ -47,7 +47,7 @@ npx hardhat test ./test/deploy.js --network rinkeby
 
 ## Contract Addresses
 
-### 2021-07-20@mainnet
+### 2021-07-29@mainnet
 | Name | Interfaces | mainnet |
 | ---- | ---- | ---- |
 | usdt | IERC20 | 0xdAC17F958D2ee523a2206206994597C13D831ec7 |
