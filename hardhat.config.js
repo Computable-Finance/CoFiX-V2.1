@@ -33,7 +33,7 @@ module.exports = {
     mainnet: {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${config.alchemy.mainnet.apiKey}`,
       accounts: [config.account.mainnet.key, config.account.mainnet.userA, config.account.mainnet.userB],
-      gasPrice: 20e9,
+      gasPrice: 25e9,
       gas: 6e6,
       timeout: 2000000000
     },

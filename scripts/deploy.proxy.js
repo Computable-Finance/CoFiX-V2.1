@@ -39,7 +39,7 @@ exports.deploy = async function () {
     //const pusd = await TestERC20.attach('0x0000000000000000000000000000000000000000');
     console.log('pusd: ' + pusd.address);
 
-    let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
+    let usdc = await TestERC20.deploy('USDC', 'USDC', 6);
     //const usdc = await TestERC20.attach('0x0000000000000000000000000000000000000000');
     console.log('usdc: ' + usdc.address);
 
@@ -119,7 +119,7 @@ exports.deploy = async function () {
         cofixGovernance.address, 
         2,
         [usdt.address, pusd.address, usdc.address],
-        [1000000, '1000000000000000000', '1000000000000000000']
+        [1000000, '1000000000000000000', 1000000]
     ], { initializer: 'init' });
     //const usdAnchor = await CoFiXAnchorPool.attach('0x0000000000000000000000000000000000000000');
     console.log('usdAnchor: ' + usdAnchor.address);
@@ -216,7 +216,7 @@ exports.deploy = async function () {
     console.log('20. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
     await cofixDAO.setTokenExchange(pusd.address, usdt.address, BigInt(1000000));
     console.log('21. cofixDAO.setTokenExchange(usdc.address, usdt.address)');
-    await cofixDAO.setTokenExchange(usdc.address, usdt.address, BigInt(1000000));
+    await cofixDAO.setTokenExchange(usdc.address, usdt.address, BigInt('1000000000000000000'));
     console.log('22. cofixDAO.setTokenExchange(eth.address, eth.address)');
     await cofixDAO.setTokenExchange(eth.address, eth.address, BigInt('1000000000000000000'));
     console.log('23. cofixDAO.setTokenExchange(peth.address, eth.address)');
