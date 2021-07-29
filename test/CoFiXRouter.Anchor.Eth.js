@@ -84,7 +84,7 @@ describe('CoFiXRouter', function() {
                 nest: toDecimal(await nest.balanceOf(account)),
                 cofi: toDecimal(await cofi.balanceOf(account)),
                 pusd: toDecimal(await pusd.balanceOf(account)),
-                usdc: toDecimal(await usdc.balanceOf(account)),
+                usdc: toDecimal(await usdc.balanceOf(account), 6),
                 xusdt: toDecimal(await xusdt.balanceOf(account)),
                 xpusd: toDecimal(await xpusd.balanceOf(account)),
                 xusdc: toDecimal(await xusdc.balanceOf(account)),
