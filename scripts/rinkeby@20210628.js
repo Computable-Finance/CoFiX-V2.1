@@ -173,7 +173,7 @@ exports.deploy = async function () {
     //let pusd = await TestERC20.deploy('PUSD', 'PUSD', 18);
     let pusd = await TestERC20.attach('0xe6CdD2c0F48dCfaB1E4a8bcBb4e2001F671fe0e2');
     console.log('pusd: ' + pusd.address);
-    //let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
+    //let usdc = await TestERC20.deploy('USDC', 'USDC', 6);
     let usdc = await TestERC20.attach('0x46A7783AcA0b65073Ba51e52B73f252A261a909d');
     console.log('usdc: ' + usdc.address);
     // 部署ETH锚定池
