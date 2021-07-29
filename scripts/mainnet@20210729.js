@@ -49,7 +49,7 @@ exports.deploy = async function () {
     const pusd = await TestERC20.attach('0xCCEcC702Ec67309Bc3DDAF6a42E9e5a6b8Da58f0');
     console.log('pusd: ' + pusd.address);
 
-    //let usdc = await TestERC20.deploy('USDC', 'USDC', 18);
+    //let usdc = await TestERC20.deploy('USDC', 'USDC', 6);
     const usdc = await TestERC20.attach('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48');
     console.log('usdc: ' + usdc.address);
 
