@@ -65,7 +65,7 @@ npx hardhat test ./test/deploy.js --network rinkeby
 | cofixVaultForStaking | ICoFiXVaultForStaking | 0x7Bd4546DEdB397a0f0D7593A7Fa7f2Ceb3ff32E6 |
 | cofixController | ICoFiXController | 0x8eFFbf9CA7dB20481cE9C25EA4B410b3B835D70E |
 | CoFiXPair-usdt | ICoFiXPair, ICoFiXERC20 | 0xFa8055B3e0C36605bB31e23bC565C31eb3Dca386 |
-| CoFiXPair-hbtc | ICoFiXPair, ICoFiXERC20 || 0xd312E8374fF2B0260A32aF5f91BA8d8EaFAE856B |
+| CoFiXPair-hbtc | ICoFiXPair, ICoFiXERC20 | 0xd312E8374fF2B0260A32aF5f91BA8d8EaFAE856B |
 | CoFiXPair-nest | ICoFiXPair, ICoFiXERC20 | 0x2FA6F2d5e42630e872cD0F33C69D1c2708FF79Fd |
 | CoFiXPair-cofi | ICoFiXPair, ICoFiXERC20 | 0x711EA25b70Bb580a7cb19DeBd0ab40A016c3fCbb |
 | CoFiXAnchorPool-eth | ICoFiXAnchorPool | 0xD7E54D936ca1e7F0ed097D4Ec6140653eC60f85D |
