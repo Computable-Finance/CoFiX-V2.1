@@ -146,7 +146,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint liquidityMin,
         address to,
         uint deadline
-    ) external override payable ensure(deadline) returns (address xtoken, uint liquidity) {
+    ) external payable override ensure(deadline) returns (address xtoken, uint liquidity) {
         // 1. Transfer token to pool
         if (token != address(0)) {
             TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
@@ -180,7 +180,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint liquidityMin,
         address to,
         uint deadline
-    ) external override payable ensure(deadline) returns (address xtoken, uint liquidity) {
+    ) external payable override ensure(deadline) returns (address xtoken, uint liquidity) {
         // 1. Transfer token to pool
         if (token != address(0)) {
             TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
@@ -216,7 +216,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint amountETHMin,
         address to,
         uint deadline
-    ) external override payable ensure(deadline) returns (uint amountETH, uint amountToken) {
+    ) external payable override ensure(deadline) returns (uint amountETH, uint amountToken) {
         // 0. Get xtoken corresponding to the token
         address xtoken = ICoFiXPool(pool).getXToken(token);
 

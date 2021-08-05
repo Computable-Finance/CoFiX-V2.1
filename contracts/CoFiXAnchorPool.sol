@@ -109,7 +109,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return impactCostVOL Impact cost threshold
     /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    function getConfig() external override view returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
+    function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
         return (_theta, uint96(0), _nt);
     }
 
