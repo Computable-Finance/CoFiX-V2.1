@@ -601,7 +601,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @dev Calculate the impact cost of buy in eth
     /// @param vol Trade amount in eth
     /// @return impactCost Impact cost
-    function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
+    function impactCostForBuyInETH(uint vol) public pure override returns (uint impactCost) {
         //return _impactCostForBuyInETH(vol, uint(_impactCostVOL));
         impactCost = vol / 100000;
     }
@@ -609,7 +609,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @dev Calculate the impact cost of sell out eth
     /// @param vol Trade amount in eth
     /// @return impactCost Impact cost
-    function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
+    function impactCostForSellOutETH(uint vol) public pure override returns (uint impactCost) {
         //return _impactCostForSellOutETH(vol, uint(_impactCostVOL));
         impactCost = vol / 100000;
     }
