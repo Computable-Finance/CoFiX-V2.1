@@ -33,7 +33,7 @@ contract CoFiXBase {
 
     /// @dev To support open-zeppelin/upgrades
     /// @param governance ICoFiXGovernance implementation contract address
-    function initialize(address governance) virtual public {
+    function initialize(address governance) public virtual {
         require(_governance == address(0), "CoFiX:!initialize");
         _governance = governance;
     }

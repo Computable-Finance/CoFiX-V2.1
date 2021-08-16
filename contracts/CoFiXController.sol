@@ -112,7 +112,7 @@ contract CoFiXController is ICoFiXController {
     function queryOracle(
         address tokenAddress,
         address payback
-    ) external override payable returns (
+    ) external payable override returns (
         uint k, 
         uint ethAmount, 
         uint tokenAmount, 
