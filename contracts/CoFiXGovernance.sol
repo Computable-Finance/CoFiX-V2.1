@@ -61,7 +61,7 @@ contract CoFiXGovernance is CoFiXMapping, ICoFiXGovernance {
     /// @param flag Permission weight. The permission of the target address must be greater than this 
     /// weight to pass the check
     /// @return True indicates permission
-    function checkGovernance(address addr, uint flag) public view override returns (bool) {
+    function checkGovernance(address addr, uint flag) external view override returns (bool) {
         return _governanceMapping[addr].flag > flag;
     }
 }

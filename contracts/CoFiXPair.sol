@@ -125,7 +125,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @dev Get initial asset ratio
     /// @return initToken0Amount Initial asset ratio - eth
     /// @return initToken1Amount Initial asset ratio - token
-    function getInitialAssetRatio() public view override returns (
+    function getInitialAssetRatio() external view override returns (
         uint initToken0Amount, 
         uint initToken1Amount
     ) {

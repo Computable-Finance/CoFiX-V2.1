@@ -28,7 +28,7 @@ contract CoFiXController is ICoFiXController {
     /// @return avgPriceTokenAmount Avg price - token amount
     /// @return sigmaSQ The square of the volatility (18 decimal places)
     function latestPriceInfo(address tokenAddress, address payback) 
-    public 
+    external 
     payable 
     override
     returns (

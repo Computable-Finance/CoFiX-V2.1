@@ -267,7 +267,7 @@ contract CoFiXDAO is CoFiXBase, ICoFiXDAO {
     }
 
     /// @dev Get the current amount available for repurchase
-    function quotaOf() public view override returns (uint) {
+    function quotaOf() external view override returns (uint) {
 
         // 1. Load configuration
         Config memory config = _config;

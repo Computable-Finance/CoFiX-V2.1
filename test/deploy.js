@@ -62,6 +62,47 @@ describe('CoFiXRouter', function() {
         //     value: toBigInt(10.1)
         // });
 
+        const cfg = function (c) {
+            return {
+                theta: c.theta.toString(),
+                impactCostVOL: c.impactCostVOL.toString(),
+                nt: c.nt.toString()
+            };
+        }
+        await console.log('usdtPair: ', cfg(await usdtPair.getConfig()));
+        await console.log('hbtcPair: ', cfg(await hbtcPair.getConfig()));
+        await console.log('nestPair: ', cfg(await nestPair.getConfig()));
+        await console.log('cofiPair: ', cfg(await cofiPair.getConfig()));
+
+        await console.log('ethAnchor: ', cfg(await ethAnchor.getConfig()));
+        await console.log('usdAnchor: ', cfg(await usdAnchor.getConfig()));
+
+        // // 6. 初始化资金池参数
+        // console.log('12. usdtPair.setConfig()');
+        // await usdtPair.setConfig(20, '100000000000000000000', '500000000000000000');
+        // console.log('13. hbtcPair.setConfig()');
+        // await hbtcPair.setConfig(20, '100000000000000000000', '500000000000000000');
+        // console.log('14. nestPair.setConfig()');
+        // await nestPair.setConfig(20, '5000000000000000000', '500000000000000000');
+        // console.log('15. cofiPair.setConfig()');
+        // await cofiPair.setConfig(20, '500000000000000000', '500000000000000000');
+        // console.log('16. ethAnchor.setConfig()');
+        // await ethAnchor.setConfig(20, 0, '500000000000000000');
+        // console.log('17. usdAnchor.setConfig()');
+        // await usdAnchor.setConfig(20, 0, '250000000000000');
+
+        // await console.log('usdtPair: ', cfg(await usdtPair.getConfig()));
+        // await console.log('hbtcPair: ', cfg(await hbtcPair.getConfig()));
+        // await console.log('nestPair: ', cfg(await nestPair.getConfig()));
+        // await console.log('cofiPair: ', cfg(await cofiPair.getConfig()));
+
+        // await console.log('ethAnchor: ', cfg(await ethAnchor.getConfig()));
+        // await console.log('usdAnchor: ', cfg(await usdAnchor.getConfig()));
+
+        // const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
+        // const newPair = await CoFiXPair.deploy();
+        // console.log('newPair: ' + newPair.address);
+
         console.log('ok');
         
         return;

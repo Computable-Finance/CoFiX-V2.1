@@ -122,7 +122,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @param addr Target address
     /// @return The number of CoFi to be collected by the target address on the designated transaction lock
-    function earned(address xtoken, address addr) public view override returns (uint) {
+    function earned(address xtoken, address addr) external view override returns (uint) {
         // Load staking channel
         StakeChannel storage channel = _channels[xtoken];
         // Call _calcReward() to calculate new reward
@@ -284,7 +284,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @return newReward Amount added since last settlement
     /// @return rewardPerToken New number of unit token dividends
-    function calcReward(address xtoken) public view returns (
+    function calcReward(address xtoken) external view override returns (
         uint newReward, 
         uint rewardPerToken
     ) {
