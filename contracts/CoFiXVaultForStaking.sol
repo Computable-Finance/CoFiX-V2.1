@@ -95,7 +95,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         for (uint i = 0; i < cnt; ++i) {
             address xtoken = xtokens[i];
             require(xtoken != address(0), "CoFiXVaultForStaking: invalid xtoken");
-            StakeChannel storage channel = _channels[xtoken] ;
+            StakeChannel storage channel = _channels[xtoken];
             _updateReward(xtoken, channel);
             channel.cofiWeight = weights[i];
         }

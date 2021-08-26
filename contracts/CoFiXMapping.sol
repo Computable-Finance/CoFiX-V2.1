@@ -93,7 +93,7 @@ abstract contract CoFiXMapping is CoFiXBase, ICoFiXMapping {
     }
 
     /// @dev Get address of CoFi token contract
-    /// @return Address of CoFi Node token contract
+    /// @return Address of CoFi token contract
     function getCoFiTokenAddress() external view override returns (address) { return _cofiToken; }
 
     /// @dev Get address of CoFi Node contract
