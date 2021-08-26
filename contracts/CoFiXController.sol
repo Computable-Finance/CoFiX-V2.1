@@ -211,7 +211,7 @@ contract CoFiXController is ICoFiXController {
     //     }
     // }
 
-    function _sqrt(uint256 x) public pure returns (uint256) {
+    function _sqrt(uint256 x) private pure returns (uint256) {
         unchecked {
             if (x == 0) return 0;
             else {
