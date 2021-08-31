@@ -27,6 +27,12 @@ describe('CoFiXRouter', function() {
             usdAnchor,
             ethAnchor,
 
+            xeth,
+            xpeth,
+            xusdt,
+            xpusd,
+            xusdc,
+
             pusd,
             usdc,
             weth
@@ -69,6 +75,32 @@ describe('CoFiXRouter', function() {
                 nt: c.nt.toString()
             };
         }
+        const eth = { address: '0x0000000000000000000000000000000000000000' };
+
+        // await usdt.transfer(owner.address, 0, { nonce: 1973, gasPrice: 10e8 });
+        // await usdt.transfer(owner.address, 1, { nonce: 1973, gasPrice: 11e8 })
+        // return;
+        // console.log('pairFor(eth/usdt)=' + await cofixRouter.pairFor(eth.address, usdt.address));
+        // console.log('pairFor(usdt/eth)=' + await cofixRouter.pairFor(usdt.address, eth.address));
+
+        // const chi = async function(xtoken) {
+        //     let v = await cofixVaultForStaking.getChannelInfo(xtoken);
+        //     return {
+        //         totalStaked: v.totalStaked.toString(),
+        //         cofiPerBlock: v.cofiPerBlock.toString()
+        //     };
+        // }
+        // console.log('getChannelInfo(cnode)=', await chi(cnode.address));
+        // console.log('getChannelInfo(usdtPair)=', await chi(usdtPair.address));
+        // console.log('getChannelInfo(hbtcPair)=', await chi(hbtcPair.address));
+        // console.log('getChannelInfo(nestPair)=', await chi(nestPair.address));
+        // console.log('getChannelInfo(cofiPair)=', await chi(cofiPair.address));
+        // console.log('getChannelInfo(xeth)=', await chi(xeth.address));
+        // console.log('getChannelInfo(xpeth)=', await chi(xpeth.address));
+        // console.log('getChannelInfo(xusdt)=', await chi(xusdt.address));
+        // console.log('getChannelInfo(xpusd)=', await chi(xpusd.address));
+        // console.log('getChannelInfo(xusdc)=', await chi(xusdc.address));
+
         await console.log('usdtPair: ', cfg(await usdtPair.getConfig()));
         await console.log('hbtcPair: ', cfg(await hbtcPair.getConfig()));
         await console.log('nestPair: ', cfg(await nestPair.getConfig()));
@@ -77,31 +109,37 @@ describe('CoFiXRouter', function() {
         await console.log('ethAnchor: ', cfg(await ethAnchor.getConfig()));
         await console.log('usdAnchor: ', cfg(await usdAnchor.getConfig()));
 
-        // // 6. 初始化资金池参数
-        // console.log('12. usdtPair.setConfig()');
-        // await usdtPair.setConfig(20, '100000000000000000000', '500000000000000000');
-        // console.log('13. hbtcPair.setConfig()');
-        // await hbtcPair.setConfig(20, '100000000000000000000', '500000000000000000');
-        // console.log('14. nestPair.setConfig()');
-        // await nestPair.setConfig(20, '5000000000000000000', '500000000000000000');
-        // console.log('15. cofiPair.setConfig()');
-        // await cofiPair.setConfig(20, '500000000000000000', '500000000000000000');
-        // console.log('16. ethAnchor.setConfig()');
-        // await ethAnchor.setConfig(20, 0, '500000000000000000');
-        // console.log('17. usdAnchor.setConfig()');
-        // await usdAnchor.setConfig(20, 0, '250000000000000');
+        return;
+        console.log('16. ethAnchor.setConfig()');
+        await ethAnchor.setConfig(20, 0, '0');
+        console.log('17. usdAnchor.setConfig()');
+        await usdAnchor.setConfig(20, 0, '0');
 
-        // await console.log('usdtPair: ', cfg(await usdtPair.getConfig()));
-        // await console.log('hbtcPair: ', cfg(await hbtcPair.getConfig()));
-        // await console.log('nestPair: ', cfg(await nestPair.getConfig()));
-        // await console.log('cofiPair: ', cfg(await cofiPair.getConfig()));
+        return;
+    //     cnode.address,
+    //     usdtPair.address,
+    //     hbtcPair.address,
+    //     nestPair.address,
+    //     cofiPair.address,
+    //     xeth.address,
+    //     xpeth.address,
+    //     xusdt.address,
+    //     xpusd.address,
+    //     xusdc.address
+        console.log('18. cofixVaultForStaking.batchSetPoolWeight()');
+        await cofixVaultForStaking.batchSetPoolWeight([
+            // LP-usdt speed ** 0CoFi/block **
+            usdtPair.address,
+            // LP-xeth speed 	** 0.2CoFi/block **
+            xeth.address,
+            // LP-xusdt speed 	** 0.2CoFi/block **
+            xusdt.address,
+            // LP-xpusd speed 	** 0.15CoFi/block **
+            xpusd.address
+        ], [0, 20, 20, 15]);
 
-        // await console.log('ethAnchor: ', cfg(await ethAnchor.getConfig()));
-        // await console.log('usdAnchor: ', cfg(await usdAnchor.getConfig()));
-
-        // const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
-        // const newPair = await CoFiXPair.deploy();
-        // console.log('newPair: ' + newPair.address);
+        console.log('24. registerPair(eth.address, usdt.address, usdtPair.address)');
+        await cofixRouter.registerPair(eth.address, usdt.address, '0x0000000000000000000000000000000000000000');
 
         console.log('ok');
         
