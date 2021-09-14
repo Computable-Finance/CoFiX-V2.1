@@ -10,11 +10,12 @@ contract CoFiXController is ICoFiXController {
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
-    address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
+    //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
+    address NEST_PRICE_FACADE;
 
     /// @dev To support open-zeppelin/upgrades
     function initialize(address nestPriceFacade) external {
-        //NEST_PRICE_FACADE = nestPriceFacade;
+        NEST_PRICE_FACADE = nestPriceFacade;
     }
 
     /// @dev Query latest price info
