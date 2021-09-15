@@ -5,7 +5,7 @@ describe('CoFiXRouter', function() {
     it('test1', async function() {
 
         const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
-        const UniswapWrapperPool = await ethers.getContractFactory('UniswapWrapperPool');
+        const UniswapV3PoolAdapter = await ethers.getContractFactory('UniswapV3PoolAdapter');
         const TestRouter = await ethers.getContractFactory('TestRouter');
         const WETH = await ethers.getContractFactory('WETH');
         
@@ -52,7 +52,7 @@ describe('CoFiXRouter', function() {
         await pool.initialize(1n << 96n);
         console.log('pool: ' + pool.address);
         const weth = await WETH.deploy();
-        const uniswapWrapperPool = await UniswapWrapperPool.deploy(pool.address, weth.address);
+        const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy(pool.address, weth.address);
 
         const toBigInt = function(val, decimals) {
             decimals = decimals || 18;
@@ -134,7 +134,7 @@ describe('CoFiXRouter', function() {
                 //usdAnchor: await getAccountInfo(usdAnchor),
                 owner: await getAccountInfo(owner),
                 pool: await getAccountInfo(pool),
-                uniswapWrapperPool: await getAccountInfo(uniswapWrapperPool),
+                uniswapV3PoolAdapter: await getAccountInfo(uniswapV3PoolAdapter),
                 addr1: await getAccountInfo(addr1),
                 //dao: await getAccountInfo(cofixDAO),
                 //addr2: await getAccountInfo(addr2)
@@ -144,8 +144,8 @@ describe('CoFiXRouter', function() {
         let status;
         let p;
 
-        console.log('wrap-token0 = ' + await uniswapWrapperPool.TOKEN0());
-        console.log('wrap-token1 = ' + await uniswapWrapperPool.TOKEN1());
+        console.log('wrap-token0 = ' + await uniswapV3PoolAdapter.TOKEN0());
+        console.log('wrap-token1 = ' + await uniswapV3PoolAdapter.TOKEN1());
 
         console.log('pool-token0 = ' + await pool.token0());
         console.log('pool-token1 = ' + await pool.token1());
@@ -166,12 +166,12 @@ describe('CoFiXRouter', function() {
         if(true) {
             console.log('2. 交易');
 
-            // await usdt.approve(uniswapWrapperPool.address, toBigInt(10000000, 6));
-            // await hbtc.approve(uniswapWrapperPool.address, toBigInt(10000000));
+            // await usdt.approve(uniswapV3PoolAdapter.address, toBigInt(10000000, 6));
+            // await hbtc.approve(uniswapV3PoolAdapter.address, toBigInt(10000000));
 
             const v = 100000000000n;
-            await hbtc.transfer(uniswapWrapperPool.address, v);
-            let receipt = await uniswapWrapperPool.swap(hbtc.address, usdt.address, v, addr1.address, owner.address);
+            await hbtc.transfer(uniswapV3PoolAdapter.address, v);
+            let receipt = await uniswapV3PoolAdapter.swap(hbtc.address, usdt.address, v, addr1.address, owner.address);
             await showReceipt(receipt);
             console.log(await getStatus());
         }

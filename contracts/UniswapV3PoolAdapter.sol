@@ -16,8 +16,8 @@ import "./uniswap/interfaces/callback/IUniswapV3SwapCallback.sol";
 
 import "hardhat/console.sol";
 
-/// @dev UniswapWrapperPool
-contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
+/// @dev UniswapV3PoolAdapter
+contract UniswapV3PoolAdapter is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
@@ -31,17 +31,27 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
-    address immutable public TARGET_UNISWAP_POOL;
+    // token0地址，0表示eth
     address immutable public TOKEN0;
+
+    // token1地址，0表示eth
     address immutable public TOKEN1;
+    
+    // 目标uniswap资金池地址
+    address immutable public TARGET_UNISWAP_V3_POOL;
+    
+    // IWETH9实现合约地址
     address immutable public WETH9;
 
-    constructor (address targetUniswapPool, address weth9) {
-        address token0 = IUniswapV3Pool(targetUniswapPool).token0();
-        address token1 = IUniswapV3Pool(targetUniswapPool).token1();
-        TARGET_UNISWAP_POOL = targetUniswapPool;
+    /// @dev 构造uniswap适配资金池
+    /// @param targetUniswapV3Pool 目标UniswapV3Pool地址
+    /// @param weth9 目标IWETH9实现地址
+    constructor (address targetUniswapV3Pool, address weth9) {
+        address token0 = IUniswapV3Pool(targetUniswapV3Pool).token0();
+        address token1 = IUniswapV3Pool(targetUniswapV3Pool).token1();
         TOKEN0 = token0 == weth9 ? address(0) : token0;
         TOKEN1 = token1 == weth9 ? address(0) : token1;
+        TARGET_UNISWAP_V3_POOL = targetUniswapV3Pool;
         WETH9 = weth9;
     }
 
@@ -109,17 +119,6 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
     function getXToken(address token) external view override returns (address) {
         revert("UWP:not support");
     }
-    
-    // Transfer token, 0 address means eth
-    function _transfer(address token, address to, uint value) private {
-        if (value > 0) {
-            if (token == address(0)) {
-                payable(to).transfer(value);
-            } else {
-                TransferHelper.safeTransfer(token, to, value);
-            }
-        }
-    }
 
     /// @dev Swap token
     /// @param src Src token address
@@ -140,6 +139,8 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         uint amountOut, 
         uint mined
     ) {
+        require(amountIn < 1 << 255, "UWP:amountIn too large");
+
         // 1. Return unnecessary eth
         // The src is 0, which means that the ETH is transferred in and the part exceeding
         // the amountToken needs to be returned
@@ -152,20 +153,36 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
             payable(payback).transfer(msg.value);
         }
 
+        // 2. 确定交易方向
         bool zeroForOne;
         if (src == TOKEN0 && dest == TOKEN1) {
-            console.log("true");
             zeroForOne = true;
         } else if (src == TOKEN1 && dest == TOKEN0) {
-            console.log("false");
             zeroForOne = false;
         } else {
             revert("UWP:token error");
         }
 
-        require(amountIn < 1 << 255, "UWP:amountIn too large");
+        // 3. 调用uniswap v3 pool执行交易
+        // /// @notice Swap token0 for token1, or token1 for token0
+        // /// @dev The caller of this method receives a callback in the form of IUniswapV3SwapCallback#uniswapV3SwapCallback
+        // /// @param recipient The address to receive the output of the swap
+        // /// @param zeroForOne The direction of the swap, true for token0 to token1, false for token1 to token0
+        // /// @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+        // /// @param sqrtPriceLimitX96 The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
+        // /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
+        // /// @param data Any data to be passed through to the callback
+        // /// @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
+        // /// @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+        // function swap(
+        //     address recipient,
+        //     bool zeroForOne,
+        //     int256 amountSpecified,
+        //     uint160 sqrtPriceLimitX96,
+        //     bytes calldata data
+        // ) external returns (int256 amount0, int256 amount1);
 
-        (int256 amount0, int256 amount1) = IUniswapV3Pool(TARGET_UNISWAP_POOL).swap(
+        (int256 amount0, int256 amount1) = IUniswapV3Pool(TARGET_UNISWAP_V3_POOL).swap(
             address(this),
             zeroForOne,
             int(amountIn),
@@ -173,20 +190,19 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
             abi.encode(amountIn)
         );
 
-        //console.log("swap-amount0", uint(-amount0));
-        //console.log("swap-amount1", uint(amount1));
+        // 4. 检查交易结果
+        require(zeroForOne ? amount0 > 0 && amount1 < 0 : amount0 < 0 && amount1 > 0, "UWP:balance error");
+        require(amountIn == (zeroForOne ? uint(amount0) : uint(amount1)), "UWP:amountIn error");
 
+        // 5. 讲兑换到的代币转到目标地址
+        amountOut = zeroForOne ? uint(-amount1) : uint(-amount0);
         // 目标代币是eth
         if (dest == address(0)) {
-            amountOut = IWETH9(WETH9).balanceOf(address(this));
-            if (amountOut > 0) {
-                IWETH9(WETH9).withdraw(amountOut);
-                TransferHelper.safeTransferETH(to, amountOut);
-            }
+            IWETH9(WETH9).withdraw(amountOut);
+            TransferHelper.safeTransferETH(to, amountOut);
         } 
         // 目标代币是token
         else {
-            amountOut = IERC20(dest).balanceOf(address(this));
             TransferHelper.safeTransfer(dest, to, amountOut);
         }
 
@@ -211,51 +227,44 @@ contract UniswapWrapperPool is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         uint amountIn = abi.decode(data, (uint));
         if (amount0Delta > 0) {
             require(amountIn == uint(amount0Delta), "UWP:not completed");
-            _pay(TOKEN0, address(this), msg.sender, uint(amount0Delta));
+            _pay(TOKEN0, msg.sender, uint(amount0Delta));
         }
         if (amount1Delta > 0) {
             require(amountIn == uint(amount1Delta), "UWP:not completed");
-            _pay(TOKEN1, address(this), msg.sender, uint(amount1Delta));
+            _pay(TOKEN1, msg.sender, uint(amount1Delta));
         }
     }
 
     receive() external payable {
         //require(msg.sender == WETH9, 'Not WETH9');
     }
-
-    function sweepToken(
-        address token,
-        uint256 amountMinimum,
-        address recipient
-    ) external payable {
-        uint256 balanceToken = IERC20(token).balanceOf(address(this));
-        require(balanceToken >= amountMinimum, 'Insufficient token');
-
-        if (balanceToken > 0) {
-            TransferHelper.safeTransfer(token, recipient, balanceToken);
+    
+    // Transfer token, 0 address means eth
+    function _transfer(address token, address to, uint value) private {
+        if (value > 0) {
+            if (token == address(0)) {
+                payable(to).transfer(value);
+            } else {
+                TransferHelper.safeTransfer(token, to, value);
+            }
         }
     }
 
     /// @param token The token to pay
-    /// @param payer The entity that must pay
     /// @param recipient The entity that will receive payment
     /// @param value The amount to pay
     function _pay(
         address token,
-        address payer,
         address recipient,
         uint256 value
     ) private {
-        if (token == address(0) && address(this).balance >= value) {
+        if (token == address(0)) {
             // pay with WETH9
             IWETH9(WETH9).deposit{value: value}(); // wrap only what is needed to pay
             IWETH9(WETH9).transfer(recipient, value);
-        } else if (payer == address(this)) {
+        } else {
             // pay with tokens already in the contract (for the exact input multihop case)
             TransferHelper.safeTransfer(token, recipient, value);
-        } else {
-            // pull payment
-            TransferHelper.safeTransferFrom(token, payer, recipient, value);
         }
     }
 }

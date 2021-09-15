@@ -5,7 +5,7 @@ describe('CoFiXRouter', function() {
     it('test1', async function() {
 
         const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
-        const UniswapWrapperPool = await ethers.getContractFactory('UniswapWrapperPool');
+        const UniswapV3PoolAdapter = await ethers.getContractFactory('UniswapV3PoolAdapter');
         const TestRouter = await ethers.getContractFactory('TestRouter');
         const WETH = await ethers.getContractFactory('WETH');
         
@@ -53,7 +53,7 @@ describe('CoFiXRouter', function() {
         const pool = await ethers.getContractAt('IUniswapV3Pool', await testRouter.getPool(usdt.address, weth.address, 500));
         await pool.initialize(1n << 96n);
         console.log('pool: ' + pool.address);
-        const uniswapWrapperPool = await UniswapWrapperPool.deploy(pool.address, weth.address);
+        const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy(pool.address, weth.address);
 
         const toBigInt = function(val, decimals) {
             decimals = decimals || 18;
@@ -135,7 +135,7 @@ describe('CoFiXRouter', function() {
                 //usdAnchor: await getAccountInfo(usdAnchor),
                 owner: await getAccountInfo(owner),
                 pool: await getAccountInfo(pool),
-                uniswapWrapperPool: await getAccountInfo(uniswapWrapperPool),
+                uniswapV3PoolAdapter: await getAccountInfo(uniswapV3PoolAdapter),
                 addr1: await getAccountInfo(addr1),
                 //dao: await getAccountInfo(cofixDAO),
                 //addr2: await getAccountInfo(addr2)
@@ -145,8 +145,17 @@ describe('CoFiXRouter', function() {
         let status;
         let p;
 
-        console.log('wrap-token0 = ' + await uniswapWrapperPool.TOKEN0());
-        console.log('wrap-token1 = ' + await uniswapWrapperPool.TOKEN1());
+        // if (true) {
+        //     const UNI = '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984';
+        //     const WET = '0xc778417e063141139fce010982780140aa0cd5ab';
+        //     let up = await testRouter.getUniswapPool(UNI, WET, 3000);
+        //     console.log('up: ' + up);
+        // }
+        // 0x7b2a5f8956ff62b26ac87f22165f75185e2ad639
+        // return;
+
+        console.log('wrap-token0 = ' + await uniswapV3PoolAdapter.TOKEN0());
+        console.log('wrap-token1 = ' + await uniswapV3PoolAdapter.TOKEN1());
 
         console.log('pool-token0 = ' + await pool.token0());
         console.log('pool-token1 = ' + await pool.token1());
@@ -169,7 +178,7 @@ describe('CoFiXRouter', function() {
             console.log('2. 交易');
 
             const v = 10000000000n;
-            await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', usdt.address, uniswapWrapperPool.address);
+            await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', usdt.address, uniswapV3PoolAdapter.address);
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [
                     '0x0000000000000000000000000000000000000000',
@@ -182,6 +191,22 @@ describe('CoFiXRouter', function() {
                 BigInt('1800000000000'), {
                     value: v
                 }
+            );
+
+            await showReceipt(receipt);
+            console.log(await getStatus());
+
+            await usdt.approve(cofixRouter.address, 1000000000n);
+            receipt = await cofixRouter.swapExactTokensForTokens(
+                [
+                    usdt.address,
+                    '0x0000000000000000000000000000000000000000'
+                ],
+                1000000000n,
+                0n,
+                addr1.address,
+                addr1.address,
+                BigInt('1800000000000')
             );
 
             await showReceipt(receipt);
