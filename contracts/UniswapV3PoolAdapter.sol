@@ -139,13 +139,15 @@ contract UniswapV3PoolAdapter is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         uint amountOut, 
         uint mined
     ) {
-        require(amountIn < 1 << 255, "UWP:amountIn too large");
+        require(amountIn < 0x8000000000000000000000000000000000000000000000000000000000000000, "UWP:amountIn too large");
 
         // 1. Return unnecessary eth
         // The src is 0, which means that the ETH is transferred in and the part exceeding
         // the amountToken needs to be returned
         if (src == address(0)) {
-            _transfer(address(0), payback, msg.value - amountIn);
+            if (msg.value > amountIn) {
+                payable(payback).transfer(msg.value - amountIn);
+            }
         } 
         // If src is not 0, it means that the token is transferred in and all the transferred 
         // eth need to be returned
@@ -193,6 +195,7 @@ contract UniswapV3PoolAdapter is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         // 4. 检查交易结果
         require(zeroForOne ? amount0 > 0 && amount1 < 0 : amount0 < 0 && amount1 > 0, "UWP:balance error");
         require(amountIn == (zeroForOne ? uint(amount0) : uint(amount1)), "UWP:amountIn error");
+        mined = 0;
 
         // 5. 讲兑换到的代币转到目标地址
         amountOut = zeroForOne ? uint(-amount1) : uint(-amount0);
@@ -205,8 +208,6 @@ contract UniswapV3PoolAdapter is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         else {
             TransferHelper.safeTransfer(dest, to, amountOut);
         }
-
-        mined = 0;
     }
 
     /// @notice Called to `msg.sender` after executing a swap via IUniswapV3Pool#swap.
@@ -239,17 +240,6 @@ contract UniswapV3PoolAdapter is CoFiXBase, ICoFiXPool, IUniswapV3SwapCallback {
         //require(msg.sender == WETH9, 'Not WETH9');
     }
     
-    // Transfer token, 0 address means eth
-    function _transfer(address token, address to, uint value) private {
-        if (value > 0) {
-            if (token == address(0)) {
-                payable(to).transfer(value);
-            } else {
-                TransferHelper.safeTransfer(token, to, value);
-            }
-        }
-    }
-
     /// @param token The token to pay
     /// @param recipient The entity that will receive payment
     /// @param value The amount to pay

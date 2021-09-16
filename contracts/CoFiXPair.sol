@@ -225,8 +225,9 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
         // 5. Increase xtoken
         _mint(to, liquidity);
+        //emit Mint(token, to, amountETH, amountToken, liquidity);
+
         xtoken = address(this);
-        emit Mint(token, to, amountETH, amountToken, liquidity);
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
@@ -284,10 +285,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         amountETHOut = navps * liquidity / 1 ether;
         amountTokenOut = amountETHOut * initToken1Amount / initToken0Amount;
 
-        // 4. Destroy xtoken
-        _burn(address(this), liquidity);
-
-        // 5. Adjust according to the surplus of the fund pool
+        // 4. Adjust according to the surplus of the fund pool
         // If the number of eth to be retrieved exceeds the balance of the fund pool, 
         // it will be automatically converted into a token
         if (amountETHOut > balance0) {
@@ -300,15 +298,17 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
             amountETHOut += (amountTokenOut - balance1) * ethAmount / tokenAmount;
             amountTokenOut = balance1;
         }
+        
+        // 5. Destroy xtoken
+        _burn(address(this), liquidity);
+        //emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
-        // 6. Transfer of funds to the user's designated address
+        // 6. Mining logic
+        _updateMiningState(balance0 - amountETHOut, balance1 - amountTokenOut, ethAmount, tokenAmount);
+
+        // 7. Transfer of funds to the user's designated address
         payable(to).transfer(amountETHOut);
         TransferHelper.safeTransfer(token, to, amountTokenOut);
-
-        emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
-
-        // 7. Mining logic
-        _updateMiningState(balance0 - amountETHOut, balance1 - amountTokenOut, ethAmount, tokenAmount);
     }
 
     /// @dev Swap token

@@ -214,7 +214,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 4. Increase xtoken
         liquidity = CoFiXAnchorToken(xtoken).mint(to, amountToken * 1 ether / base);
-        emit Mint(token, to, amountETH, amountToken, liquidity);
+        //emit Mint(token, to, amountETH, amountToken, liquidity);
 
         // 5. Update mining state
         _updateMiningState(tokenInfo, _balanceOf(token) * 1 ether / base, uint(_nt));
@@ -251,7 +251,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 3. Destroy xtoken
         CoFiXAnchorToken(tokenInfo.xtokenAddress).burn(liquidity);
-        emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
+        //emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
         // 4. Adjust according to the surplus of the fund pool
         _cash(liquidity, token, base, _balanceOf(token), to, address(0));

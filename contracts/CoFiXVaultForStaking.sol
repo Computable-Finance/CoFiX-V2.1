@@ -173,13 +173,14 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @param amount Stake amount
     function stake(address xtoken, uint amount) external override {
+        // Transfer xtoken from msg.sender to this
+        TransferHelper.safeTransferFrom(xtoken, msg.sender, address(this), amount);
+
         // Load stake channel
         StakeChannel storage channel = _channels[xtoken];
         // Settle reward for account
         Account memory account = _getReward(xtoken, channel, msg.sender);
 
-        // Transfer xtoken from msg.sender to this
-        TransferHelper.safeTransferFrom(xtoken, msg.sender, address(this), amount);
         // Update totalStaked
         channel.totalStaked += amount;
 

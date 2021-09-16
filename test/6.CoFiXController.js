@@ -116,7 +116,7 @@ describe('CoFiXRouter', function() {
         let status;
         let p;
 
-        if (true) {
+        if (false) {
             let pi = await nestPriceFacade.lastPriceListAndTriggeredPriceInfoView(usdt.address, 2);
             console.log({
                 sigmaSQ: toDecimal(pi.triggeredSigmaSQ.toString()),

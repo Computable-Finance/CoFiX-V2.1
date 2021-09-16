@@ -102,30 +102,30 @@ describe('CoFiXRouter', function() {
         //     '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
         //     '0xCF483FF2D14EFd67f2c78cfe3430488313191569'
         // );
-        const TestERC20 = await ethers.getContractFactory('TestERC20');
-        const uni = await TestERC20.attach('0x1f9840a85d5af5bf1d1762f925bdaddc4201f984');
-        console.log('usdt: ' + await usdt.balanceOf(owner.address));
-        await uni.approve(cofixRouter.address, toBigInt(0.01));
-        let receipt = await cofixRouter.swapExactTokensForTokens(
-            [
-                uni.address,
-                '0x0000000000000000000000000000000000000000',
-                usdt.address
-                // 目标token地址
-            ],
-            // eth数量
-            toBigInt(0.01),
-            // 预期获得的token的最小数量
-            BigInt(0),
-            // 接收地址
-            owner.address,
-            // 出矿接收地址
-            owner.address,
-            BigInt('1800000000000'), {
-                value: BigInt('10000000000000000')
-            }
-        );
-        console.log('usdt: ' + await usdt.balanceOf(owner.address));
+        // const TestERC20 = await ethers.getContractFactory('TestERC20');
+        // const uni = await TestERC20.attach('0x1f9840a85d5af5bf1d1762f925bdaddc4201f984');
+        // console.log('usdt: ' + await usdt.balanceOf(owner.address));
+        // await uni.approve(cofixRouter.address, toBigInt(0.01));
+        // let receipt = await cofixRouter.swapExactTokensForTokens(
+        //     [
+        //         uni.address,
+        //         '0x0000000000000000000000000000000000000000',
+        //         usdt.address
+        //         // 目标token地址
+        //     ],
+        //     // eth数量
+        //     toBigInt(0.01),
+        //     // 预期获得的token的最小数量
+        //     BigInt(0),
+        //     // 接收地址
+        //     owner.address,
+        //     // 出矿接收地址
+        //     owner.address,
+        //     BigInt('1800000000000'), {
+        //         value: BigInt('10000000000000000')
+        //     }
+        // );
+        // console.log('usdt: ' + await usdt.balanceOf(owner.address));
 
         return;
 
