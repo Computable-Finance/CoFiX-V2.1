@@ -11,21 +11,21 @@ interface ICoFiXPool {
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
-    /// @dev Add liquidity and mining xtoken event
-    /// @param token Target token address
-    /// @param to The address to receive xtoken
-    /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
-    /// @param amountToken The amount of Token added to pool
-    /// @param liquidity The real liquidity or XToken minted from pool
-    event Mint(address token, address to, uint amountETH, uint amountToken, uint liquidity);
+    // /// @dev Add liquidity and mining xtoken event
+    // /// @param token Target token address
+    // /// @param to The address to receive xtoken
+    // /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
+    // /// @param amountToken The amount of Token added to pool
+    // /// @param liquidity The real liquidity or XToken minted from pool
+    // event Mint(address token, address to, uint amountETH, uint amountToken, uint liquidity);
     
-    /// @dev Remove liquidity and burn xtoken event
-    /// @param token The address of ERC20 Token
-    /// @param to The target address receiving the Token
-    /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
-    /// @param amountETHOut The real amount of ETH transferred from the pool
-    /// @param amountTokenOut The real amount of Token transferred from the pool
-    event Burn(address token, address to, uint liquidity, uint amountETHOut, uint amountTokenOut);
+    // /// @dev Remove liquidity and burn xtoken event
+    // /// @param token The address of ERC20 Token
+    // /// @param to The target address receiving the Token
+    // /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
+    // /// @param amountETHOut The real amount of ETH transferred from the pool
+    // /// @param amountTokenOut The real amount of Token transferred from the pool
+    // event Burn(address token, address to, uint liquidity, uint amountETHOut, uint amountTokenOut);
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20

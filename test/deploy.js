@@ -27,6 +27,12 @@ describe('CoFiXRouter', function() {
             usdAnchor,
             ethAnchor,
 
+            xeth,
+            xpeth,
+            xusdt,
+            xpusd,
+            xusdc,
+
             pusd,
             usdc,
             weth
@@ -61,6 +67,178 @@ describe('CoFiXRouter', function() {
         // await ntokenMining.post(cofi.address, 10, toBigInt(2565), {
         //     value: toBigInt(10.1)
         // });
+
+        const cfg = function (c) {
+            return {
+                theta: c.theta.toString(),
+                impactCostVOL: c.impactCostVOL.toString(),
+                nt: c.nt.toString()
+            };
+        }
+        const eth = { address: '0x0000000000000000000000000000000000000000' };
+
+        // weth: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+        // usdt: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+        // eth/usdt pool 500: 0x11b815efB8f581194ae79006d24E0d814B7697F6
+        //  token0: 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 address
+        //  token1: 0xdac17f958d2ee523a2206206994597c13d831ec7 address
+        // eth/usdt pool 3000: 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36
+        //  token0: 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 address
+        //  token1: 0xdac17f958d2ee523a2206206994597c13d831ec7 address
+        // uniswap factory: 0x1F98431c8aD98523631AE4a59f267346ea31F984
+        
+        // const TestRouter = await ethers.getContractFactory('TestRouter');
+        // const testRouter = await TestRouter.deploy(eth.address);
+        // console.log('pool: ' + await testRouter.getUniswapPool(
+        //     '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        //     '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        //     3000
+        // ));
+
+        /// @dev 构造uniswap适配资金池
+        /// @param targetUniswapV3Pool 目标UniswapV3Pool地址
+        /// @param weth9 目标IWETH9实现地址
+        //constructor (address targetUniswapV3Pool, address weth9) 
+        // const targetUniswapV3Pool = '0x11b815efB8f581194ae79006d24E0d814B7697F6';
+        // const weth9 = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+        // const UniswapV3PoolAdapter = await ethers.getContractFactory('UniswapV3PoolAdapter');
+        // const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy(targetUniswapV3Pool, weth9, {
+        //     gasPrice: 49000000000,
+        //     nonce: 165
+        // });
+
+        //console.log('uniswapV3PoolAdapter: ' + uniswapV3PoolAdapter.address);
+
+        // uniswapV3PoolAdapter: 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a
+        // newCofixRouter: 0x5F4bBB85f2E2Fd5E64bFeBD0edC64409182A57A1
+        const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
+        const newCofixRouter = await CoFiXRouter.deploy({
+            gasPrice: 44000000000,
+            nonce: 166
+        });
+        console.log('newCofixRouter: ' + newCofixRouter.address);
+
+        // const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy('0x7b2a5f8956ff62b26ac87f22165f75185e2ad639', '0xc778417e063141139fce010982780140aa0cd5ab', {
+        //     gasPrice: 1470000000,
+        //     nonce: 2064
+        // });
+
+        return; 
+
+        // if (true) {
+        //     const UNI = '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984';
+        //     const WET = '0xc778417e063141139fce010982780140aa0cd5ab';
+        //     let up = await testRouter.getUniswapPool(UNI, WET, 3000);
+        //     console.log('up: ' + up);
+        // }
+        // 0x7b2a5f8956ff62b26ac87f22165f75185e2ad639
+        // return;
+
+        // const UniswapV3PoolAdapter = await ethers.getContractFactory('UniswapV3PoolAdapter');
+        // const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy(
+        //     '0x7b2a5f8956ff62b26ac87f22165f75185e2ad639',
+        //     '0xc778417e063141139fce010982780140aa0cd5ab'
+        // );
+
+        // console.log('uniswapV3PoolAdapter: ' + uniswapV3PoolAdapter.address);
+
+        // uniswapV3PoolAdapter: 0xCF483FF2D14EFd67f2c78cfe3430488313191569
+
+        // await cofixRouter.registerPair(
+        //     '0x0000000000000000000000000000000000000000', 
+        //     '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+        //     '0xCF483FF2D14EFd67f2c78cfe3430488313191569'
+        // );
+        // const TestERC20 = await ethers.getContractFactory('TestERC20');
+        // const uni = await TestERC20.attach('0x1f9840a85d5af5bf1d1762f925bdaddc4201f984');
+        // console.log('usdt: ' + await usdt.balanceOf(owner.address));
+        // await uni.approve(cofixRouter.address, toBigInt(0.01));
+        // let receipt = await cofixRouter.swapExactTokensForTokens(
+        //     [
+        //         uni.address,
+        //         '0x0000000000000000000000000000000000000000',
+        //         usdt.address
+        //         // 目标token地址
+        //     ],
+        //     // eth数量
+        //     toBigInt(0.01),
+        //     // 预期获得的token的最小数量
+        //     BigInt(0),
+        //     // 接收地址
+        //     owner.address,
+        //     // 出矿接收地址
+        //     owner.address,
+        //     BigInt('1800000000000'), {
+        //         value: BigInt('10000000000000000')
+        //     }
+        // );
+        // console.log('usdt: ' + await usdt.balanceOf(owner.address));
+
+        return;
+
+        // await usdt.transfer(owner.address, 0, { nonce: 1973, gasPrice: 10e8 });
+        // await usdt.transfer(owner.address, 1, { nonce: 1973, gasPrice: 11e8 })
+        // return;
+        // console.log('pairFor(eth/usdt)=' + await cofixRouter.pairFor(eth.address, usdt.address));
+        // console.log('pairFor(usdt/eth)=' + await cofixRouter.pairFor(usdt.address, eth.address));
+
+        // const chi = async function(xtoken) {
+        //     let v = await cofixVaultForStaking.getChannelInfo(xtoken);
+        //     return {
+        //         totalStaked: v.totalStaked.toString(),
+        //         cofiPerBlock: v.cofiPerBlock.toString()
+        //     };
+        // }
+        // console.log('getChannelInfo(cnode)=', await chi(cnode.address));
+        // console.log('getChannelInfo(usdtPair)=', await chi(usdtPair.address));
+        // console.log('getChannelInfo(hbtcPair)=', await chi(hbtcPair.address));
+        // console.log('getChannelInfo(nestPair)=', await chi(nestPair.address));
+        // console.log('getChannelInfo(cofiPair)=', await chi(cofiPair.address));
+        // console.log('getChannelInfo(xeth)=', await chi(xeth.address));
+        // console.log('getChannelInfo(xpeth)=', await chi(xpeth.address));
+        // console.log('getChannelInfo(xusdt)=', await chi(xusdt.address));
+        // console.log('getChannelInfo(xpusd)=', await chi(xpusd.address));
+        // console.log('getChannelInfo(xusdc)=', await chi(xusdc.address));
+
+        await console.log('usdtPair: ', cfg(await usdtPair.getConfig()));
+        await console.log('hbtcPair: ', cfg(await hbtcPair.getConfig()));
+        await console.log('nestPair: ', cfg(await nestPair.getConfig()));
+        await console.log('cofiPair: ', cfg(await cofiPair.getConfig()));
+
+        await console.log('ethAnchor: ', cfg(await ethAnchor.getConfig()));
+        await console.log('usdAnchor: ', cfg(await usdAnchor.getConfig()));
+
+        return;
+        console.log('16. ethAnchor.setConfig()');
+        await ethAnchor.setConfig(20, 0, '0');
+        console.log('17. usdAnchor.setConfig()');
+        await usdAnchor.setConfig(20, 0, '0');
+
+        return;
+    //     cnode.address,
+    //     usdtPair.address,
+    //     hbtcPair.address,
+    //     nestPair.address,
+    //     cofiPair.address,
+    //     xeth.address,
+    //     xpeth.address,
+    //     xusdt.address,
+    //     xpusd.address,
+    //     xusdc.address
+        console.log('18. cofixVaultForStaking.batchSetPoolWeight()');
+        await cofixVaultForStaking.batchSetPoolWeight([
+            // LP-usdt speed ** 0CoFi/block **
+            usdtPair.address,
+            // LP-xeth speed 	** 0.2CoFi/block **
+            xeth.address,
+            // LP-xusdt speed 	** 0.2CoFi/block **
+            xusdt.address,
+            // LP-xpusd speed 	** 0.15CoFi/block **
+            xpusd.address
+        ], [0, 20, 20, 15]);
+
+        console.log('24. registerPair(eth.address, usdt.address, usdtPair.address)');
+        await cofixRouter.registerPair(eth.address, usdt.address, '0x0000000000000000000000000000000000000000');
 
         console.log('ok');
         

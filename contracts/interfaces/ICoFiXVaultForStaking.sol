@@ -55,4 +55,13 @@ interface ICoFiXVaultForStaking {
     /// @dev Claim CoFi
     /// @param xtoken xtoken address (or CNode address)
     function getReward(address xtoken) external;
+
+    /// @dev Calculate dividend data
+    /// @param xtoken xtoken address (or CNode address)
+    /// @return newReward Amount added since last settlement
+    /// @return rewardPerToken New number of unit token dividends
+    function calcReward(address xtoken) external view returns (
+        uint newReward, 
+        uint rewardPerToken
+    );
 }

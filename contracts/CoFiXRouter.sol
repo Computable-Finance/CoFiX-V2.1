@@ -190,13 +190,14 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address cofixVaultForStaking = _cofixVaultForStaking;
         (xtoken, liquidity) = ICoFiXPool(pool).mint { 
             value: msg.value 
-        } (token, cofixVaultForStaking, amountETH, amountToken, to);
+        } (token, address(this), amountETH, amountToken, to);
 
         // The number of shares should not be lower than the expected minimum value
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
 
         // 3. Stake xtoken to CoFiXVaultForStaking
         ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(xtoken, to, liquidity);
+        TransferHelper.safeTransfer(xtoken, cofixVaultForStaking, liquidity);
     }
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 

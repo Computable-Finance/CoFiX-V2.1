@@ -13,10 +13,10 @@ import "./interfaces/ICoFiXGovernance.sol";
 /// @dev Base contract of CoFiX
 contract CoFiXBase {
 
-    // Address of CoFiToken contract
+    // // Address of CoFiToken contract
     address constant COFI_TOKEN_ADDRESS = 0x1a23a6BfBAdB59fa563008c0fB7cf96dfCF34Ea1;
 
-    // Address of CoFiNode contract
+    // // Address of CoFiNode contract
     address constant CNODE_TOKEN_ADDRESS = 0x558201DC4741efc11031Cdc3BC1bC728C23bF512;
 
     // Genesis block number of CoFi

@@ -95,7 +95,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
         for (uint i = 0; i < cnt; ++i) {
             address xtoken = xtokens[i];
             require(xtoken != address(0), "CoFiXVaultForStaking: invalid xtoken");
-            StakeChannel storage channel = _channels[xtoken] ;
+            StakeChannel storage channel = _channels[xtoken];
             _updateReward(xtoken, channel);
             channel.cofiWeight = weights[i];
         }
@@ -122,7 +122,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @param addr Target address
     /// @return The number of CoFi to be collected by the target address on the designated transaction lock
-    function earned(address xtoken, address addr) public view override returns (uint) {
+    function earned(address xtoken, address addr) external view override returns (uint) {
         // Load staking channel
         StakeChannel storage channel = _channels[xtoken];
         // Call _calcReward() to calculate new reward
@@ -173,13 +173,14 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @param amount Stake amount
     function stake(address xtoken, uint amount) external override {
+        // Transfer xtoken from msg.sender to this
+        TransferHelper.safeTransferFrom(xtoken, msg.sender, address(this), amount);
+
         // Load stake channel
         StakeChannel storage channel = _channels[xtoken];
         // Settle reward for account
         Account memory account = _getReward(xtoken, channel, msg.sender);
 
-        // Transfer xtoken from msg.sender to this
-        TransferHelper.safeTransferFrom(xtoken, msg.sender, address(this), amount);
         // Update totalStaked
         channel.totalStaked += amount;
 
@@ -284,7 +285,7 @@ contract CoFiXVaultForStaking is CoFiXBase, ICoFiXVaultForStaking {
     /// @param xtoken xtoken address (or CNode address)
     /// @return newReward Amount added since last settlement
     /// @return rewardPerToken New number of unit token dividends
-    function calcReward(address xtoken) public view returns (
+    function calcReward(address xtoken) external view override returns (
         uint newReward, 
         uint rewardPerToken
     ) {

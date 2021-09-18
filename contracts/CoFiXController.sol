@@ -10,11 +10,12 @@ contract CoFiXController is ICoFiXController {
     uint constant BLOCK_TIME = 14;
 
     // Address of NestPriceFacade contract
-    address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
+    //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
+    address NEST_PRICE_FACADE;
 
     /// @dev To support open-zeppelin/upgrades
     function initialize(address nestPriceFacade) external {
-        //NEST_PRICE_FACADE = nestPriceFacade;
+        NEST_PRICE_FACADE = nestPriceFacade;
     }
 
     /// @dev Query latest price info
@@ -28,7 +29,7 @@ contract CoFiXController is ICoFiXController {
     /// @return avgPriceTokenAmount Avg price - token amount
     /// @return sigmaSQ The square of the volatility (18 decimal places)
     function latestPriceInfo(address tokenAddress, address payback) 
-    public 
+    external 
     payable 
     override
     returns (
@@ -194,20 +195,46 @@ contract CoFiXController is ICoFiXController {
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     /// @return k The K value
     function _calcK(uint sigmaSQ, uint bn) private view returns (uint k) {
-        k = 0.002 ether + _sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ / 1e4) * 2e11;
+        k = 0.002 ether + (_sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ * 1 ether) >> 1);
     }
 
-    // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    function _sqrt(uint y) private pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = (y >> 1) + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) >> 1;
+    // // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
+    // function _sqrt(uint y) private pure returns (uint z) {
+    //     if (y > 3) {
+    //         z = y;
+    //         uint x = (y >> 1) + 1;
+    //         while (x < z) {
+    //             z = x;
+    //             x = (y / x + x) >> 1;
+    //         }
+    //     } else if (y != 0) {
+    //         z = 1;
+    //     }
+    // }
+
+    function _sqrt(uint256 x) private pure returns (uint256) {
+        unchecked {
+            if (x == 0) return 0;
+            else {
+                uint256 xx = x;
+                uint256 r = 1;
+                if (xx >= 0x100000000000000000000000000000000) { xx >>= 128; r <<= 64; }
+                if (xx >= 0x10000000000000000) { xx >>= 64; r <<= 32; }
+                if (xx >= 0x100000000) { xx >>= 32; r <<= 16; }
+                if (xx >= 0x10000) { xx >>= 16; r <<= 8; }
+                if (xx >= 0x100) { xx >>= 8; r <<= 4; }
+                if (xx >= 0x10) { xx >>= 4; r <<= 2; }
+                if (xx >= 0x8) { r <<= 1; }
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1;
+                r = (r + x / r) >> 1; // Seven iterations should be enough
+                uint256 r1 = x / r;
+                return (r < r1 ? r : r1);
             }
-        } else if (y != 0) {
-            z = 1;
         }
     }
 

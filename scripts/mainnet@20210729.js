@@ -74,6 +74,8 @@ exports.deploy = async function () {
     // xusdt: 0x172b260F92d1A0661e9888918a19154E99E0B9f0
     // xpusd: 0x2b06Af945F1c18A6bf02ac6E401Fd251d9FfdBCf
     // xusdc: 0xF5beBE517eb95557CBcFd19a2BAfa8e9fC50C5EE
+    // uniswapV3UsdtPool: 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a
+    // newCofixRouterImpl: 0x5F4bBB85f2E2Fd5E64bFeBD0edC64409182A57A1
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
