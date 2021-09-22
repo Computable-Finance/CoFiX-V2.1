@@ -56,6 +56,8 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     // Address of CoFiXController
     address _cofixController;
     // Impact cost threshold, this parameter is obsolete
+    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
     uint96 _impactCostVOL;
 
     // Total mined
@@ -103,12 +105,12 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
-    /// @param impactCostVOL Impact cost threshold, this parameter is obsolete
+    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // Impact cost threshold, this parameter is obsolete
+        // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
         _impactCostVOL = impactCostVOL;
         // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
         _nt = nt;
@@ -116,7 +118,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
-    /// @return impactCostVOL Impact cost threshold, this parameter is obsolete
+    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
         return (_theta, _impactCostVOL, _nt);
@@ -603,7 +605,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @return impactCost Impact cost
     function impactCostForBuyInETH(uint vol) public pure override returns (uint impactCost) {
         //return _impactCostForBuyInETH(vol, uint(_impactCostVOL));
-        impactCost = vol / 100000;
+        impactCost = vol * uint(_impactCostVOL) / 100000;
     }
 
     /// @dev Calculate the impact cost of sell out eth
@@ -611,7 +613,7 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
     /// @return impactCost Impact cost
     function impactCostForSellOutETH(uint vol) public pure override returns (uint impactCost) {
         //return _impactCostForSellOutETH(vol, uint(_impactCostVOL));
-        impactCost = vol / 100000;
+        impactCost = vol * uint(_impactCostVOL) / 100000;
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making

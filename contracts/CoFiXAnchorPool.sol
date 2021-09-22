@@ -51,7 +51,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
-    // Impact cost threshold, this parameter is obsolete
+    // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     //uint96 _impactCostVOL;
 
     // Array of TokenInfo
@@ -98,7 +98,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // Impact cost threshold, this parameter is obsolete
+        // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
         //_impactCostVOL = impactCostVOL;
         require(uint(impactCostVOL) == 0, "CoFiXAnchorPool: impactCostVOL must be 0");
         // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based

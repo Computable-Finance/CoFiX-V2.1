@@ -57,7 +57,7 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
 
     // /// @dev Set configuration
     // /// @param theta Trade fee rate, ten thousand points system. 20
-    // /// @param impactCostVOL Impact cost threshold, this parameter is obsolete
+    // /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     // /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     // function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override {
     //     revert("UWP:not support");
@@ -65,7 +65,7 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
 
     // /// @dev Get configuration
     // /// @return theta Trade fee rate, ten thousand points system. 20
-    // /// @return impactCostVOL Impact cost threshold, this parameter is obsolete
+    // /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     // /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     // function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
     //     revert("UWP:not support");
