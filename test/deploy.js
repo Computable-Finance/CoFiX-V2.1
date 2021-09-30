@@ -35,7 +35,7 @@ describe('CoFiXRouter', function() {
 
             pusd,
             usdc,
-            weth
+            peth
         } = await deployer.deploy();
 
         const toBigInt = function(val, decimals) {
@@ -77,51 +77,46 @@ describe('CoFiXRouter', function() {
         }
         const eth = { address: '0x0000000000000000000000000000000000000000' };
 
-        // weth: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-        // usdt: 0xdAC17F958D2ee523a2206206994597C13D831ec7
-        // eth/usdt pool 500: 0x11b815efB8f581194ae79006d24E0d814B7697F6
-        //  token0: 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 address
-        //  token1: 0xdac17f958d2ee523a2206206994597c13d831ec7 address
-        // eth/usdt pool 3000: 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36
-        //  token0: 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 address
-        //  token1: 0xdac17f958d2ee523a2206206994597c13d831ec7 address
-        // uniswap factory: 0x1F98431c8aD98523631AE4a59f267346ea31F984
-        
-        // const TestRouter = await ethers.getContractFactory('TestRouter');
-        // const testRouter = await TestRouter.deploy(eth.address);
-        // console.log('pool: ' + await testRouter.getUniswapPool(
-        //     '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-        //     '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-        //     3000
-        // ));
+        console.log('24. registerPair(eth.address, usdt.address, usdtPair.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(eth.address, usdt.address));
+        console.log('25. registerPair(eth.address, hbtc.address, hbtcPair.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(eth.address, hbtc.address));
+        console.log('26. registerPair(eth.address, nest.address, nestPair.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(eth.address, nest.address));
+        console.log('27. registerPair(eth.address, cofi.address, cofiPair.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(eth.address, cofi.address));
+    
+        // 注册ETH锚定池
+        console.log('28. registerPair(eth.address, peth.address, ethAnchor.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(eth.address, peth.address));
+        // 注册USD锚定池
+        console.log('29. registerPair(usdt.address, pusd.address, usdAnchor.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(usdt.address, pusd.address));
+        console.log('30. registerPair(usdt.address, usdc.address, usdAnchor.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(usdt.address, usdc.address));
+        console.log('31. registerPair(pusd.address, usdc.address, usdAnchor.address)');
+        console.log('pair: ' + await cofixRouter.pairFor(pusd.address, usdc.address));
 
-        /// @dev 构造uniswap适配资金池
-        /// @param targetUniswapV3Pool 目标UniswapV3Pool地址
-        /// @param weth9 目标IWETH9实现地址
-        //constructor (address targetUniswapV3Pool, address weth9) 
-        // const targetUniswapV3Pool = '0x11b815efB8f581194ae79006d24E0d814B7697F6';
-        // const weth9 = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-        // const UniswapV3PoolAdapter = await ethers.getContractFactory('UniswapV3PoolAdapter');
-        // const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy(targetUniswapV3Pool, weth9, {
-        //     gasPrice: 49000000000,
-        //     nonce: 165
-        // });
 
-        //console.log('uniswapV3PoolAdapter: ' + uniswapV3PoolAdapter.address);
-
-        // uniswapV3PoolAdapter: 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a
-        // newCofixRouter: 0x5F4bBB85f2E2Fd5E64bFeBD0edC64409182A57A1
-        const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
-        const newCofixRouter = await CoFiXRouter.deploy({
-            gasPrice: 44000000000,
-            nonce: 166
-        });
-        console.log('newCofixRouter: ' + newCofixRouter.address);
-
-        // const uniswapV3PoolAdapter = await UniswapV3PoolAdapter.deploy('0x7b2a5f8956ff62b26ac87f22165f75185e2ad639', '0xc778417e063141139fce010982780140aa0cd5ab', {
-        //     gasPrice: 1470000000,
-        //     nonce: 2064
-        // });
+        // console.log('24. registerPair(eth.address, usdt.address, usdtPair.address)');
+        // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
+        // console.log('25. registerPair(eth.address, hbtc.address, hbtcPair.address)');
+        // await cofixRouter.registerPair(eth.address, hbtc.address, '0x0000000000000000000000000000000000000000');
+        // console.log('26. registerPair(eth.address, nest.address, nestPair.address)');
+        // await cofixRouter.registerPair(eth.address, nest.address, '0x0000000000000000000000000000000000000000');
+        // console.log('27. registerPair(eth.address, cofi.address, cofiPair.address)');
+        // await cofixRouter.registerPair(eth.address, cofi.address, '0x0000000000000000000000000000000000000000');
+    
+        // // // 注册ETH锚定池
+        // console.log('28. registerPair(eth.address, peth.address, ethAnchor.address)');
+        // await cofixRouter.registerPair(eth.address, peth.address, '0x0000000000000000000000000000000000000000');
+        // // 注册USD锚定池
+        // console.log('29. registerPair(usdt.address, pusd.address, usdAnchor.address)');
+        // await cofixRouter.registerPair(usdt.address, pusd.address, '0x0000000000000000000000000000000000000000');
+        // console.log('30. registerPair(usdt.address, usdc.address, usdAnchor.address)');
+        // await cofixRouter.registerPair(usdt.address, usdc.address, '0x0000000000000000000000000000000000000000');
+        // console.log('31. registerPair(pusd.address, usdc.address, usdAnchor.address)');
+        // await cofixRouter.registerPair(pusd.address, usdc.address, '0x0000000000000000000000000000000000000000');
 
         return; 
 
