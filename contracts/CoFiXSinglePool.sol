@@ -158,11 +158,12 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             token,
             payback
         );
+        tokenAmount = tokenAmount * (1 ether + k) / 1 ether;
             
         uint balance0 = ethBalance();
         uint balance1 = IERC20(token).balanceOf(address(this));
             
-        uint totalValue = _calcTotalValue(
+        liquidity = (amountETH + amountToken * ethAmount / tokenAmount) * 1 ether / _calcTotalValue(
             // To calculate the net value, we need to use the asset balance before the market making fund 
             // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
             // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
@@ -175,10 +176,8 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             // Oracle price - eth amount
             ethAmount, 
             // Oracle price - token amount
-            tokenAmount * 1 ether / (1 ether + k)
+            tokenAmount
         );
-
-        liquidity = (amountETH + amountToken * ethAmount * 1 ether / tokenAmount / (1 ether + k)) * 1 ether / totalValue;
 
         if (total == 0) {
             _mint(address(0), MINIMUM_LIQUIDITY); 
@@ -355,7 +354,8 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Deposit transaction fee
     function _collect(uint fee) private returns (uint total) {
-        total = uint(_totalFee) + fee;
+        // 佣金的1/3进入DAO，2/3留在资金池
+        total = uint(_totalFee) + fee / 3;
         if (total >= 1 ether) {
             ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
             total = 0;
