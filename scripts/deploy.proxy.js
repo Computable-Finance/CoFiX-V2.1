@@ -183,13 +183,13 @@ exports.deploy = async function () {
 
     // 6. 初始化资金池参数
     console.log('12. usdtPair.setConfig()');
-    await usdtPair.setConfig(20, '100000000000000000000', '100000000000000000');
+    await usdtPair.setConfig(20, '1', '100000000000000000');
     console.log('13. hbtcPair.setConfig()');
-    await hbtcPair.setConfig(20, '100000000000000000000', '100000000000000000');
+    await hbtcPair.setConfig(20, '1', '100000000000000000');
     console.log('14. nestPair.setConfig()');
-    await nestPair.setConfig(20, '5000000000000000000', '100000000000000000');
+    await nestPair.setConfig(20, '200', '100000000000000000');
     console.log('15. cofiPair.setConfig()');
-    await cofiPair.setConfig(20, '5000000000000000000', '100000000000000000');
+    await cofiPair.setConfig(20, '500', '100000000000000000');
     console.log('16. ethAnchor.setConfig()');
     await ethAnchor.setConfig(20, 0, '100000000000000000');
     console.log('17. usdAnchor.setConfig()');

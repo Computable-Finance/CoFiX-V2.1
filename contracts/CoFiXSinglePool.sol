@@ -37,8 +37,6 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Address of CoFiXDAO
     address _cofixDAO;
-    // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    uint96 _nt;
 
     // Address of CoFiXRouter
     address _cofixRouter;
@@ -91,12 +89,11 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
+        require(uint(nt) == 0);
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
         _impactCostVOL = impactCostVOL;
-        // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-        _nt = nt;
     }
 
     /// @dev Get configuration
@@ -104,7 +101,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
     function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
-        return (_theta, _impactCostVOL, _nt);
+        return (_theta, _impactCostVOL, uint96(0));
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -159,27 +156,28 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             payback
         );
         tokenAmount = tokenAmount * (1 ether + k) / 1 ether;
+        
+        liquidity = amountETH + amountToken * ethAmount / tokenAmount;
+        if (total > 0) {
+            uint balance0 = ethBalance();
+            uint balance1 = IERC20(token).balanceOf(address(this));
             
-        uint balance0 = ethBalance();
-        uint balance1 = IERC20(token).balanceOf(address(this));
-            
-        liquidity = (amountETH + amountToken * ethAmount / tokenAmount) * 1 ether / _calcTotalValue(
-            // To calculate the net value, we need to use the asset balance before the market making fund 
-            // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
-            // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
-            // and amountToken respectively
+            liquidity = liquidity * total / _calcTotalValue(
+                // To calculate the net value, we need to use the asset balance before the market making fund 
+                // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
+                // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
+                // and amountToken respectively
 
-            // The current eth balance minus the amount eth equals the ETH balance before the transaction
-            balance0 - amountETH, 
-            //The current token balance minus the amountToken equals to the token balance before the transaction
-            balance1 - amountToken,
-            // Oracle price - eth amount
-            ethAmount, 
-            // Oracle price - token amount
-            tokenAmount
-        );
-
-        if (total == 0) {
+                // The current eth balance minus the amount eth equals the ETH balance before the transaction
+                balance0 - amountETH, 
+                //The current token balance minus the amountToken equals to the token balance before the transaction
+                balance1 - amountToken,
+                // Oracle price - eth amount
+                ethAmount, 
+                // Oracle price - token amount
+                tokenAmount
+            );
+        } else {
             _mint(address(0), MINIMUM_LIQUIDITY); 
             liquidity -= MINIMUM_LIQUIDITY;
         }
@@ -405,7 +403,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         uint ethAmount, 
         uint tokenAmount
     ) private pure returns (uint totalValue) {
-        totalValue = balance0 * tokenAmount + balance1 * ethAmount;
+        totalValue = balance0 + balance1 * ethAmount / tokenAmount;
     }
 
     /// @dev Calculate the impact cost of buy in eth
