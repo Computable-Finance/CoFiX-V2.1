@@ -64,14 +64,14 @@ module.exports = {
     rinkeby: {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${config.alchemy.rinkeby.apiKey}`,
       accounts: [config.account.rinkeby.key, config.account.rinkeby.userA, config.account.rinkeby.userB],
-      gasPrice: 1e9,
+      initialBaseFeePerGas: 1e9,
       gas: 6e6,
       timeout: 2000000000
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${config.alchemy.kovan.apiKey}`,
       accounts: [config.account.kovan.key, config.account.kovan.userA, config.account.kovan.userB],
-      gasPrice:1e9,
+      initialBaseFeePerGas: 1e9,
       timeout: 2000000000
     },
     hardhat: {

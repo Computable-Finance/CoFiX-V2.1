@@ -96,6 +96,10 @@ exports.deploy = async function () {
     // xusdt: 0x1eDBAFb57D9Ae6808F9746E2bEf0C491351B456F
     // xpusd: 0x98F718Db4fA72F584C9dcA958c1fa7f7665Fb9a7
     // xusdc: 0x738029DD7dB8872eA9f4FF72eC5f06c31DED0948
+    // uni: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
+    // uniswapV3PoolAdapter-uni: 0xCF483FF2D14EFd67f2c78cfe3430488313191569
+    // cofixSinglePool-nest: 0x503B77BB77182b5f2a19Bacc5285af0edC5126FF
+    // cofixSinglePool-cofi: 0x4115F0e23AbDd94AEF944e5Aba1362b43d3d6638
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
