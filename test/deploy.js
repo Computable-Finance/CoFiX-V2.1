@@ -67,9 +67,9 @@ describe('CoFiXRouter', function() {
         await cofixSinglePool_cofi.update(cofixGovernance.address);
 
         console.log('3. cofixSinglePool_nest.setConfig()');
-        await cofixSinglePool_nest.setConfig(30, '200', 0);
+        await cofixSinglePool_nest.setConfig(30, 10, '200');
         console.log('4. cofixSinglePool_cofi.setConfig()');
-        await cofixSinglePool_cofi.setConfig(30, '500', 0);
+        await cofixSinglePool_cofi.setConfig(30, 10, '500');
 
         console.log('5. cofixRouter.registerPair(nest)');
         await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', nest.address, cofixSinglePool_nest.address);

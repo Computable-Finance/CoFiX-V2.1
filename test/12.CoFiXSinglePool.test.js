@@ -46,7 +46,7 @@ describe('CoFiXRouter', function() {
         await cofixSinglePool.update(cofixGovernance.address);
         await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', usdt.address, cofixSinglePool.address);
         console.log('12. cofixSinglePool.setConfig()');
-        await cofixSinglePool.setConfig(30, '1', 0);
+        await cofixSinglePool.setConfig(30, 10, '1');
 
         const toBigInt = function(val, decimals) {
             decimals = decimals || 18;
@@ -257,8 +257,8 @@ describe('CoFiXRouter', function() {
             let cfg = await cofixSinglePool.getConfig();
             console.log({
                 theta: cfg.theta.toString(),
+                theta0: cfg.theta0.toString(),
                 vol: cfg.impactCostVOL.toString(),
-                nt: cfg.nt.toString()
             });
         }
 

@@ -21,6 +21,18 @@ interface ICoFiXSinglePool is ICoFiXPool {
     /// @param mined The amount of CoFi which will be mind by this trade
     event SwapForETH(uint amountIn, address to, uint amountETHOut, uint mined);
 
+    /// @dev Set configuration
+    /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
+    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL) external;
+
+    /// @dev Get configuration
+    /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
+    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    function getConfig() external view returns (uint16 theta, uint16 theta0, uint96 impactCostVOL);
+
     /// @dev Settle trade fee to DAO
     function settle() external;
 

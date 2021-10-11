@@ -568,17 +568,14 @@ contract CoFiXPair is CoFiXBase, CoFiXERC20, ICoFiXPair {
         uint tokenAmount
     ) external view override returns (uint navps) {
         uint total = totalSupply;
-        if (total > 0) {
-            return _calcTotalValue(
-                ethBalance(), 
-                IERC20(_tokenAddress).balanceOf(address(this)), 
-                ethAmount, 
-                tokenAmount,
-                _initToken0Amount,
-                _initToken1Amount
-            ) * 1 ether / total;
-        }
-        return 1 ether;
+        navps = total > 0 ? _calcTotalValue(
+            ethBalance(), 
+            IERC20(_tokenAddress).balanceOf(address(this)), 
+            ethAmount, 
+            tokenAmount,
+            _initToken0Amount,
+            _initToken1Amount
+        ) * 1 ether / total : 1 ether;
     }
 
     // Calculate the total value of asset balance

@@ -28,6 +28,10 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Target token address
     address _tokenAddress; 
+    // Trade fee rate, ten thousand points system. 20
+    uint16 _theta;
+    // Trade fee rate for dao, ten thousand points system. 20
+    uint16 _theta0;
 
     // ERC20 - name
     string public name;
@@ -42,8 +46,6 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     address _cofixRouter;
     // Lock flag
     bool _locked;
-    // Trade fee rate, ten thousand points system. 20
-    uint16 _theta;
     // Total trade fee
     uint72 _totalFee;
 
@@ -86,22 +88,23 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
-        require(uint(nt) == 0);
+    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
+        // Trade fee rate for dao, ten thousand points system. 20
+        _theta0 = theta0;
         // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
         _impactCostVOL = impactCostVOL;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
-        return (_theta, _impactCostVOL, uint96(0));
+    function getConfig() external view override returns (uint16 theta, uint16 theta0, uint96 impactCostVOL) {
+        return (_theta, _theta0, _impactCostVOL);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -289,13 +292,14 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         );
 
         // 2. Calculate the trade result
-        uint fee = amountIn * uint(_theta) / 10000;
+        uint theta = uint(_theta);
+        uint fee = amountIn * theta / 10000;
         amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
             1 ether + k + impactCostForSellOutETH(amountIn)
         );
 
         // 3. Transfer transaction fee
-        fee = _collect(fee);
+        fee = _collect(fee * uint(_theta0) / theta);
 
         // 5. Transfer token
         TransferHelper.safeTransfer(token, to, amountTokenOut);
@@ -338,11 +342,12 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             1 ether + k + impactCostForBuyInETH(amountETHOut)
         ); 
 
-        uint fee = amountETHOut * uint(_theta) / 10000;
+        uint theta = uint(_theta);
+        uint fee = amountETHOut * theta / 10000;
         amountETHOut = amountETHOut - fee;
 
         // 3. Transfer transaction fee
-        fee = _collect(fee);
+        fee = _collect(fee * uint(_theta0) / theta);
 
         // 5. Transfer token
         payable(to).transfer(amountETHOut);
@@ -353,7 +358,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     // Deposit transaction fee
     function _collect(uint fee) private returns (uint total) {
         // 佣金的1/3进入DAO，2/3留在资金池
-        total = uint(_totalFee) + fee / 3;
+        total = uint(_totalFee) + fee;
         if (total >= 1 ether) {
             ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
             total = 0;

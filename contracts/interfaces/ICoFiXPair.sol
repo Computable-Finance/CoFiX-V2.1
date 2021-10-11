@@ -21,6 +21,18 @@ interface ICoFiXPair is ICoFiXPool {
     /// @param mined The amount of CoFi which will be mind by this trade
     event SwapForETH(uint amountIn, address to, uint amountETHOut, uint mined);
 
+    /// @dev Set configuration
+    /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external;
+
+    /// @dev Get configuration
+    /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function getConfig() external view returns (uint16 theta, uint96 impactCostVOL, uint96 nt);
+
     /// @dev Get initial asset ratio
     /// @return initToken0Amount Initial asset ratio - eth
     /// @return initToken1Amount Initial asset ratio - token
