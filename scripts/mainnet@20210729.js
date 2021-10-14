@@ -76,6 +76,11 @@ exports.deploy = async function () {
     // xusdc: 0xF5beBE517eb95557CBcFd19a2BAfa8e9fC50C5EE
     // uniswapV3UsdtPool: 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a
     // newCofixRouterImpl: 0x5F4bBB85f2E2Fd5E64bFeBD0edC64409182A57A1
+    // nhbtc: 0x1F832091fAf289Ed4f50FE7418cFbD2611225d46
+
+    //const nhbtc = await TestERC20.deploy('NHBTC', 'NHBTC', 6);
+    const nhbtc = await TestERC20.attach('0x1F832091fAf289Ed4f50FE7418cFbD2611225d46');
+    console.log('nhbtc: ' + nhbtc.address);
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
@@ -380,6 +385,7 @@ exports.deploy = async function () {
         xusdt: xusdt,
         xpusd: xpusd,
         xusdc: xusdc,
+        nhbtc: nhbtc,
 
         usdtPair: usdtPair,
         hbtcPair: hbtcPair,
