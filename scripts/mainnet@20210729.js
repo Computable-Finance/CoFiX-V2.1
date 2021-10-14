@@ -77,7 +77,10 @@ exports.deploy = async function () {
     // uniswapV3UsdtPool: 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a
     // newCofixRouterImpl: 0x5F4bBB85f2E2Fd5E64bFeBD0edC64409182A57A1
     // nhbtc: 0x1F832091fAf289Ed4f50FE7418cFbD2611225d46
-
+    // cofixSinglePool-nest: 0xA1e3D346297DAa93235f2e39372d4FCDb2230475
+    // cofixSinglePool-cofi: 0x8F6b4C4E48fe9B4b24A30037f07099778bAba0a9
+    // cofixSinglePool-nhbtc: 0x400a0aA54074C924166e7864A588b1CA0baacaD2
+    
     //const nhbtc = await TestERC20.deploy('NHBTC', 'NHBTC', 6);
     const nhbtc = await TestERC20.attach('0x1F832091fAf289Ed4f50FE7418cFbD2611225d46');
     console.log('nhbtc: ' + nhbtc.address);

@@ -76,6 +76,9 @@ npx hardhat test ./test/deploy.js --network rinkeby
 | xpusd | ICoFiXERC20 | 0x2b06Af945F1c18A6bf02ac6E401Fd251d9FfdBCf |
 | xusdc | ICoFiXERC20 | 0xF5beBE517eb95557CBcFd19a2BAfa8e9fC50C5EE |
 | uniswapV3UsdtPool | ICoFiXPool | 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a |
+| cofixSinglePool-nest | ICoFiXSinglePool | 0xA1e3D346297DAa93235f2e39372d4FCDb2230475 |
+| cofixSinglePool-cofi | ICoFiXSinglePool | 0x8F6b4C4E48fe9B4b24A30037f07099778bAba0a9 |
+| cofixSinglePool-nhbtc | ICoFiXSinglePool | 0x400a0aA54074C924166e7864A588b1CA0baacaD2 |
 
 ### 2021-07-20@rinkeby
 | Name | Interfaces | rinkeby |
