@@ -156,4 +156,20 @@ contract NestPriceFacade is INestPriceFacade {
         }
         return (prices, bn, price, price * 9500 / 10000, 10853469234);
     }
+
+    /// @dev Get the last (num) effective price
+    /// @param tokenAddress Destination token address
+    /// @param count The number of prices that want to return
+    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, and the excess fees will be returned through this address
+    /// @return An array which length is num * 2, each two element expresses one price like blockNumber｜price
+    function lastPriceList(address tokenAddress, uint count, address payback) external payable override returns (uint[] memory) {
+        if (msg.value > 0.01 ether) {
+            payable(payback).transfer(msg.value - 0.01 ether);
+        } else {
+            require(msg.value == 0.01 ether, "CoFiXController: Error fee");
+        }
+
+        (uint[] memory prices, , , ,) = lastPriceListAndTriggeredPriceInfoView(tokenAddress, count);
+        return prices;
+    }
 }

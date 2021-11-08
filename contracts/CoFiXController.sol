@@ -138,79 +138,27 @@ contract CoFiXController is ICoFiXController {
     }
 
     /// @dev K value is calculated by revised volatility
-    /// @param sigmaSQ The square of the volatility (18 decimal places).
     /// @param p0 Last price (number of tokens equivalent to 1 ETH)
     /// @param bn0 Block number of the last price
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
-    function calcRevisedK(uint sigmaSQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
-        k = _calcK(_calcRevisedSigmaSQ(sigmaSQ, p0, bn0, p, bn), bn);
-    }
-
-    // Calculate the corrected volatility
-    function _calcRevisedSigmaSQ(
-        uint sigmaSQ,
-        uint p0, 
-        uint bn0, 
-        uint p, 
-        uint bn
-    ) private pure returns (uint revisedSigmaSQ) {
-        // sq2 = sq1 * 0.9 + rq2 * dt * 0.1
-        // sq1 = (sq2 - rq2 * dt * 0.1) / 0.9
-        // 1. 
-        // rq2 <= 4 * dt * sq1
-        // sqt = sq2
-        // 2. rq2 > 4 * dt * sq1 && rq2 <= 9 * dt * sq1
-        // sqt = (sq1 + rq2 * dt) / 2
-        // 3. rq2 > 9 * dt * sq1
-        // sqt = sq1 * 0.2 + rq2 * dt * 0.8
-
-        uint rq2 = p * 1 ether / p0;
-        if (rq2 > 1 ether) {
-            rq2 -= 1 ether;
+    function calcRevisedK(uint SIGMA_SQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
+        // TODO: SIGMA_SQ取值问题
+        uint sigmaISQ = p * 1 ether / p0;
+        if (sigmaISQ > 1 ether) {
+            sigmaISQ -= 1 ether;
         } else {
-            rq2 = 1 ether - rq2;
+            sigmaISQ = 1 ether - sigmaISQ;
         }
-        rq2 = rq2 * rq2 / 1 ether;
+        sigmaISQ = sigmaISQ * sigmaISQ / (bn - bn0) / BLOCK_TIME / 1 ether;
 
-        uint dt = (bn - bn0) * BLOCK_TIME;
-        uint sq1 = 0;
-        uint rq2dt = rq2 / dt;
-        if (sigmaSQ * 10 > rq2dt) {
-            sq1 = (sigmaSQ * 10 - rq2dt) / 9;
-        }
-
-        uint dds = dt * dt * dt * sq1;
-        if (rq2 <= (dds << 2)) {
-            revisedSigmaSQ = sigmaSQ;
-        } else if (rq2 <= 9 * dds) {
-            revisedSigmaSQ = (sq1 + rq2dt) >> 1;
+        if (sigmaISQ > SIGMA_SQ) {
+            k = _sqrt(0.002 ether * 0.002 ether * sigmaISQ / SIGMA_SQ) + 
+                _sqrt(1 ether * BLOCK_TIME * (block.number - bn) * sigmaISQ);
         } else {
-            revisedSigmaSQ = (sq1 + (rq2dt << 2)) / 5;
+            k = 0.002 ether + _sqrt(1 ether * BLOCK_TIME * SIGMA_SQ * (block.number - bn));
         }
     }
-
-    /// @dev Calc K value
-    /// @param sigmaSQ The square of the volatility (18 decimal places).
-    /// @param bn The block number when (ETH, TOKEN) price takes into effective
-    /// @return k The K value
-    function _calcK(uint sigmaSQ, uint bn) private view returns (uint k) {
-        k = 0.002 ether + (_sqrt((block.number - bn) * BLOCK_TIME * sigmaSQ * 1 ether) >> 1);
-    }
-
-    // // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
-    // function _sqrt(uint y) private pure returns (uint z) {
-    //     if (y > 3) {
-    //         z = y;
-    //         uint x = (y >> 1) + 1;
-    //         while (x < z) {
-    //             z = x;
-    //             x = (y / x + x) >> 1;
-    //         }
-    //     } else if (y != 0) {
-    //         z = 1;
-    //     }
-    // }
 
     function _sqrt(uint256 x) private pure returns (uint256) {
         unchecked {
