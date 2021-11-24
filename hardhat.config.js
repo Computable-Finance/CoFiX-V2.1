@@ -1,6 +1,6 @@
 require('@nomiclabs/hardhat-waffle');
 require('@openzeppelin/hardhat-upgrades');
-require('hardhat-gas-reporter');
+//require('hardhat-gas-reporter');
 
 const config = require('./.private.json');
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -38,7 +38,7 @@ module.exports = {
         }
       },
       {
-        version: '0.8.9',
+        version: '0.8.10',
         settings: {
           optimizer: {
             enabled: true,
@@ -74,6 +74,22 @@ module.exports = {
       initialBaseFeePerGas: 1e9,
       timeout: 2000000000
     },
+    bsc_test: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
+      gasPrice: 10e9,
+      gas: 6000000,
+      accounts: [config.account.bsc_test.key, config.account.bsc_test.userA, config.account.bsc_test.userB],
+      timeout: 2000000000
+    },
+    bsc_main: {
+      url: "https://bsc-dataseed1.defibit.io/",
+      chainId: 56,
+      gasPrice: 6e9,
+      gas: 6000000,
+      accounts: [config.account.bsc_main.key, config.account.bsc_main.userA, config.account.bsc_main.userB],
+      timeout: 2000000000
+    },
     hardhat: {
       gas: 6000000,
       gasPrice: 0
@@ -82,9 +98,9 @@ module.exports = {
   mocha: {
     timeout: 200000000
   },
-  gasReporter: {
-    currency: 'CHF',
-    gasPrice: 1
-  }
+  // gasReporter: {
+  //   currency: 'CHF',
+  //   gasPrice: 1
+  // }
 };
 

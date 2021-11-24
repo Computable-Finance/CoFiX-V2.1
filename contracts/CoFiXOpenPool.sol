@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./libs/TransferHelper.sol";
 
-import "./interfaces/ICoFiXSinglePool.sol";
+import "./interfaces/ICoFiXOpenPool.sol";
 import "./interfaces/ICoFiXController.sol";
 import "./interfaces/INestOpenPrice.sol";
 import "./interfaces/ICoFiXDAO.sol";
@@ -15,8 +15,10 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
+import "hardhat/console.sol";
+
 /// @dev 开放式资金池，使用NEST4.0价格
-contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
+contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
@@ -24,7 +26,16 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
-    uint constant BLOCK_TIME = 14;
+    /*
+    1. 如何共用做市接口：做市接口每次只能做一个币种，token0直接取得份额，token1需要根据价格转化为份额
+    2. 份额如何计算：按照计价代币来算，一个单位的计价代币表示一个份额
+    3. 兑换逻辑，价格如何转换和确定：
+    4. CoFi需要跨上去吗?
+    5. CoFiXDAO需要跨上去吗?
+    */
+
+    // TODO: 改为3秒
+    uint constant BLOCK_TIME = 3;
 
     // Address of NestPriceFacade contract
     //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
@@ -34,7 +45,13 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
     // Target token address
-    address _tokenAddress; 
+    address _token0; 
+    // Impact cost threshold, this parameter is obsolete
+    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
+    uint96 _impactCostVOL;
+
+    address _token1;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     // Trade fee rate for dao, ten thousand points system. 20
@@ -48,6 +65,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Address of CoFiXDAO
     address _cofixDAO;
+    // 常规波动率
+    uint96 _sigmaSQ;
 
     // Address of CoFiXRouter
     address _cofixRouter;
@@ -57,11 +76,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     uint72 _totalFee;
 
     // Address of CoFiXController
-    address _cofixController;
-    // Impact cost threshold, this parameter is obsolete
-    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
-    uint96 _impactCostVOL;
+    //address _cofixController;
 
     // Constructor, in order to support openzeppelin's scalable scheme, 
     // it's need to move the constructor to the initialize method
@@ -72,7 +87,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     uint constant USDT_BASE = 1 ether;
 
     // ETH/USDT报价通道id
-    uint constant ETH_USDT_CHANNEL_ID = 0;
+    //uint constant PRICE_CHANNEL_ID = ?;
+    uint PRICE_CHANNEL_ID;
 
     uint constant TRANSFER_RATE = 0;
 
@@ -80,21 +96,32 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         return 2000 ether * 1 ether / rawPrice;
     }
 
+    function setNestOpenPrice(address nestOpenPrice) external onlyGovernance {
+        NEST_PRICE_FACADE = nestOpenPrice;
+    }
+
+    function setPriceChannelId(uint channelId) external onlyGovernance {
+        PRICE_CHANNEL_ID = channelId;
+    }
+    
     /// @dev init Initialize
     /// @param governance ICoFiXGovernance implementation contract address
     /// @param name_ Name of xtoken
     /// @param symbol_ Symbol of xtoken
-    /// @param tokenAddress Target token address
+    /// @param token0 代币地址1（不支持eth）
+    /// @param token1 代币地址2（不支持eth）
     function init(
         address governance,
         string calldata name_, 
         string calldata symbol_, 
-        address tokenAddress
+        address token0,
+        address token1
     ) external {
         super.initialize(governance);
         name = name_;
         symbol = symbol_;
-        _tokenAddress = tokenAddress;
+        _token0 = token0;
+        _token1 = token1;
     }
 
     modifier check() {
@@ -109,21 +136,30 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL) external override onlyGovernance {
+    /// @param sigmaSQ 常规波动率
+    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL, uint96 sigmaSQ) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
         _theta0 = theta0;
         // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
         _impactCostVOL = impactCostVOL;
+
+        _sigmaSQ = sigmaSQ;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    function getConfig() external view override returns (uint16 theta, uint16 theta0, uint96 impactCostVOL) {
-        return (_theta, _theta0, _impactCostVOL);
+    /// @param sigmaSQ 常规波动率
+    function getConfig() external view override returns (
+        uint16 theta, 
+        uint16 theta0, 
+        uint96 impactCostVOL, 
+        uint96 sigmaSQ
+    ) {
+        return (_theta, _theta0, _impactCostVOL, _sigmaSQ);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -136,7 +172,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             ,//cofiNode,
             _cofixDAO,
             _cofixRouter,
-            _cofixController,
+            ,//_cofixController,
             //cofixVaultForStaking
         ) = ICoFiXGovernance(newGovernance).getBuiltinAddress();
     }
@@ -161,10 +197,10 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         uint liquidity
     ) {
         // 1. Check token address
-        require(token == _tokenAddress, "CoFiXPair: invalid token address");
-
-        // 2. Calculate net worth and share
-        uint total = totalSupply;
+        //require(token == _tokenAddress, "CoFiXPair: invalid token address");
+        require(amountETH == 0, "COP:amountETH must be 0");
+        console.log("mint-amountETH", amountETH);
+        
         // 3. Query oracle
         (
             uint k, 
@@ -172,17 +208,35 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             uint tokenAmount, 
             //uint blockNumber, 
         ) = _queryOracle(
-            token,
-            msg.value - amountETH,
+            PRICE_CHANNEL_ID,
+            msg.value,
             payback
         );
         tokenAmount = tokenAmount * (1 ether + k) / 1 ether;
+
+        address token0 = _token0;
+        address token1 = _token1;
+        uint balance0 = IERC20(token0).balanceOf(address(this));
+        uint balance1 = IERC20(token1).balanceOf(address(this));
+
+        // 代币0做市，份额直接换算
+        if (token == token0) {
+            liquidity = amountToken;
+            balance0 -= amountToken;
+        }
+        // 代币1做市，需要调用预言机，进行价格转换计算
+        else if(token == token1) {
+            liquidity = amountToken * ethAmount / tokenAmount;
+            balance1 -= amountToken;
+        } 
+        // 不支持的代币
+        else {
+            revert("COP:token not support");
+        }
         
-        liquidity = amountETH + amountToken * ethAmount / tokenAmount;
+        // 2. Calculate net worth and share
+        uint total = totalSupply;
         if (total > 0) {
-            uint balance0 = ethBalance();
-            uint balance1 = IERC20(token).balanceOf(address(this));
-            
             liquidity = liquidity * total / _calcTotalValue(
                 // To calculate the net value, we need to use the asset balance before the market making fund 
                 // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
@@ -190,15 +244,31 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
                 // and amountToken respectively
 
                 // The current eth balance minus the amount eth equals the ETH balance before the transaction
-                balance0 - amountETH, 
+                balance0, 
                 //The current token balance minus the amountToken equals to the token balance before the transaction
-                balance1 - amountToken,
+                balance1,
                 // Oracle price - eth amount
                 ethAmount, 
                 // Oracle price - token amount
                 tokenAmount
             );
+            console.log("mint-navps", _calcTotalValue(
+                // To calculate the net value, we need to use the asset balance before the market making fund 
+                // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
+                // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
+                // and amountToken respectively
+
+                // The current eth balance minus the amount eth equals the ETH balance before the transaction
+                balance0, 
+                //The current token balance minus the amountToken equals to the token balance before the transaction
+                balance1,
+                // Oracle price - eth amount
+                ethAmount, 
+                // Oracle price - token amount
+                tokenAmount
+            ) * 1 ether / total);
         } else {
+            // TODO: 对于精度小的币，小份额不能这样去除
             _mint(address(0), MINIMUM_LIQUIDITY); 
             liquidity -= MINIMUM_LIQUIDITY;
         }
@@ -232,11 +302,13 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         }
 
         // 1. Check token address
-        require(token == _tokenAddress, "CoFiXPair: invalid token address");
+        require(token == address(0), "COP:token must be 0");
         
         // 3. Calculate the net value and calculate the equal proportion fund according to the net value
-        uint balance0 = ethBalance();
-        uint balance1 = IERC20(token).balanceOf(address(this));
+        address token0 = _token0;
+        address token1 = _token1;
+        uint balance0 = IERC20(token0).balanceOf(address(this));
+        uint balance1 = IERC20(token1).balanceOf(address(this));
         uint total = totalSupply;
 
         amountETHOut = balance0 * liquidity / total;
@@ -247,8 +319,9 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         //emit Burn(token, to, liquidity, amountETHOut, amountTokenOut);
 
         // 7. Transfer of funds to the user's designated address
-        payable(to).transfer(amountETHOut);
-        TransferHelper.safeTransfer(token, to, amountTokenOut);
+        //payable(to).transfer(amountETHOut);
+        TransferHelper.safeTransfer(token0, to, amountETHOut);
+        TransferHelper.safeTransfer(token1, to, amountTokenOut);
     }
 
     /// @dev Swap token
@@ -270,134 +343,96 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         uint amountOut, 
         uint mined
     ) {
-        address token = _tokenAddress;
-        if (src == address(0) && dest == token) {
-            (amountOut, mined) =  _swapForToken(token, amountIn, to, payback);
-        } else if (src == token && dest == address(0)) {
-            (amountOut, mined) = _swapForETH(token, amountIn, to, payback);
+        address token0 = _token0;
+        address token1 = _token1;
+        uint theta = uint(_theta);
+
+        // 1. Query oracle
+        (
+            uint k, 
+            uint ethAmount, 
+            uint tokenAmount, 
+            //uint blockNumber, 
+        ) = _queryOracle(
+            PRICE_CHANNEL_ID,
+            msg.value,
+            payback
+        );
+
+        if (src == token0 && dest == token1) {
+            //(amountOut, mined) =  _swapForToken(token1, amountIn, to, payback);
+
+            // 2. Calculate the trade result
+            uint fee = amountIn * theta / 10000;
+            amountOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
+                1 ether + k + impactCostForSellOutETH(amountIn)
+            );
+
+            // 3. Transfer transaction fee
+            // fee = _collect(fee * uint(_theta0) / theta);
+            TransferHelper.safeTransfer(token0, _cofixDAO, fee * uint(_theta0) / theta);
+
+            // 5. Transfer token
+            TransferHelper.safeTransfer(token1, to, amountOut);
+
+            emit SwapForToken1(amountIn, to, amountOut, mined);
+        } else if (src == token1 && dest == token0) {
+            //(amountOut, mined) = _swapForETH(token1, amountIn, to, payback);
+           
+            // 2. Calculate the trade result
+            amountOut = amountIn * ethAmount / tokenAmount;
+            amountOut = amountOut * 1 ether / (
+                1 ether + k + impactCostForBuyInETH(amountOut)
+            ); 
+
+            uint fee = amountOut * theta / 10000;
+            amountOut = amountOut - fee;
+
+            // 3. Transfer transaction fee
+            // fee = _collect(fee * uint(_theta0) / theta);
+            TransferHelper.safeTransfer(token0, _cofixDAO, fee * uint(_theta0) / theta);
+
+            // 5. Transfer token
+            //payable(to).transfer(amountETHOut);
+            TransferHelper.safeTransfer(token0, to, amountOut);
+
+            emit SwapForToken0(amountIn, to, amountOut, mined);
         } else {
             revert("CoFiXPair: pair error");
         }
     }
 
-    /// @dev Swap for tokens
-    /// @param amountIn The exact amount of Token a trader want to swap into pool
-    /// @param to The target address receiving the ETH
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
-    /// and the excess fees will be returned through this address
-    /// @return amountTokenOut The real amount of token transferred out of pool
-    /// @return mined The amount of CoFi which will be mind by this trade
-    function _swapForToken(
-        address token,
-        uint amountIn, 
-        address to, 
-        address payback
-    ) private returns (
-        uint amountTokenOut, 
-        uint mined
-    ) {
-        // 1. Query oracle
-        (
-            uint k, 
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNumber, 
-        ) = _queryOracle(
-            token,
-            msg.value  - amountIn,
-            payback
-        );
+    // // Deposit transaction fee
+    // function _collect(uint fee) private returns (uint total) {
+    //     // // 佣金的1/3进入DAO，2/3留在资金池
+    //     // total = uint(_totalFee) + fee;
+    //     // if (total >= 1 ether) {
+    //     //     ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
+    //     //     total = 0;
+    //     // } 
+    //     // _totalFee = uint72(total);
 
-        // 2. Calculate the trade result
-        uint theta = uint(_theta);
-        uint fee = amountIn * theta / 10000;
-        amountTokenOut = (amountIn - fee) * tokenAmount * 1 ether / ethAmount / (
-            1 ether + k + impactCostForSellOutETH(amountIn)
-        );
+    //     TransferHelper.safeTransfer(_token0, _cofixDAO, fee);
+    //     return 0;
+    // }
 
-        // 3. Transfer transaction fee
-        fee = _collect(fee * uint(_theta0) / theta);
+    // /// @dev Settle trade fee to DAO
+    // function settle() external override {
+    //     ICoFiXDAO(_cofixDAO).addETHReward { value: uint(_totalFee) } (address(this));
+    //     _totalFee = uint72(0);
+    // }
 
-        // 5. Transfer token
-        TransferHelper.safeTransfer(token, to, amountTokenOut);
+    // /// @dev Get eth balance of this pool
+    // /// @return eth balance of this pool
+    // function ethBalance() public view override returns (uint) {
+    //     //return address(this).balance - uint(_totalFee);
+    //     return IERC20(_token0).balanceOf(address(this));
+    // }
 
-        emit SwapForToken(amountIn, to, amountTokenOut, mined);
-    }
-
-    /// @dev Swap for eth
-    /// @param amountIn The exact amount of Token a trader want to swap into pool
-    /// @param to The target address receiving the ETH
-    /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
-    /// and the excess fees will be returned through this address
-    /// @return amountETHOut The real amount of eth transferred out of pool
-    /// @return mined The amount of CoFi which will be mind by this trade
-    function _swapForETH(
-        address token,
-        uint amountIn, 
-        address to, 
-        address payback
-    ) private returns (
-        uint amountETHOut, 
-        uint mined
-    ) {
-        // 1. Query oracle
-        (
-            uint k, 
-            uint ethAmount, 
-            uint tokenAmount, 
-            //uint blockNumber, 
-        ) = _queryOracle(
-            token,
-            msg.value,
-            payback
-        );
-
-        // 2. Calculate the trade result
-        amountETHOut = amountIn * ethAmount / tokenAmount;
-        amountETHOut = amountETHOut * 1 ether / (
-            1 ether + k + impactCostForBuyInETH(amountETHOut)
-        ); 
-
-        uint theta = uint(_theta);
-        uint fee = amountETHOut * theta / 10000;
-        amountETHOut = amountETHOut - fee;
-
-        // 3. Transfer transaction fee
-        fee = _collect(fee * uint(_theta0) / theta);
-
-        // 5. Transfer token
-        payable(to).transfer(amountETHOut);
-
-        emit SwapForETH(amountIn, to, amountETHOut, mined);
-    }
-
-    // Deposit transaction fee
-    function _collect(uint fee) private returns (uint total) {
-        // 佣金的1/3进入DAO，2/3留在资金池
-        total = uint(_totalFee) + fee;
-        if (total >= 1 ether) {
-            ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
-            total = 0;
-        } 
-        _totalFee = uint72(total);
-    }
-
-    /// @dev Settle trade fee to DAO
-    function settle() external override {
-        ICoFiXDAO(_cofixDAO).addETHReward { value: uint(_totalFee) } (address(this));
-        _totalFee = uint72(0);
-    }
-
-    /// @dev Get eth balance of this pool
-    /// @return eth balance of this pool
-    function ethBalance() public view override returns (uint) {
-        return address(this).balance - uint(_totalFee);
-    }
-
-    /// @dev Get total trade fee which not settled
-    function totalFee() external view override returns (uint) {
-        return uint(_totalFee);
-    }
+    // /// @dev Get total trade fee which not settled
+    // function totalFee() external view override returns (uint) {
+    //     return uint(_totalFee);
+    // }
 
     /// @dev Get net worth
     /// @param ethAmount Oracle price - eth amount
@@ -410,8 +445,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         // 做市: Np = (Au * (1 + K) / P + Ae) / S
         uint total = totalSupply;
         navps = total > 0 ? _calcTotalValue(
-            ethBalance(), 
-            IERC20(_tokenAddress).balanceOf(address(this)), 
+            IERC20(_token0).balanceOf(address(this)), 
+            IERC20(_token1).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
         ) * 1 ether / total : 1 ether;
@@ -447,17 +482,18 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view override returns (address) {
-        if (token == _tokenAddress) {
+        if (token == _token0 || token == _token1) {
             return address(this);
         }
         return address(0);
+        //return address(this);
     }
 
     /// @dev Calc variance of price and K in CoFiX is very expensive
     /// We use expected value of K based on statistical calculations here to save gas
     /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
     /// We can make use of `data` bytes in the future
-    /// @param tokenAddress Target address of token
+    /// @param channelId 目标报价通道
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
     /// and the excess fees will be returned through this address
     /// @return k The K value(18 decimal places).
@@ -465,7 +501,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @return tokenAmount Oracle price - token amount
     /// @return blockNumber Block number of price
     function _queryOracle(
-        address tokenAddress,
+        uint channelId,
         uint fee,
         address payback
     ) private returns (
@@ -479,41 +515,57 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
             ,//uint triggeredPriceBlockNumber,
             ,//uint triggeredPriceValue,
             uint triggeredAvgPrice,
-            uint triggeredSigmaSQ
+            //uint triggeredSigmaSQ
         ) = INestOpenPrice(NEST_PRICE_FACADE).lastPriceListAndTriggeredPriceInfo {
             value: fee  
-        } (ETH_USDT_CHANNEL_ID, 2, payback);
+        } (channelId, 2, payback);
 
-        prices[1] = _toUSDTPrice(prices[1]);
-        prices[3] = _toUSDTPrice(prices[3]);
+        
+        //prices[1] = (prices[1]);
+        //prices[3] = (prices[3]);
+        //triggeredAvgPrice = (triggeredAvgPrice);
         tokenAmount = prices[1];
         _checkPrice(tokenAmount, triggeredAvgPrice);
         blockNumber = prices[0];
-        ethAmount = 1 ether;
+        ethAmount = 2000 ether;
 
-        k = calcRevisedK(triggeredSigmaSQ, prices[3], prices[2], tokenAmount, blockNumber);
+        k = calcRevisedK(uint(_sigmaSQ), prices[3], prices[2], tokenAmount, blockNumber);
     }
 
-    /// @dev K value is calculated by revised volatility
+     /// @dev K value is calculated by revised volatility
     /// @param p0 Last price (number of tokens equivalent to 1 ETH)
     /// @param bn0 Block number of the last price
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
+    /// @param SIGMA_SQ 常规波动率
     function calcRevisedK(uint SIGMA_SQ, uint p0, uint bn0, uint p, uint bn) public view returns (uint k) {
-        // TODO: SIGMA_SQ取值问题
         uint sigmaISQ = p * 1 ether / p0;
         if (sigmaISQ > 1 ether) {
             sigmaISQ -= 1 ether;
         } else {
             sigmaISQ = 1 ether - sigmaISQ;
         }
+
+        // James:
+        // fort算法 把前面一项改成 max ((p2-p1)/p1,0.002) 后面不变
+        // jackson:
+        // 好
+        // jackson:
+        // 要取绝对值吧
+        // James:
+        // 对的
+        if (sigmaISQ > 0.002 ether) {
+            k = sigmaISQ;
+        } else {
+            k = 0.002 ether;
+        }
+
         sigmaISQ = sigmaISQ * sigmaISQ / (bn - bn0) / BLOCK_TIME / 1 ether;
 
         if (sigmaISQ > SIGMA_SQ) {
-            k = _sqrt(0.002 ether * 0.002 ether * sigmaISQ / SIGMA_SQ) + 
-                _sqrt(1 ether * BLOCK_TIME * (block.number - bn) * sigmaISQ);
+            k += _sqrt(1 ether * BLOCK_TIME * (block.number - bn) * sigmaISQ);
         } else {
-            k = 0.002 ether + _sqrt(1 ether * BLOCK_TIME * SIGMA_SQ * (block.number - bn));
+            k += _sqrt(1 ether * BLOCK_TIME * SIGMA_SQ * (block.number - bn));
         }
     }
 
@@ -548,7 +600,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         require(
             price <= avgPrice * 11 / 10 &&
             price >= avgPrice * 9 / 10, 
-            "CoFiXController: price deviation"
+            "COP:price deviation"
         );
     }
 }

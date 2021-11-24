@@ -40,6 +40,8 @@ describe('CoFiXRouter', function() {
             nhbtc
         } = await deployer.deploy();
 
+        console.log('ok');
+        return;
         const toBigInt = function(val, decimals) {
             decimals = decimals || 18;
             val = parseFloat(val.toString());

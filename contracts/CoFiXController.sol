@@ -191,7 +191,7 @@ contract CoFiXController is ICoFiXController {
         require(
             price <= avgPrice * 11 / 10 &&
             price >= avgPrice * 9 / 10, 
-            "CoFiXController: price deviation"
+            "CoFiXController:price deviation"
         );
     }
     
