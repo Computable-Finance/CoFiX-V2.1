@@ -14,8 +14,6 @@ import "./interfaces/ICoFiXPool.sol";
 import "./uniswap/interfaces/IUniswapV3Pool.sol";
 import "./uniswap/interfaces/callback/IUniswapV3SwapCallback.sol";
 
-import "hardhat/console.sol";
-
 /// @dev UniswapV3PoolAdapter
 contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallback {
 

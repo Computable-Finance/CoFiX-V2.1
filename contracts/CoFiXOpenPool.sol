@@ -15,8 +15,6 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
-import "hardhat/console.sol";
-
 /// @dev 开放式资金池，使用NEST4.0价格
 contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
@@ -199,7 +197,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         // 1. Check token address
         //require(token == _tokenAddress, "CoFiXPair: invalid token address");
         require(amountETH == 0, "COP:amountETH must be 0");
-        console.log("mint-amountETH", amountETH);
         
         // 3. Query oracle
         (
@@ -252,21 +249,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
                 // Oracle price - token amount
                 tokenAmount
             );
-            console.log("mint-navps", _calcTotalValue(
-                // To calculate the net value, we need to use the asset balance before the market making fund 
-                // is transferred. Since the ETH was transferred when CoFiXRouter called this method and the 
-                // Token was transferred before CoFiXRouter called this method, we need to deduct the amountETH 
-                // and amountToken respectively
-
-                // The current eth balance minus the amount eth equals the ETH balance before the transaction
-                balance0, 
-                //The current token balance minus the amountToken equals to the token balance before the transaction
-                balance1,
-                // Oracle price - eth amount
-                ethAmount, 
-                // Oracle price - token amount
-                tokenAmount
-            ) * 1 ether / total);
         } else {
             // TODO: 对于精度小的币，小份额不能这样去除
             _mint(address(0), MINIMUM_LIQUIDITY); 
@@ -529,7 +511,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         blockNumber = prices[0];
         ethAmount = 2000 ether;
 
-        k = calcRevisedK(uint(_sigmaSQ), prices[3], prices[2], tokenAmount, blockNumber);
+        k = calcRevisedK(prices[3], prices[2], tokenAmount, blockNumber);
     }
 
      /// @dev K value is calculated by revised volatility
@@ -537,8 +519,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @param bn0 Block number of the last price
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
-    /// @param SIGMA_SQ 常规波动率
-    function calcRevisedK(uint SIGMA_SQ, uint p0, uint bn0, uint p, uint bn) public view returns (uint k) {
+    function calcRevisedK(uint p0, uint bn0, uint p, uint bn) public view returns (uint k) {
+        uint sigmaSQ = uint(_sigmaSQ);
         uint sigmaISQ = p * 1 ether / p0;
         if (sigmaISQ > 1 ether) {
             sigmaISQ -= 1 ether;
@@ -562,10 +544,10 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
         sigmaISQ = sigmaISQ * sigmaISQ / (bn - bn0) / BLOCK_TIME / 1 ether;
 
-        if (sigmaISQ > SIGMA_SQ) {
+        if (sigmaISQ > sigmaSQ) {
             k += _sqrt(1 ether * BLOCK_TIME * (block.number - bn) * sigmaISQ);
         } else {
-            k += _sqrt(1 ether * BLOCK_TIME * SIGMA_SQ * (block.number - bn));
+            k += _sqrt(1 ether * BLOCK_TIME * sigmaSQ * (block.number - bn));
         }
     }
 
