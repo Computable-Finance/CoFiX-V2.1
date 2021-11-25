@@ -88,12 +88,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     //uint constant PRICE_CHANNEL_ID = ?;
     uint PRICE_CHANNEL_ID;
 
-    uint constant TRANSFER_RATE = 0;
-
-    function _toUSDTPrice(uint rawPrice) private pure returns (uint) {
-        return 2000 ether * 1 ether / rawPrice;
-    }
-
     function setNestOpenPrice(address nestOpenPrice) external onlyGovernance {
         NEST_PRICE_FACADE = nestOpenPrice;
     }
@@ -383,38 +377,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             revert("CoFiXPair: pair error");
         }
     }
-
-    // // Deposit transaction fee
-    // function _collect(uint fee) private returns (uint total) {
-    //     // // 佣金的1/3进入DAO，2/3留在资金池
-    //     // total = uint(_totalFee) + fee;
-    //     // if (total >= 1 ether) {
-    //     //     ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
-    //     //     total = 0;
-    //     // } 
-    //     // _totalFee = uint72(total);
-
-    //     TransferHelper.safeTransfer(_token0, _cofixDAO, fee);
-    //     return 0;
-    // }
-
-    // /// @dev Settle trade fee to DAO
-    // function settle() external override {
-    //     ICoFiXDAO(_cofixDAO).addETHReward { value: uint(_totalFee) } (address(this));
-    //     _totalFee = uint72(0);
-    // }
-
-    // /// @dev Get eth balance of this pool
-    // /// @return eth balance of this pool
-    // function ethBalance() public view override returns (uint) {
-    //     //return address(this).balance - uint(_totalFee);
-    //     return IERC20(_token0).balanceOf(address(this));
-    // }
-
-    // /// @dev Get total trade fee which not settled
-    // function totalFee() external view override returns (uint) {
-    //     return uint(_totalFee);
-    // }
 
     /// @dev Get net worth
     /// @param ethAmount Oracle price - eth amount

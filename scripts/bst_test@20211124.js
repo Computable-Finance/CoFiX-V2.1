@@ -50,6 +50,7 @@ exports.deploy = async function () {
     // cofixDAO: 0x76D8680e763c611f204c974cf2F6c203d44fd124
     // cofixRouter: 0x4A448cBb12e449D7031f36C8122eCE6dDdf9cc84
     // nest_usdt_pool: 0xF9e8D1C6Ed54295a4a630085E6D982a37d9d2f85
+    // proxyAdmin: 0xD3E0Effa6A9cEC78C95c1FD0BbcCCA5929068B83
 
     // 1. 部署依赖合约
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 18);
