@@ -49,12 +49,12 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     uint96 _impactCostVOL;
 
     address _token1;
+    // 报价通道编号
+    uint64 _channelId;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     // Trade fee rate for dao, ten thousand points system. 20
     uint16 _theta0;
-    // 报价通道编号
-    uint32 _channelId;
 
     // ERC20 - name
     string public name;
@@ -111,16 +111,19 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     }
 
     /// @dev Set configuration
+    /// @param channelId 报价通道id
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param sigmaSQ 常规波动率
     function setConfig(
+        uint64 channelId,
         uint16 theta, 
         uint16 theta0, 
         uint96 impactCostVOL, 
         uint96 sigmaSQ
     ) external override onlyGovernance {
+        _channelId = channelId;
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
@@ -132,17 +135,19 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     }
 
     /// @dev Get configuration
+    /// @return channelId 报价通道id
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @param sigmaSQ 常规波动率
+    /// @return sigmaSQ 常规波动率
     function getConfig() external view override returns (
+        uint64 channelId,
         uint16 theta, 
         uint16 theta0, 
         uint96 impactCostVOL, 
         uint96 sigmaSQ
     ) {
-        return (_theta, _theta0, _impactCostVOL, _sigmaSQ);
+        return (_channelId, _theta, _theta0, _impactCostVOL, _sigmaSQ);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 

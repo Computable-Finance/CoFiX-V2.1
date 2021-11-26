@@ -22,18 +22,26 @@ interface ICoFiXOpenPool is ICoFiXPool {
     event SwapForToken0(uint amountIn, address to, uint amountETHOut, uint mined);
 
     /// @dev Set configuration
+    /// @param channelId 报价通道id
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param sigmaSQ 常规波动率
-    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL, uint96 sigmaSQ) external;
+    function setConfig(uint64 channelId, uint16 theta, uint16 theta0, uint96 impactCostVOL, uint96 sigmaSQ) external;
 
     /// @dev Get configuration
+    /// @return channelId 报价通道id
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @return sigmaSQ 常规波动率
-    function getConfig() external view returns (uint16 theta, uint16 theta0, uint96 impactCostVOL, uint96 sigmaSQ);
+    function getConfig() external view returns (
+        uint64 channelId,
+        uint16 theta, 
+        uint16 theta0, 
+        uint96 impactCostVOL, 
+        uint96 sigmaSQ
+    );
 
     // /// @dev Settle trade fee to DAO
     // function settle() external;
