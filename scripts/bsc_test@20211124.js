@@ -40,7 +40,7 @@ exports.deploy = async function () {
     // hedgeFutures: 0xFD42E41B96BC69e8B0763B2Ed75CD50347b9778D
     // hedgeSwap: 0xD83C860d3A27cC5EddaB68EaBFCF9cc8ad38F15D
 
-    //     ** 开始部署合约 bst_test@20211124.js **
+    //     ** 开始部署合约 bsc_test@20211124.js **
     // usdt: 0xDd4A68D8236247BDC159F7C5fF92717AA634cBCc
     // peth: 0xc39dC1385a44fBB895991580EA55FC10e7451cB3
     // pusd: 0x3DA5c9aafc6e6D6839E62e2fB65825869019F291

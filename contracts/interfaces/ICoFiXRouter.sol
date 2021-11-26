@@ -51,26 +51,26 @@ interface ICoFiXRouter {
         uint deadline
     ) external payable returns (address xtoken, uint liquidity);
 
-    /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically 
-    /// (notice: msg.value = amountETH + oracle fee)
-    /// @param  pool The address of pool
-    /// @param  token The address of ERC20 Token
-    /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
-    /// @param  amountToken The amount of Token added to pool
-    /// @param  liquidityMin The minimum liquidity maker wanted
-    /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The deadline of this request
-    /// @return xtoken The liquidity share token address obtained
-    /// @return liquidity The real liquidity or XToken minted from pool
-    function addLiquidityAndStake(
-        address pool,
-        address token,
-        uint amountETH,
-        uint amountToken,
-        uint liquidityMin,
-        address to,
-        uint deadline
-    ) external payable returns (address xtoken, uint liquidity);
+    // /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically 
+    // /// (notice: msg.value = amountETH + oracle fee)
+    // /// @param  pool The address of pool
+    // /// @param  token The address of ERC20 Token
+    // /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
+    // /// @param  amountToken The amount of Token added to pool
+    // /// @param  liquidityMin The minimum liquidity maker wanted
+    // /// @param  to The target address receiving the liquidity pool (XToken)
+    // /// @param  deadline The deadline of this request
+    // /// @return xtoken The liquidity share token address obtained
+    // /// @return liquidity The real liquidity or XToken minted from pool
+    // function addLiquidityAndStake(
+    //     address pool,
+    //     address token,
+    //     uint amountETH,
+    //     uint amountToken,
+    //     uint liquidityMin,
+    //     address to,
+    //     uint deadline
+    // ) external payable returns (address xtoken, uint liquidity);
 
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
     /// (notice: msg.value = oracle fee)
@@ -109,8 +109,8 @@ interface ICoFiXRouter {
         uint deadline
     ) external payable returns (uint amountOut);
 
-    /// @dev Acquire the transaction mining share of the target XToken
-    /// @param xtoken The destination XToken address
-    /// @return Target XToken's transaction mining share
-    function getTradeReward(address xtoken) external view returns (uint);
+    // /// @dev Acquire the transaction mining share of the target XToken
+    // /// @param xtoken The destination XToken address
+    // /// @return Target XToken's transaction mining share
+    // function getTradeReward(address xtoken) external view returns (uint);
 }

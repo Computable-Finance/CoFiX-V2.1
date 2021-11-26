@@ -12,11 +12,11 @@ exports.deploy = async function () {
     const NestPriceFacade = await ethers.getContractFactory('NestPriceFacade');
     const CoFiToken = await ethers.getContractFactory('CoFiToken');
     const CoFiXGovernance = await ethers.getContractFactory('CoFiXGovernance');
-    const CoFiXDAO = await ethers.getContractFactory('CoFiXDAOSimple');
+    const CoFiXDAOSimple = await ethers.getContractFactory('CoFiXDAOSimple');
     const CoFiXRouter = await ethers.getContractFactory('CoFiXRouter');
     const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
 
-    console.log('** 开始部署合约 bst_main@20211127.js **');
+    console.log('** 开始部署合约 bsc_main@20211127.js **');
 
     //     ** 开始部署合约 bsc@20211120.js **
     // usdt: 0x55d398326f99059ff775485246999027b3197955
@@ -54,7 +54,7 @@ exports.deploy = async function () {
     console.log('cofixGovernance: ' + cofixGovernance.address);
     
     const cofixDAO = await upgrades.deployProxy(CoFiXDAOSimple, [cofixGovernance.address], { initializer: 'initialize' });
-    //const cofixDAO = await CoFiXDAO.attach('0x0000000000000000000000000000000000000000');
+    //const cofixDAO = await CoFiXDAOSimple.attach('0x0000000000000000000000000000000000000000');
     console.log('cofixDAO: ' + cofixDAO.address);
     
     const cofixRouter = await upgrades.deployProxy(CoFiXRouter, [cofixGovernance.address], { initializer: 'initialize' });
@@ -76,10 +76,10 @@ exports.deploy = async function () {
         '0x0000000000000000000000000000000000000000', //cofixController.address,
         '0x0000000000000000000000000000000000000000' //cofixVaultForStaking.address
     );
-    console.log('2. cofixDAO.update');
-    await cofixDAO.update(cofixGovernance.address);
-    console.log('3. cofixRouter.update');
-    await cofixRouter.update(cofixGovernance.address);
+    // console.log('2. cofixDAO.update');
+    // await cofixDAO.update(cofixGovernance.address);
+    // console.log('3. cofixRouter.update');
+    // await cofixRouter.update(cofixGovernance.address);
     console.log('10. nest_usdt_pool.update(cofixGovernance.address)');
     await nest_usdt_pool.update(cofixGovernance.address);
 

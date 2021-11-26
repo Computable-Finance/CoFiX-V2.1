@@ -32,7 +32,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     5. CoFiXDAO需要跨上去吗?
     */
 
-    // TODO: 改为3秒
+    // 出块时间
     uint constant BLOCK_TIME = 3;
 
     // Address of NestPriceFacade contract
@@ -115,7 +115,12 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param sigmaSQ 常规波动率
-    function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL, uint96 sigmaSQ) external override onlyGovernance {
+    function setConfig(
+        uint16 theta, 
+        uint16 theta0, 
+        uint96 impactCostVOL, 
+        uint96 sigmaSQ
+    ) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
