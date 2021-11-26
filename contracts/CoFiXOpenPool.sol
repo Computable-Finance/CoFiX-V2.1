@@ -411,7 +411,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @return impactCost Impact cost
     function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
         //return _impactCostForBuyInETH(vol, uint(_impactCostVOL));
-        impactCost = vol * uint(_impactCostVOL) / 100000;
+        //impactCost = vol * uint(_impactCostVOL) / 100000;
+        impactCost = vol * uint(_impactCostVOL) / 500000000;
     }
 
     /// @dev Calculate the impact cost of sell out eth
@@ -419,7 +420,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @return impactCost Impact cost
     function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
         //return _impactCostForSellOutETH(vol, uint(_impactCostVOL));
-        impactCost = vol * uint(_impactCostVOL) / 100000;
+        //impactCost = vol * uint(_impactCostVOL) / 100000;
+        impactCost = vol * uint(_impactCostVOL) / 500000000;
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
