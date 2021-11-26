@@ -3,6 +3,6 @@
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const deploy = require('./bst_test@20211124.js');
+const deploy = require('./bst_main@20211127.js');
 
 exports.deploy = deploy.deploy;

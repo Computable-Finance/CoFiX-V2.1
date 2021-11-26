@@ -36,8 +36,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     uint constant BLOCK_TIME = 3;
 
     // Address of NestPriceFacade contract
-    //address constant NEST_PRICE_FACADE = 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A;
-    address NEST_PRICE_FACADE;
+    address constant NEST_OPEN_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
@@ -54,6 +53,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     uint16 _theta;
     // Trade fee rate for dao, ten thousand points system. 20
     uint16 _theta0;
+    // 报价通道编号
+    uint32 _channelId;
 
     // ERC20 - name
     string public name;
@@ -81,21 +82,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     constructor() {
     }
 
-    // USDT代币的基数
-    uint constant USDT_BASE = 1 ether;
-
-    // ETH/USDT报价通道id
-    //uint constant PRICE_CHANNEL_ID = ?;
-    uint PRICE_CHANNEL_ID;
-
-    function setNestOpenPrice(address nestOpenPrice) external onlyGovernance {
-        NEST_PRICE_FACADE = nestOpenPrice;
-    }
-
-    function setPriceChannelId(uint channelId) external onlyGovernance {
-        PRICE_CHANNEL_ID = channelId;
-    }
-    
     /// @dev init Initialize
     /// @param governance ICoFiXGovernance implementation contract address
     /// @param name_ Name of xtoken
@@ -199,7 +185,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             uint tokenAmount, 
             //uint blockNumber, 
         ) = _queryOracle(
-            PRICE_CHANNEL_ID,
+            uint(_channelId),
             msg.value,
             payback
         );
@@ -330,7 +316,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             uint tokenAmount, 
             //uint blockNumber, 
         ) = _queryOracle(
-            PRICE_CHANNEL_ID,
+            uint(_channelId),
             msg.value,
             payback
         );
@@ -462,7 +448,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             ,//uint triggeredPriceValue,
             uint triggeredAvgPrice,
             //uint triggeredSigmaSQ
-        ) = INestOpenPrice(NEST_PRICE_FACADE).lastPriceListAndTriggeredPriceInfo {
+        ) = INestOpenPrice(NEST_OPEN_PRICE).lastPriceListAndTriggeredPriceInfo {
             value: fee  
         } (channelId, 2, payback);
 
