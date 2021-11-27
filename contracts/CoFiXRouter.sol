@@ -7,10 +7,8 @@ import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPool.sol";
-import "./interfaces/ICoFiXVaultForStaking.sol";
 
 import "./CoFiXBase.sol";
-import "./CoFiToken.sol";
 
 /// @dev Router contract to interact with each CoFiXPair
 contract CoFiXRouter is CoFiXBase, ICoFiXRouter {

@@ -7,12 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXOpenPool.sol";
-import "./interfaces/ICoFiXController.sol";
 import "./interfaces/INestOpenPrice.sol";
-import "./interfaces/ICoFiXDAO.sol";
 
 import "./CoFiXBase.sol";
-import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
 /// @dev 开放式资金池，使用NEST4.0价格
@@ -71,11 +68,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     address _cofixRouter;
     // Lock flag
     bool _locked;
-    // Total trade fee
-    uint72 _totalFee;
-
-    // Address of CoFiXController
-    //address _cofixController;
 
     // Constructor, in order to support openzeppelin's scalable scheme, 
     // it's need to move the constructor to the initialize method
@@ -103,8 +95,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     }
 
     modifier check() {
-        require(_cofixRouter == msg.sender, "CoFiXPair: Only for CoFiXRouter");
-        require(!_locked, "CoFiXPair: LOCKED");
+        require(_cofixRouter == msg.sender, "COP:Only for CoFiXRouter");
+        require(!_locked, "COP:LOCKED");
         _locked = true;
         _;
         _locked = false;
@@ -370,7 +362,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
             emit SwapForToken0(amountIn, to, amountOut, mined);
         } else {
-            revert("CoFiXPair: pair error");
+            revert("COP:pair error");
         }
     }
 
