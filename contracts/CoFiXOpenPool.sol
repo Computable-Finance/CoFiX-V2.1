@@ -416,11 +416,11 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
     function getXToken(address token) external view override returns (address) {
-        if (token == _token0 || token == _token1) {
-            return address(this);
-        }
-        return address(0);
-        //return address(this);
+        //if (token == _token0 || token == _token1) {
+        //    return address(this);
+        //}
+        //return address(0);
+        return address(this);
     }
 
     /// @dev Calc variance of price and K in CoFiX is very expensive
