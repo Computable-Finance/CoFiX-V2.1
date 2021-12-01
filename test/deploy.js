@@ -41,6 +41,11 @@ describe('CoFiXRouter', function() {
         } = await deployer.deploy();
 
         console.log('ok');
+        const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
+        
+        const newCoFiXOpenPool = await CoFiXOpenPool.deploy();
+        console.log('newCoFiXOpenPool: ' + newCoFiXOpenPool.address);
+        
         return;
         const toBigInt = function(val, decimals) {
             decimals = decimals || 18;
