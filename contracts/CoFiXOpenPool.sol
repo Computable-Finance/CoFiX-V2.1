@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXOpenPool.sol";
-import "./interfaces/INestOpenPrice.sol";
+import "./interfaces/INestBatchPrice2.sol";
 
 import "./CoFiXBase.sol";
 import "./CoFiXERC20.sol";
@@ -33,7 +33,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     uint constant BLOCK_TIME = 3;
 
     // Address of NestPriceFacade contract
-    address constant NEST_OPEN_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
+    address constant NEST_BATCH_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
@@ -47,7 +47,9 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
     address _token1;
     // 报价通道编号
-    uint64 _channelId;
+    uint32 _channelId;
+    // 报价对编号
+    uint32 _pairIndex;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     // Trade fee rate for dao, ten thousand points system. 20
@@ -104,18 +106,21 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
     /// @dev Set configuration
     /// @param channelId 报价通道id
+    /// @param pairIndex 报价对编号
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @param sigmaSQ 常规波动率
     function setConfig(
-        uint64 channelId,
+        uint32 channelId,
+        uint32 pairIndex,
         uint16 theta, 
         uint16 theta0, 
         uint96 impactCostVOL, 
         uint96 sigmaSQ
     ) external override onlyGovernance {
         _channelId = channelId;
+        _pairIndex = pairIndex;
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
@@ -188,6 +193,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             //uint blockNumber, 
         ) = _queryOracle(
             uint(_channelId),
+            uint(_pairIndex),
             msg.value,
             payback
         );
@@ -319,6 +325,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             //uint blockNumber, 
         ) = _queryOracle(
             uint(_channelId),
+            uint(_pairIndex),
             msg.value,
             payback
         );
@@ -428,6 +435,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
     /// We can make use of `data` bytes in the future
     /// @param channelId 目标报价通道
+    /// @param pairIndex 目标报价对编号
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
     /// and the excess fees will be returned through this address
     /// @return k The K value(18 decimal places).
@@ -436,6 +444,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @return blockNumber Block number of price
     function _queryOracle(
         uint channelId,
+        uint pairIndex,
         uint fee,
         address payback
     ) private returns (
@@ -444,22 +453,24 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         uint tokenAmount, 
         uint blockNumber
     ) {
-        (
-            uint[] memory prices,
-            ,//uint triggeredPriceBlockNumber,
-            ,//uint triggeredPriceValue,
-            uint triggeredAvgPrice,
-            //uint triggeredSigmaSQ
-        ) = INestOpenPrice(NEST_OPEN_PRICE).lastPriceListAndTriggeredPriceInfo {
+        uint[] memory pairIndices = new uint[](1);
+        pairIndices[0] = pairIndex;
+        // (
+        //     uint[] memory prices,
+        //     ,//uint triggeredPriceBlockNumber,
+        //     ,//uint triggeredPriceValue,
+        //     uint triggeredAvgPrice,
+        //     //uint triggeredSigmaSQ
+        // ) 
+        uint[] memory prices = INestBatchPrice2(NEST_BATCH_PRICE).lastPriceListAndTriggeredPriceInfo {
             value: fee  
-        } (channelId, 2, payback);
+        } (channelId, pairIndices, 2, payback);
 
-        
         //prices[1] = (prices[1]);
         //prices[3] = (prices[3]);
         //triggeredAvgPrice = (triggeredAvgPrice);
         tokenAmount = prices[1];
-        _checkPrice(tokenAmount, triggeredAvgPrice);
+        _checkPrice(tokenAmount, prices[6]);
         blockNumber = prices[0];
         ethAmount = 2000 ether;
 
