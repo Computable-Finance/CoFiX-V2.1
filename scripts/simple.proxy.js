@@ -82,7 +82,7 @@ exports.deploy = async function () {
 
     // 6. 初始化资金池参数
     console.log('12. nest_usdt_pool.setConfig()');
-    await nest_usdt_pool.setConfig(30, 10, 200, 102739726027n);
+    await nest_usdt_pool.setConfig(0, 0, 30, 10, 200, 102739726027n);
 
     // 9. 注册交易对
     // 注册usdt和nest交易对

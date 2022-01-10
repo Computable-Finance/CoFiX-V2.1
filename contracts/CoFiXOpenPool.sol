@@ -9,11 +9,14 @@ import "./libs/TransferHelper.sol";
 import "./interfaces/ICoFiXOpenPool.sol";
 import "./interfaces/INestBatchPrice2.sol";
 
+import "./custom/ChainParameter.sol";
+import "./custom/CoFiXFrequentlyUsed.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiXERC20.sol";
 
 /// @dev 开放式资金池，使用NEST4.0价格
-contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
+contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFiXOpenPool {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
@@ -28,12 +31,6 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     4. CoFi需要跨上去吗?
     5. CoFiXDAO需要跨上去吗?
     */
-
-    // 出块时间
-    uint constant BLOCK_TIME = 3;
-
-    // Address of NestPriceFacade contract
-    address constant NEST_BATCH_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
 
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
