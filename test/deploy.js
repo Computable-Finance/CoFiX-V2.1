@@ -9,19 +9,17 @@ describe('CoFiXRouter', function() {
         
         // 部署合约
         const {
-            cofi,
-            cnode,
+            dcu,
             cofixDAO,
             cofixRouter,
             cofixController,
-            cofixVaultForStaking,
             cofixGovernance,
             nestPriceFacade,
 
             nest,
             usdt,
             hbtc,
-            usdtPair,
+            nest_usdt_pool,
             hbtcPair,
             nestPair,
             cofiPair,
@@ -41,10 +39,8 @@ describe('CoFiXRouter', function() {
         } = await deployer.deploy();
 
         console.log('ok');
-        const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
         
-        const newCoFiXOpenPool = await CoFiXOpenPool.deploy();
-        console.log('newCoFiXOpenPool: ' + newCoFiXOpenPool.address);
+        await cofixRouter.registerPair(nest.address, '0x51EFE1E589354e1f24C7d4533D21F74f973c6eED', '0x82502A8f52BF186907BD0E12c8cEe612b4C203d1');
         
         return;
         const toBigInt = function(val, decimals) {

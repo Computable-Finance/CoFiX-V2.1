@@ -60,7 +60,7 @@ exports.deploy = async function () {
     
     // 3. 部署资金池合约
     const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, nest.address], { initializer: 'init' });
-    //const usdtPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
+    //const nest_usdt_pool = await CoFiXOpenPool.attach('0x0000000000000000000000000000000000000000');
     console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
     // 4. 更新合约
