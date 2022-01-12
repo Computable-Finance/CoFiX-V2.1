@@ -44,6 +44,7 @@ exports.deploy = async function () {
     // cofixDAO: 0x31a8dF221E790AC7e20f021D2bEf94b1Bb7CE6D7
     // cofixRouter: 0xe51f5cfD748db482D599602742B8bEc4D679c6f1
     // nest_usdt_pool: 0x459Dac18933cdC80040382b25851660761E6EF40
+    //                  -> 0x3c74E71cf4582B39d60d561Af38831c9C802B234
     // proxyAdmin: 0x7E015B01307A40D56e5720d68a4e7D29b4377702
 
     // 1. 部署依赖合约
@@ -81,8 +82,8 @@ exports.deploy = async function () {
     console.log('cofixRouter: ' + cofixRouter.address);
     
     // 3. 部署资金池合约
-    //const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, nest.address], { initializer: 'init' });
-    const nest_usdt_pool = await CoFiXOpenPool.attach('0x459Dac18933cdC80040382b25851660761E6EF40');
+    //const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1.1', 'XToken-1.1', usdt.address, nest.address], { initializer: 'init' });
+    const nest_usdt_pool = await CoFiXOpenPool.attach('0x3c74E71cf4582B39d60d561Af38831c9C802B234');
     console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
     // // 4. 更新合约
@@ -104,7 +105,7 @@ exports.deploy = async function () {
 
     // // 6. 初始化资金池参数
     // console.log('12. nest_usdt_pool.setConfig()');
-    // await nest_usdt_pool.setConfig(0, 0, 30, 10, 200, 102739726027n);
+    // await nest_usdt_pool.setConfig(0, 1, 2000000000n, 30, 10, 200, 102739726027n);
 
     // // 9. 注册交易对
     // // 注册usdt和nest交易对

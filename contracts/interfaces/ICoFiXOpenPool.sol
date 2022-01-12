@@ -24,6 +24,7 @@ interface ICoFiXOpenPool is ICoFiXPool {
     /// @dev Set configuration
     /// @param channelId 报价通道id
     /// @param pairIndex 报价对编号
+    /// @param postUnit 报价币计价单位（注意需要精度转化）
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
@@ -31,23 +32,28 @@ interface ICoFiXOpenPool is ICoFiXPool {
     function setConfig(
         uint32 channelId,
         uint32 pairIndex,
+        uint96 postUnit,
         uint16 theta, 
         uint16 theta0, 
-        uint96 impactCostVOL, 
+        uint32 impactCostVOL, 
         uint96 sigmaSQ
     ) external;
 
     /// @dev Get configuration
     /// @return channelId 报价通道id
+    /// @return pairIndex 报价对编号
+    /// @return postUnit 报价币计价单位（注意需要精度转化）
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @return sigmaSQ 常规波动率
     function getConfig() external view returns (
-        uint64 channelId,
+        uint32 channelId,
+        uint32 pairIndex,
+        uint96 postUnit,
         uint16 theta, 
         uint16 theta0, 
-        uint96 impactCostVOL, 
+        uint32 impactCostVOL, 
         uint96 sigmaSQ
     );
 
