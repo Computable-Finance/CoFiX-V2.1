@@ -143,7 +143,7 @@ contract CoFiXController is ICoFiXController {
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
     /// @param bn The block number when (ETH, TOKEN) price takes into effective
     function calcRevisedK(uint SIGMA_SQ, uint p0, uint bn0, uint p, uint bn) public view override returns (uint k) {
-        // TODO: SIGMA_SQ取值问题
+        // TODO: SIGMA_SQ value
         uint sigmaISQ = p * 1 ether / p0;
         if (sigmaISQ > 1 ether) {
             sigmaISQ -= 1 ether;

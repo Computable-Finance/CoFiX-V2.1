@@ -8,7 +8,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -108,7 +108,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('0. 设置价格');
+            console.log('0. Set price');
             await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
             await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
@@ -131,8 +131,8 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('1. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 usdtPair.address,
                 usdt.address,
@@ -150,8 +150,8 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('2. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('2. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 nestPair.address,
                 nest.address,
@@ -169,7 +169,7 @@ describe('CoFiXRouter', function() {
         }
         
         if (true) {
-            console.log('3. anchorPool做市10000usdt');
+            console.log('3. anchorPool add liquidity 10000usdt');
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
                 usdt.address,
@@ -187,7 +187,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('4. anchorPool做市20000pusd');
+            console.log('4. anchorPool add liquidity 20000pusd');
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
                 pusd.address,
@@ -205,7 +205,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('5. anchorPool做市30000usdc');
+            console.log('5. anchorPool add liquidity 30000usdc');
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
                 usdc.address,
@@ -224,7 +224,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
 
-            console.log('6. 使用路由usdc->usdt->eth->nest兑换10usdt');
+            console.log('6. Swap path: usdc->usdt->eth->nest with 10usdt');
             //let path = await cofixRouter.getRouterPath(usdc.address, nest.address);
             let path = [usdc.address, usdt.address, '0x0000000000000000000000000000000000000000', nest.address];
             console.log(path);
@@ -251,7 +251,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
             await nest.connect(addr1).approve(cofixRouter.address, toBigInt(900));
-            console.log('7. 使用路由nest->eth->usdt->usdc兑换900nest');
+            console.log('7. Swap path: nest->eth->usdt->usdc with 900nest');
             let nestMined = await nestPair.estimate('2000166261648224847', '39970186477181116273778', '1000000000000000000', '192307000000000000000000');
             let usdtMined = await usdtPair.estimate('1999795637788636142', '6000442184', '1000000000000000000', '2051000000');
             let usdtAnchorMined = await usdAnchor.estimate(usdt.address, '9999537816');

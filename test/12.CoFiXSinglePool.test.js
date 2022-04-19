@@ -10,7 +10,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -143,7 +143,7 @@ describe('CoFiXRouter', function() {
         await usdt.transfer(owner.address, toBigInt(10000000, 6));
         //await weth.transfer(owner.address, toBigInt(10000000));
         if(true) {
-            console.log('1. 创建交易对，并做市');
+            console.log('1. Create pool, and add liquidity');
 
             console.log(await getStatus());
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
@@ -164,7 +164,7 @@ describe('CoFiXRouter', function() {
         }
 
         if(true) {
-            console.log('2. 创建交易对，并做市');
+            console.log('2. Create pool, and add liquidity');
 
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
             let receipt = await cofixRouter.addLiquidity(
@@ -184,7 +184,7 @@ describe('CoFiXRouter', function() {
         }
 
         if(true) {
-            console.log('3. 创建交易对，并做市');
+            console.log('3. Create pool, and add liquidity');
 
             await usdt.approve(cofixRouter.address, toBigInt(10000000, 6));
             let receipt = await cofixRouter.addLiquidity(
@@ -204,7 +204,7 @@ describe('CoFiXRouter', function() {
         }
 
         if(true) {
-            console.log('4. 交易');
+            console.log('4. Swap');
 
             const v = toBigInt(0.1);
             await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', usdt.address, cofixSinglePool.address);

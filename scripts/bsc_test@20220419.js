@@ -21,26 +21,9 @@ exports.deploy = async function () {
     //const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
     const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
 
-    console.log('** Deploy: bst_test@20211124.js **');
+    console.log('** Deploy: bsc_test@20220419.js **');
 
-    // nest: 0x821edD79cc386E56FeC9DA5793b87a3A52373cdE
-    // pusd: 0x3DA5c9aafc6e6D6839E62e2fB65825869019F291
-    // peth: 0xc39dC1385a44fBB895991580EA55FC10e7451cB3
-    // nestGovernance: 0x5691dc0770D55B9469a3242DA282754687687935
-    // nestLedger: 0x78D5E2fC85969e51580fd2C0Fd6D056a444167cE
-    // nestOpenMining: 0xF2f9E62f52389EF223f5Fa8b9926e95386935277
-
-    //     ** Deploy: bsc_test@20211123.js **
-    // usdt: 0xDd4A68D8236247BDC159F7C5fF92717AA634cBCc
-    // dcu: 0x5Df87aE415206707fd52aDa20a5Eac2Ec70e8dbb
-    // nestPriceFacade: 0xF2f9E62f52389EF223f5Fa8b9926e95386935277
-    // hedgeGovernance: 0x38831FF0d6133D2d45C2eb876602C0249BA601eE
-    // hedgeDAO: 0x81c952c4EEE91DF16A7908E1869a31E438FbCE44
-    // hedgeOptions: 0x19465d54ba7c492174127244cc26dE49F0cC1F1f
-    // hedgeFutures: 0xFD42E41B96BC69e8B0763B2Ed75CD50347b9778D
-    // hedgeSwap: 0xD83C860d3A27cC5EddaB68EaBFCF9cc8ad38F15D
-
-    //     ** Deploy: bsc_test@20211124.js **
+    // ** Deploy: bsc_test@20220419.js **
     // usdt: 0xDd4A68D8236247BDC159F7C5fF92717AA634cBCc
     // peth: 0xc39dC1385a44fBB895991580EA55FC10e7451cB3
     // pusd: 0x3DA5c9aafc6e6D6839E62e2fB65825869019F291
@@ -49,8 +32,7 @@ exports.deploy = async function () {
     // cofixGovernance: 0xD69399d7B6a7E6481596065272F5E50329DA5914
     // cofixDAO: 0x76D8680e763c611f204c974cf2F6c203d44fd124
     // cofixRouter: 0x4A448cBb12e449D7031f36C8122eCE6dDdf9cc84
-    // nest_usdt_pool: 0xF9e8D1C6Ed54295a4a630085E6D982a37d9d2f85
-    // proxyAdmin: 0xD3E0Effa6A9cEC78C95c1FD0BbcCCA5929068B83
+    // nest_usdt_pool: 0xBc95AB3Ce2F9e87C1453514a838234F9C0E6DB86
 
     // 1. Deploy dependent contract
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 18);
@@ -87,38 +69,18 @@ exports.deploy = async function () {
     console.log('cofixRouter: ' + cofixRouter.address);
         
     // 3. Deploy pool contract
-    //const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, nest.address], { initializer: 'init' });
-    const nest_usdt_pool = await CoFiXOpenPool.attach('0xF9e8D1C6Ed54295a4a630085E6D982a37d9d2f85');
+    //const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-2', 'XToken-2', usdt.address, nest.address], { initializer: 'init' });
+    const nest_usdt_pool = await CoFiXOpenPool.attach('0xBc95AB3Ce2F9e87C1453514a838234F9C0E6DB86');
     console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
-    // // // 4. Update
-    // // console.log('1. cofixGovernance.setBuiltinAddress');
-    // // await cofixGovernance.setBuiltinAddress(
-    // //     '0x0000000000000000000000000000000000000000', //cofi.address,
-    // //     '0x0000000000000000000000000000000000000000', //cnode.address,
-    // //     cofixDAO.address,
-    // //     cofixRouter.address,
-    // //     '0x0000000000000000000000000000000000000000', //cofixController.address,
-    // //     '0x0000000000000000000000000000000000000000' //cofixVaultForStaking.address
-    // // );
-    // console.log('2. cofixDAO.update');
-    // await cofixDAO.update(cofixGovernance.address);
-    // console.log('3. cofixRouter.update');
-    // await cofixRouter.update(cofixGovernance.address);
     // console.log('10. nest_usdt_pool.update(cofixGovernance.address)');
     // await nest_usdt_pool.update(cofixGovernance.address);
 
-    // // 6. Set pool config
+    // // 6. Set config
     // console.log('12. nest_usdt_pool.setConfig()');
-    // await nest_usdt_pool.setConfig(30, 10, 200, 102739726027n);
-
-    // // 9. Register pairs
-    // // Register nest/usdt pair
-    // console.log('24. registerPair(nest.address, usdt.address, nest_usdt_pool.address)');
-    // await cofixRouter.registerPair(nest.address, usdt.address, nest_usdt_pool.address);
+    // await nest_usdt_pool.setConfig(0, 1, 2000000000000000000000n, 30, 10, 2000, 102739726027n);
 
     // await nest_usdt_pool.setNestOpenPrice(nestPriceFacade.address);
-    // await nest_usdt_pool.setPriceChannelId(1);
 
     const contracts = {
         //cofi: cofi,

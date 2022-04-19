@@ -53,7 +53,7 @@ contract TestRouter {
     //     delete parameters;
     // }
 
-	// 获取资金池地址
+	// Get pool address
 	function getPool(address token0, address token1, uint24 fee) public view returns (address) {
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
 		address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(

@@ -51,7 +51,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
     
-    // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    // Impact cost threshold
     //uint96 _impactCostVOL;
 
     // Array of TokenInfo
@@ -98,7 +98,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
     function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
-        // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+        // Impact cost threshold
         //_impactCostVOL = impactCostVOL;
         require(uint(impactCostVOL) == 0, "CoFiXAnchorPool: impactCostVOL must be 0");
         // Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
@@ -440,7 +440,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 4. According to the adjusted scale before and after the transaction, the ore drawing data is calculated
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
-        // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
+        // Z_t=[Y_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
         uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1 ether;
@@ -465,7 +465,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 4. According to the adjusted scale before and after the transaction, the ore drawing data is calculated
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
-        // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
+        // Z_t=[Y_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
         // When d0 < D1, the y value also needs to be updated
         uint Y = uint(tokenInfo._Y) + D0 * nt * (block.number - uint(tokenInfo._lastblock)) / 1 ether;
@@ -500,7 +500,7 @@ contract CoFiXAnchorPool is CoFiXBase, ICoFiXAnchorPool {
 
         // 4. According to the adjusted scale before and after the transaction, the ore drawing data is calculated
         // Y_t=Y_(t-1)+D_(t-1)*n_t*(S_t+1)-Z_t                   
-        // Z_t=〖[Y〗_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
+        // Z_t=[Y_(t-1)+D_(t-1)*n_t*(S_t+1)]* v_t
         uint D0 = uint(tokenInfo._D);
 
         if (D0 > D1) {

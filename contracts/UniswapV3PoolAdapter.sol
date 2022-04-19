@@ -29,21 +29,21 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
-    // token0地址，0表示eth
+    // Address of token0, 0 means eth
     address immutable public TOKEN0;
 
-    // token1地址，0表示eth
+    // Address of token1, 0 means eth
     address immutable public TOKEN1;
     
-    // 目标uniswap资金池地址
+    // Target uniswap pool
     address immutable public TARGET_UNISWAP_V3_POOL;
     
-    // IWETH9实现合约地址
+    // IWETH9 contract address
     address immutable public WETH9;
 
-    /// @dev 构造uniswap适配资金池
-    /// @param targetUniswapV3Pool 目标UniswapV3Pool地址
-    /// @param weth9 目标IWETH9实现地址
+    /// @dev Constructor of uniswap pool
+    /// @param targetUniswapV3Pool Target UniswapV3Pool
+    /// @param weth9 IWETH9 contract address
     constructor (address targetUniswapV3Pool, address weth9) {
         address token0 = IUniswapV3Pool(targetUniswapV3Pool).token0();
         address token1 = IUniswapV3Pool(targetUniswapV3Pool).token1();
@@ -52,71 +52,6 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
         TARGET_UNISWAP_V3_POOL = targetUniswapV3Pool;
         WETH9 = weth9;
     }
-
-    // /// @dev Set configuration
-    // /// @param theta Trade fee rate, ten thousand points system. 20
-    // /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    // function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external override {
-    //     revert("UWP:not support");
-    // }
-
-    // /// @dev Get configuration
-    // /// @return theta Trade fee rate, ten thousand points system. 20
-    // /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
-    // function getConfig() external view override returns (uint16 theta, uint96 impactCostVOL, uint96 nt) {
-    //     revert("UWP:not support");
-    // }
-
-    // /// @dev Add liquidity and mint xtoken
-    // /// @param token Target token address
-    // /// @param to The address to receive xtoken
-    // /// @param amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
-    // /// @param amountToken The amount of Token added to pool
-    // /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
-    // /// and the excess fees will be returned through this address
-    // /// @return xtoken The liquidity share token address obtained
-    // /// @return liquidity The real liquidity or XToken minted from pool
-    // function mint(
-    //     address token,
-    //     address to, 
-    //     uint amountETH, 
-    //     uint amountToken,
-    //     address payback
-    // ) external payable override returns (
-    //     address xtoken,
-    //     uint liquidity
-    // ) {
-    //     revert("UWP:not support");
-    // }
-
-    // /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
-    // /// @param token The address of ERC20 Token
-    // /// @param to The target address receiving the Token
-    // /// @param liquidity The amount of liquidity (XToken) sent to pool, or the liquidity to remove
-    // /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
-    // /// and the excess fees will be returned through this address
-    // /// @return amountETHOut The real amount of ETH transferred from the pool
-    // /// @return amountTokenOut The real amount of Token transferred from the pool
-    // function burn(
-    //     address token,
-    //     address to, 
-    //     uint liquidity, 
-    //     address payback
-    // ) external payable override returns (
-    //     uint amountETHOut,
-    //     uint amountTokenOut 
-    // ) {
-    //     revert("UWP:not support");
-    // }
-
-    // /// @dev Gets the token address of the share obtained by the specified token market making
-    // /// @param token Target token address
-    // /// @return If the fund pool supports the specified token, return the token address of the market share
-    // function getXToken(address token) external view override returns (address) {
-    //     revert("UWP:not support");
-    // }
 
     /// @dev Swap token
     /// @param src Src token address
@@ -156,7 +91,7 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
             payable(payback).transfer(msg.value);
         }
 
-        // 2. 确定交易方向
+        // 2. Make sure swap direction
         bool zeroForOne;
         if (src == TOKEN0 && dest == TOKEN1) {
             zeroForOne = true;
@@ -166,7 +101,7 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
             revert("UWP:token error");
         }
 
-        // 3. 调用uniswap v3 pool执行交易
+        // 3. Swap with uniswap v3 pool
         (int256 amount0, int256 amount1) = IUniswapV3Pool(TARGET_UNISWAP_V3_POOL).swap(
             address(this),
             zeroForOne,
@@ -175,19 +110,19 @@ contract UniswapV3PoolAdapter is CoFiXBase,/* ICoFiXPool, */ IUniswapV3SwapCallb
             abi.encode(amountIn)
         );
 
-        // 4. 检查交易结果
+        // 4. Check swap result
         require(zeroForOne ? amount0 > 0 && amount1 < 0 : amount0 < 0 && amount1 > 0, "UWP:balance error");
         require(amountIn == (zeroForOne ? uint(amount0) : uint(amount1)), "UWP:amountIn error");
         mined = 0;
 
-        // 5. 讲兑换到的代币转到目标地址
+        // 5. Transfer token to target address
         amountOut = zeroForOne ? uint(-amount1) : uint(-amount0);
-        // 目标代币是eth
+        // Token is eth
         if (dest == address(0)) {
             IWETH9(WETH9).withdraw(amountOut);
             TransferHelper.safeTransferETH(to, amountOut);
         } 
-        // 目标代币是token
+        // Token is erc20
         else {
             TransferHelper.safeTransfer(dest, to, amountOut);
         }

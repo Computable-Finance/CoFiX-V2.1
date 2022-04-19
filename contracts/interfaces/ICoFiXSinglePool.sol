@@ -4,7 +4,7 @@ pragma solidity ^0.8.6;
 
 import "./ICoFiXPool.sol";
 
-/// @dev 单边池
+/// @dev Single pool
 interface ICoFiXSinglePool is ICoFiXPool {
 
     /// @dev Swap for token event
@@ -24,13 +24,13 @@ interface ICoFiXSinglePool is ICoFiXPool {
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @param impactCostVOL Impact cost threshold
     function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL) external;
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @return impactCostVOL Impact cost threshold
     function getConfig() external view returns (uint16 theta, uint16 theta0, uint96 impactCostVOL);
 
     /// @dev Settle trade fee to DAO

@@ -7,7 +7,7 @@ describe('CoFiXRouter', function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();
         
-        // 部署合约
+        // Deploy contract
         const {
             dcu,
             cofixDAO,
@@ -96,7 +96,7 @@ describe('CoFiXRouter', function() {
         // console.log('9. cofixRouter.registerPair(nhbtc)');
         // await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', nhbtc.address, cofixSinglePool_nhbtc.address);
 
-        // 7. 初始化锁仓挖矿参数
+        // 7. Set staking parameters
         console.log('18. cofixVaultForStaking.batchSetPoolWeight()');
         await cofixVaultForStaking.batchSetPoolWeight([
             cnode.address,

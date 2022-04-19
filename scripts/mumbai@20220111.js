@@ -21,7 +21,7 @@ exports.deploy = async function () {
     //const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
     const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
 
-    console.log('** 开始部署合约 mumbai@20220111.js **');
+    console.log('** Deploy: mumbai@20220111.js **');
     
     // nest: 0x58694D405C8Cd917880FC1E23729fc0B90B7732c
     // usdt: 0xd32502b39da054dfF448AaBc1cb8210C756535f6
@@ -47,7 +47,7 @@ exports.deploy = async function () {
     //                  -> 0x3c74E71cf4582B39d60d561Af38831c9C802B234
     // proxyAdmin: 0x7E015B01307A40D56e5720d68a4e7D29b4377702
 
-    // 1. 部署依赖合约
+    // 1. Deploy dependent contract
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
     const usdt = await TestERC20.attach('0xd32502b39da054dfF448AaBc1cb8210C756535f6');
     console.log('usdt: ' + usdt.address);
@@ -68,7 +68,7 @@ exports.deploy = async function () {
     const nestPriceFacade = await NestPriceFacade.attach('0xD3E0Effa6A9cEC78C95c1FD0BbcCCA5929068B83');
     console.log('nestPriceFacade: ' + nestPriceFacade.address);
 
-    // 2. 部署结构合约
+    // 2. Deploy structure contract
     //const cofixGovernance = await upgrades.deployProxy(CoFiXGovernance, ['0x0000000000000000000000000000000000000000'], { initializer: 'initialize' });
     const cofixGovernance = await CoFiXGovernance.attach('0xB52E62003F106Ec763A95F4eBc89047A686a3f7c');
     console.log('cofixGovernance: ' + cofixGovernance.address);
@@ -81,12 +81,12 @@ exports.deploy = async function () {
     const cofixRouter = await CoFiXRouter.attach('0xe51f5cfD748db482D599602742B8bEc4D679c6f1');
     console.log('cofixRouter: ' + cofixRouter.address);
     
-    // 3. 部署资金池合约
+    // 3. Deploy pool contract
     //const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1.1', 'XToken-1.1', usdt.address, nest.address], { initializer: 'init' });
     const nest_usdt_pool = await CoFiXOpenPool.attach('0x3c74E71cf4582B39d60d561Af38831c9C802B234');
     console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
-    // // 4. 更新合约
+    // // 4. Update
     // console.log('1. cofixGovernance.setBuiltinAddress');
     // await cofixGovernance.setBuiltinAddress(
     //     '0x0000000000000000000000000000000000000000', //cofi.address,
@@ -103,12 +103,11 @@ exports.deploy = async function () {
     // console.log('10. nest_usdt_pool.update(cofixGovernance.address)');
     // await nest_usdt_pool.update(cofixGovernance.address);
 
-    // // 6. 初始化资金池参数
+    // // 6. Set pool config
     // console.log('12. nest_usdt_pool.setConfig()');
     // await nest_usdt_pool.setConfig(0, 1, 2000000000n, 30, 10, 200, 102739726027n);
 
-    // // 9. 注册交易对
-    // // 注册usdt和nest交易对
+    // // 9. Register pairs
     // console.log('24. registerPair(nest.address, usdt.address, nest_usdt_pool.address)');
     // await cofixRouter.registerPair(nest.address, usdt.address, nest_usdt_pool.address);
 
@@ -134,6 +133,6 @@ exports.deploy = async function () {
     };
     
     //console.log(contracts);
-    console.log('** 合约部署完成 **');
+    console.log('** Deployed **');
     return contracts;
 }

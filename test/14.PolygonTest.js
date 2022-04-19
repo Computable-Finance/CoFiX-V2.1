@@ -50,7 +50,7 @@ describe('14.PolygonTest', function() {
         // const nest_usdt_pool = await ethers.getContractAt('ICoFiXOpenPool', '0x459Dac18933cdC80040382b25851660761E6EF40');
         // console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -159,7 +159,7 @@ describe('14.PolygonTest', function() {
         let p;
 
         if (true) {
-            console.log('1. 查询价格');
+            console.log('1. Query price');
 
             let prices = await nestBatchPriceView.lastPriceList(0, 0, 4);
             
@@ -176,7 +176,7 @@ describe('14.PolygonTest', function() {
         // await nest_usdt_pool.setConfig(0, 1, 2000000000n, 30, 10, 200, 102739726027n);
 
         if (false) {
-            console.log('2. 做市');
+            console.log('2. Add liquidity ');
 
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address,
@@ -194,7 +194,7 @@ describe('14.PolygonTest', function() {
         }
 
         if (true) {
-            console.log('2.1. 做市');
+            console.log('2.1. Add liquidity ');
 
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address,
@@ -212,7 +212,7 @@ describe('14.PolygonTest', function() {
         }
 
         if (false) {
-            console.log('3. 赎回');
+            console.log('3. Redeem');
             await nest_usdt_pool.approve(cofixRouter.address, await nest_usdt_pool.balanceOf(owner.address));
             let receipt = await cofixRouter.removeLiquidityGetTokenAndETH(
                 nest_usdt_pool.address,
@@ -228,7 +228,7 @@ describe('14.PolygonTest', function() {
         }
 
         if (false) {
-            console.log('4. 兑换');
+            console.log('4. Swap');
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [usdt.address, nest.address],
                 1000000n,
@@ -246,7 +246,7 @@ describe('14.PolygonTest', function() {
         //await dcu.mint('0x82502A8f52BF186907BD0E12c8cEe612b4C203d1', 15000000000000000000000000n);
 
         if (false) {
-            console.log('4. 兑换2');
+            console.log('4. Swap 2');
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [usdt.address, nest.address, '0x51EFE1E589354e1f24C7d4533D21F74f973c6eED'],
                 1000000n,
@@ -261,7 +261,7 @@ describe('14.PolygonTest', function() {
         }
 
         if (false) {
-            console.log('5. 兑换3');
+            console.log('5. Swap 3');
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 ['0x51EFE1E589354e1f24C7d4533D21F74f973c6eED', nest.address],
                 7500017497459407961062702n,

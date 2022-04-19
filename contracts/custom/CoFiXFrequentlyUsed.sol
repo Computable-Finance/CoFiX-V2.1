@@ -11,7 +11,7 @@ import "../CoFiXBase.sol";
 //     address constant NEST_BATCH_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
 // }
 
-// TODO: 主网部署时，需要使用上面的常量版本
+// TODO: Use constant version
 /// @dev Base contract of Hedge
 contract CoFiXFrequentlyUsed is CoFiXBase {
 

@@ -14,7 +14,7 @@ import "./CoFiXBase.sol";
 import "./CoFiToken.sol";
 import "./CoFiXERC20.sol";
 
-/// @dev 单边池
+/// @dev Single pool
 contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     /* ******************************************************************************************
@@ -51,9 +51,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Address of CoFiXController
     address _cofixController;
-    // Impact cost threshold, this parameter is obsolete
-    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
+    // Impact cost threshold
     uint96 _impactCostVOL;
 
     // Constructor, in order to support openzeppelin's scalable scheme, 
@@ -89,20 +87,20 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
     /// @dev Set configuration
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @param impactCostVOL Impact cost threshold
     function setConfig(uint16 theta, uint16 theta0, uint96 impactCostVOL) external override onlyGovernance {
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
         _theta0 = theta0;
-        // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+        // Impact cost threshold
         _impactCostVOL = impactCostVOL;
     }
 
     /// @dev Get configuration
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    /// @return impactCostVOL Impact cost threshold
     function getConfig() external view override returns (uint16 theta, uint16 theta0, uint96 impactCostVOL) {
         return (_theta, _theta0, _impactCostVOL);
     }
@@ -357,7 +355,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
 
     // Deposit transaction fee
     function _collect(uint fee) private returns (uint total) {
-        // 佣金的1/3进入DAO，2/3留在资金池
+        // 1/3 to DAO, 2/3 left at this pool
         total = uint(_totalFee) + fee;
         if (total >= 1 ether) {
             ICoFiXDAO(_cofixDAO).addETHReward { value: total } (address(this));
@@ -391,7 +389,7 @@ contract CoFiXSinglePool is CoFiXBase, CoFiXERC20, ICoFiXSinglePool {
         uint ethAmount, 
         uint tokenAmount
     ) external view override returns (uint navps) {
-        // 做市: Np = (Au * (1 + K) / P + Ae) / S
+        // Np = (Au * (1 + K) / P + Ae) / S
         uint total = totalSupply;
         navps = total > 0 ? _calcTotalValue(
             ethBalance(), 
