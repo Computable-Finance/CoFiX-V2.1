@@ -4,7 +4,7 @@ pragma solidity ^0.8.6;
 
 import "./ICoFiXPool.sol";
 
-/// @dev 开放式资金池，使用NEST4.0价格
+/// @dev CoFiXOpenPool, use NEST4.3 price
 interface ICoFiXOpenPool is ICoFiXPool {
 
     /// @dev Swap for token event
@@ -22,13 +22,15 @@ interface ICoFiXOpenPool is ICoFiXPool {
     event SwapForToken0(uint amountIn, address to, uint amountETHOut, uint mined);
 
     /// @dev Set configuration
-    /// @param channelId 报价通道id
-    /// @param pairIndex 报价对编号
-    /// @param postUnit 报价币计价单位（注意需要精度转化）
+    /// @param channelId Target price channelId
+    /// @param pairIndex Target price pairIndex
+    /// @param postUnit Unit of post token, make sure decimals convert
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @param sigmaSQ 常规波动率
+    /// @param impactCostVOL The significance of this parameter is adjusted to represent the times of impact cost
+    /// impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+    /// for nest, _impactCostVOL is 2000
+    /// @param sigmaSQ Standard sigmaSQ
     function setConfig(
         uint32 channelId,
         uint32 pairIndex,
@@ -40,13 +42,15 @@ interface ICoFiXOpenPool is ICoFiXPool {
     ) external;
 
     /// @dev Get configuration
-    /// @return channelId 报价通道id
-    /// @return pairIndex 报价对编号
-    /// @return postUnit 报价币计价单位（注意需要精度转化）
+    /// @return channelId Target price channelId
+    /// @return pairIndex Target price pairIndex
+    /// @return postUnit Unit of post token, make sure decimals convert
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @return sigmaSQ 常规波动率
+    /// @return impactCostVOL The significance of this parameter is adjusted to represent the times of impact cost
+    /// impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+    /// for nest, _impactCostVOL is 2000
+    /// @return sigmaSQ Standard sigmaSQ
     function getConfig() external view returns (
         uint32 channelId,
         uint32 pairIndex,
@@ -57,16 +61,6 @@ interface ICoFiXOpenPool is ICoFiXPool {
         uint96 sigmaSQ
     );
 
-    // /// @dev Settle trade fee to DAO
-    // function settle() external;
-
-    // /// @dev Get eth balance of this pool
-    // /// @return eth balance of this pool
-    // function ethBalance() external view returns (uint);
-
-    // /// @dev Get total trade fee which not settled
-    // function totalFee() external view returns (uint);
-    
     /// @dev Get net worth
     /// @param ethAmount Oracle price - eth amount
     /// @param tokenAmount Oracle price - token amount

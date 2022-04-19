@@ -5,6 +5,6 @@ pragma solidity ^0.8.6;
 /// @dev Base contract of Hedge
 contract ChainParameter {
 
-    // 区块时间
+    // Block average time
     uint constant BLOCK_TIME = 2;
 }

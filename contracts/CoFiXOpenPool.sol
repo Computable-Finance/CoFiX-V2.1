@@ -15,7 +15,7 @@ import "./custom/CoFiXFrequentlyUsed.sol";
 import "./CoFiXBase.sol";
 import "./CoFiXERC20.sol";
 
-/// @dev 开放式资金池，使用NEST4.0价格
+/// @dev CoFiXOpenPool, use NEST4.3 price
 contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFiXOpenPool {
 
     /* ******************************************************************************************
@@ -24,26 +24,18 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
-    /*
-    1. 如何共用做市接口：做市接口每次只能做一个币种，token0直接取得份额，token1需要根据价格转化为份额
-    2. 份额如何计算：按照计价代币来算，一个单位的计价代币表示一个份额
-    3. 兑换逻辑，价格如何转换和确定：
-    4. CoFi需要跨上去吗?
-    5. CoFiXDAO需要跨上去吗?
-    */
-
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
     // Target token address
     address _token0; 
-    // 报价币计价单位（注意需要精度转化）
+    // Unit of post token, make sure decimals convert
     uint96 _postUnit;
 
     address _token1;
-    // 报价通道编号
+    // Target price channelId
     uint32 _channelId;
-    // 报价对编号
+    // Target price pairIndex
     uint32 _pairIndex;
     // Trade fee rate, ten thousand points system. 20
     uint16 _theta;
@@ -58,16 +50,16 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
 
     // Address of CoFiXDAO
     address _cofixDAO;
-    // 常规波动率
+    // Standard sigmaSQ
     uint96 _sigmaSQ;
 
     // Address of CoFiXRouter
     address _cofixRouter;
     // Lock flag
     bool _locked;
-    // Impact cost threshold, this parameter is obsolete
-    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
+    // The significance of the _impactCostVOL parameter is adjusted to represent the times of impact cost
+    // impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+    // for nest, _impactCostVOL is 2000
     uint32 _impactCostVOL;
 
     // Constructor, in order to support openzeppelin's scalable scheme, 
@@ -79,8 +71,8 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
     /// @param governance ICoFiXGovernance implementation contract address
     /// @param name_ Name of xtoken
     /// @param symbol_ Symbol of xtoken
-    /// @param token0 代币地址1（不支持eth）
-    /// @param token1 代币地址2（不支持eth）
+    /// @param token0 Address of token0(not support eth)
+    /// @param token1 Address of token1(not support eth)
     function init(
         address governance,
         string calldata name_, 
@@ -104,13 +96,15 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
     }
 
     /// @dev Set configuration
-    /// @param channelId 报价通道id
-    /// @param pairIndex 报价对编号
-    /// @param postUnit 报价币计价单位（注意需要精度转化）
+    /// @param channelId Target price channelId
+    /// @param pairIndex Target price pairIndex
+    /// @param postUnit Unit of post token, make sure decimals convert
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @param sigmaSQ 常规波动率
+    /// @param impactCostVOL The significance of this parameter is adjusted to represent the times of impact cost
+    /// impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+    /// for nest, _impactCostVOL is 2000
+    /// @param sigmaSQ Standard sigmaSQ
     function setConfig(
         uint32 channelId,
         uint32 pairIndex,
@@ -128,20 +122,24 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
         _theta0 = theta0;
-        // 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
+        // The significance of the _impactCostVOL parameter is adjusted to represent the times of impact cost
+        // impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+        // for nest, _impactCostVOL is 2000
         _impactCostVOL = impactCostVOL;
 
         _sigmaSQ = sigmaSQ;
     }
 
     /// @dev Get configuration
-    /// @return channelId 报价通道id
-    /// @return pairIndex 报价对编号
-    /// @return postUnit 报价币计价单位（注意需要精度转化）
+    /// @return channelId Target price channelId
+    /// @return pairIndex Target price pairIndex
+    /// @return postUnit Unit of post token, make sure decimals convert
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
-    /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    /// @return sigmaSQ 常规波动率
+    /// @return impactCostVOL The significance of this parameter is adjusted to represent the times of impact cost
+    /// impact cost formula: vol * uint(_impactCostVOL) * 0.000000001
+    /// for nest, _impactCostVOL is 2000
+    /// @return sigmaSQ Standard sigmaSQ
     function getConfig() external view override returns (
         uint32 channelId,
         uint32 pairIndex,
@@ -210,17 +208,16 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         uint balance0 = ERC20(token0).balanceOf(address(this));
         uint balance1 = ERC20(token1).balanceOf(address(this));
 
-        // 代币0做市，份额直接换算
+        // token0, liquidity is amount of token0
         if (token == token0) {
             liquidity = amountToken;
             balance0 -= amountToken;
         }
-        // 代币1做市，需要调用预言机，进行价格转换计算
+        // token1, need use price
         else if(token == token1) {
             liquidity = amountToken * ethAmount / tokenAmount;
             balance1 -= amountToken;
         } 
-        // 不支持的代币
         else {
             revert("COP:token not support");
         }
@@ -386,7 +383,7 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         uint ethAmount, 
         uint tokenAmount
     ) external view override returns (uint navps) {
-        // 做市: Np = (Au * (1 + K) / P + Ae) / S
+        // Np = (Au * (1 + K) / P + Ae) / S
         uint total = totalSupply;
         navps = total > 0 ? _calcTotalValue(
             ERC20(_token0).balanceOf(address(this)), 
@@ -412,7 +409,8 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
     function impactCostForBuyInETH(uint vol) public view override returns (uint impactCost) {
         //return _impactCostForBuyInETH(vol, uint(_impactCostVOL));
         //impactCost = vol * uint(_impactCostVOL) / 100000;
-        impactCost = vol * uint(_impactCostVOL) / 500000000;
+        // nest: 0.000002/U
+        impactCost = vol * uint(_impactCostVOL) / 1e9;
     }
 
     /// @dev Calculate the impact cost of sell out eth
@@ -421,7 +419,8 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
     function impactCostForSellOutETH(uint vol) public view override returns (uint impactCost) {
         //return _impactCostForSellOutETH(vol, uint(_impactCostVOL));
         //impactCost = vol * uint(_impactCostVOL) / 100000;
-        impactCost = vol * uint(_impactCostVOL) / 500000000;
+        // nest: 0.000002/U
+        impactCost = vol * uint(_impactCostVOL) / 1e9;
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
@@ -438,8 +437,8 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
     /// We use expected value of K based on statistical calculations here to save gas
     /// In the near future, NEST could provide the variance of price directly. We will adopt it then.
     /// We can make use of `data` bytes in the future
-    /// @param channelId 目标报价通道
-    /// @param pairIndex 目标报价对编号
+    /// @param channelId Target price channelId
+    /// @param pairIndex Target price pairIndex
     /// @param payback As the charging fee may change, it is suggested that the caller pay more fees, 
     /// and the excess fees will be returned through this address
     /// @return k The K value(18 decimal places).
@@ -495,14 +494,7 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
             sigmaISQ = 1 ether - sigmaISQ;
         }
 
-        // James:
-        // fort算法 把前面一项改成 max ((p2-p1)/p1,0.002) 后面不变
-        // jackson:
-        // 好
-        // jackson:
-        // 要取绝对值吧
-        // James:
-        // 对的
+        // The left part change to: Max((p2 - p1) / p1, 0.002)
         if (sigmaISQ > 0.002 ether) {
             k = sigmaISQ;
         } else {
