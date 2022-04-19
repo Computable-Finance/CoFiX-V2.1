@@ -60,7 +60,7 @@ exports.deploy = async function () {
     
     // 3. 部署资金池合约
     const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, nest.address], { initializer: 'init' });
-    //const usdtPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
+    //const nest_usdt_pool = await CoFiXOpenPool.attach('0x0000000000000000000000000000000000000000');
     console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
 
     // 4. 更新合约
@@ -82,7 +82,7 @@ exports.deploy = async function () {
 
     // 6. 初始化资金池参数
     console.log('12. nest_usdt_pool.setConfig()');
-    await nest_usdt_pool.setConfig(30, 10, 200, 102739726027n);
+    await nest_usdt_pool.setConfig(0, 0, 30, 10, 200, 102739726027n);
 
     // 9. 注册交易对
     // 注册usdt和nest交易对

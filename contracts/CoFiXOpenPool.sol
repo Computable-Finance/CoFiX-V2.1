@@ -2,18 +2,21 @@
 
 pragma solidity ^0.8.6;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXOpenPool.sol";
 import "./interfaces/INestBatchPrice2.sol";
 
+import "./custom/ChainParameter.sol";
+import "./custom/CoFiXFrequentlyUsed.sol";
+
 import "./CoFiXBase.sol";
 import "./CoFiXERC20.sol";
 
 /// @dev 开放式资金池，使用NEST4.0价格
-contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
+contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFiXOpenPool {
 
     /* ******************************************************************************************
      * Note: In order to unify the authorization entry, all transferFrom operations are carried
@@ -29,21 +32,13 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     5. CoFiXDAO需要跨上去吗?
     */
 
-    // 出块时间
-    uint constant BLOCK_TIME = 3;
-
-    // Address of NestPriceFacade contract
-    address constant NEST_BATCH_PRICE = 0x09CE0e021195BA2c1CDE62A8B187abf810951540;
-
     // it's negligible because we calc liquidity in ETH
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
     // Target token address
     address _token0; 
-    // Impact cost threshold, this parameter is obsolete
-    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
-    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
-    uint96 _impactCostVOL;
+    // 报价币计价单位（注意需要精度转化）
+    uint96 _postUnit;
 
     address _token1;
     // 报价通道编号
@@ -70,6 +65,10 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     address _cofixRouter;
     // Lock flag
     bool _locked;
+    // Impact cost threshold, this parameter is obsolete
+    // 将_impactCostVOL参数的意义做出调整，表示冲击成本倍数
+    // 冲击成本计算公式：vol * uint(_impactCostVOL) * 0.00001
+    uint32 _impactCostVOL;
 
     // Constructor, in order to support openzeppelin's scalable scheme, 
     // it's need to move the constructor to the initialize method
@@ -107,6 +106,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     /// @dev Set configuration
     /// @param channelId 报价通道id
     /// @param pairIndex 报价对编号
+    /// @param postUnit 报价币计价单位（注意需要精度转化）
     /// @param theta Trade fee rate, ten thousand points system. 20
     /// @param theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @param impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
@@ -114,13 +114,16 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     function setConfig(
         uint32 channelId,
         uint32 pairIndex,
+        uint96 postUnit,
         uint16 theta, 
         uint16 theta0, 
-        uint96 impactCostVOL, 
+        uint32 impactCostVOL, 
         uint96 sigmaSQ
     ) external override onlyGovernance {
         _channelId = channelId;
         _pairIndex = pairIndex;
+        _postUnit = postUnit;
+
         // Trade fee rate, ten thousand points system. 20
         _theta = theta;
         // Trade fee rate for dao, ten thousand points system. 20
@@ -133,18 +136,22 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
 
     /// @dev Get configuration
     /// @return channelId 报价通道id
+    /// @return pairIndex 报价对编号
+    /// @return postUnit 报价币计价单位（注意需要精度转化）
     /// @return theta Trade fee rate, ten thousand points system. 20
     /// @return theta0 Trade fee rate for dao, ten thousand points system. 20
     /// @return impactCostVOL 将impactCostVOL参数的意义做出调整，表示冲击成本倍数
     /// @return sigmaSQ 常规波动率
     function getConfig() external view override returns (
-        uint64 channelId,
+        uint32 channelId,
+        uint32 pairIndex,
+        uint96 postUnit,
         uint16 theta, 
         uint16 theta0, 
-        uint96 impactCostVOL, 
+        uint32 impactCostVOL, 
         uint96 sigmaSQ
     ) {
-        return (_channelId, _theta, _theta0, _impactCostVOL, _sigmaSQ);
+        return (_channelId, _pairIndex, _postUnit, _theta, _theta0, _impactCostVOL, _sigmaSQ);
     }
 
     /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
@@ -197,12 +204,11 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
             msg.value,
             payback
         );
-        tokenAmount = tokenAmount * (1 ether + k) / 1 ether;
 
         address token0 = _token0;
         address token1 = _token1;
-        uint balance0 = IERC20(token0).balanceOf(address(this));
-        uint balance1 = IERC20(token1).balanceOf(address(this));
+        uint balance0 = ERC20(token0).balanceOf(address(this));
+        uint balance1 = ERC20(token1).balanceOf(address(this));
 
         // 代币0做市，份额直接换算
         if (token == token0) {
@@ -238,9 +244,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
                 tokenAmount
             );
         } else {
-            // TODO: 对于精度小的币，小份额不能这样去除
             _mint(address(0), MINIMUM_LIQUIDITY); 
-            liquidity -= MINIMUM_LIQUIDITY;
+            liquidity = liquidity * 1 ether / 10 ** uint(ERC20(token0).decimals()) - MINIMUM_LIQUIDITY;
         }
 
         // 5. Increase xtoken
@@ -277,8 +282,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         // 3. Calculate the net value and calculate the equal proportion fund according to the net value
         address token0 = _token0;
         address token1 = _token1;
-        uint balance0 = IERC20(token0).balanceOf(address(this));
-        uint balance1 = IERC20(token1).balanceOf(address(this));
+        uint balance0 = ERC20(token0).balanceOf(address(this));
+        uint balance1 = ERC20(token1).balanceOf(address(this));
         uint total = totalSupply;
 
         amountETHOut = balance0 * liquidity / total;
@@ -384,8 +389,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         // 做市: Np = (Au * (1 + K) / P + Ae) / S
         uint total = totalSupply;
         navps = total > 0 ? _calcTotalValue(
-            IERC20(_token0).balanceOf(address(this)), 
-            IERC20(_token1).balanceOf(address(this)), 
+            ERC20(_token0).balanceOf(address(this)), 
+            ERC20(_token1).balanceOf(address(this)), 
             ethAmount, 
             tokenAmount
         ) * 1 ether / total : 1 ether;
@@ -420,9 +425,8 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
     }
 
     /// @dev Gets the token address of the share obtained by the specified token market making
-    /// @param token Target token address
     /// @return If the fund pool supports the specified token, return the token address of the market share
-    function getXToken(address token) external view override returns (address) {
+    function getXToken(address) external view override returns (address) {
         //if (token == _token0 || token == _token1) {
         //    return address(this);
         //}
@@ -472,7 +476,7 @@ contract CoFiXOpenPool is CoFiXBase, CoFiXERC20, ICoFiXOpenPool {
         tokenAmount = prices[1];
         _checkPrice(tokenAmount, prices[6]);
         blockNumber = prices[0];
-        ethAmount = 2000 ether;
+        ethAmount = uint(_postUnit);
 
         k = calcRevisedK(prices[3], prices[2], tokenAmount, blockNumber);
     }
