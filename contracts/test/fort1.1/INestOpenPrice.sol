@@ -51,7 +51,7 @@ interface INestOpenPrice {
     /// @param channelId 报价通道编号
     /// @param count The number of prices that want to return
     /// @param payback 如果费用有多余的，则退回到此地址
-    /// @return An array which length is num * 2, each two element expresses one price like blockNumber｜price
+    /// @return An array which length is num * 2, each two element expresses one price like blockNumber|price
     function lastPriceList(uint channelId, uint count, address payback) external payable returns (uint[] memory);
 
     /// @dev Returns the results of latestPrice() and triggeredPriceInfo()
@@ -79,7 +79,7 @@ interface INestOpenPrice {
     /// @param channelId 报价通道编号
     /// @param count The number of prices that want to return
     /// @param payback 如果费用有多余的，则退回到此地址
-    /// @return prices An array which length is num * 2, each two element expresses one price like blockNumber｜price
+    /// @return prices An array which length is num * 2, each two element expresses one price like blockNumber|price
     /// @return triggeredPriceBlockNumber The block number of triggered price
     /// @return triggeredPriceValue The token triggered price. (1eth equivalent to (price) token)
     /// @return triggeredAvgPrice Average price

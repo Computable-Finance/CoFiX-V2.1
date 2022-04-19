@@ -8,7 +8,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -108,7 +108,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('0. 设置价格');
+            console.log('0. Set price');
             await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
             await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }

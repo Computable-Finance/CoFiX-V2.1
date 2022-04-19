@@ -10,7 +10,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -125,7 +125,7 @@ describe('CoFiXRouter', function() {
 
         console.log(await getStatus());
         if (true) {
-            console.log('1. 做市1');
+            console.log('1. Add liquidity 1');
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address, //nest_usdt_pool.address, //address pool,
                 usdt.address, //address token,
@@ -147,7 +147,7 @@ describe('CoFiXRouter', function() {
             expect(status.nest_usdt_pool.nest).to.eq(toDecimal(toBigInt(0)));
         }
         if (true) {
-            console.log('2. 做市2');
+            console.log('2. Add liquidity 2');
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address, //nest_usdt_pool.address, //address pool,
                 usdt.address, //address token,
@@ -170,7 +170,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('3. 做市3');
+            console.log('3. Add liquidity 3');
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address, //nest_usdt_pool.address, //address pool,
                 nest.address, //address token,
@@ -192,7 +192,7 @@ describe('CoFiXRouter', function() {
             expect(status.nest_usdt_pool.nest).to.eq(toDecimal(toBigInt(10000)));
         }
         if (true) {
-            console.log('4. 做市4');
+            console.log('4. Add liquidity 4');
             let receipt = await cofixRouter.addLiquidity(
                 nest_usdt_pool.address, //nest_usdt_pool.address, //address pool,
                 nest.address, //address token,
@@ -215,7 +215,7 @@ describe('CoFiXRouter', function() {
         }
 
         if(true) {
-            console.log('5. 兑换1');
+            console.log('5. Swap1');
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [usdt.address, nest.address], //address[] calldata path,
                 toBigInt(100), //uint amountIn,
@@ -237,7 +237,7 @@ describe('CoFiXRouter', function() {
             // expect(status.nest_usdt_pool.nest).to.eq(toDecimal(toBigInt(20000)));
         }
         if(true) {
-            console.log('6. 兑换2');
+            console.log('6. Swap2');
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [nest.address, usdt.address], //address[] calldata path,
                 toBigInt(100), //uint amountIn,

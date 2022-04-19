@@ -6,7 +6,7 @@ describe('CoFiXRouter', function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();
         
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -99,8 +99,8 @@ describe('CoFiXRouter', function() {
         await nest.approve(cofixRouter.address, toBigInt(100000000));
 
         if (true) {
-            console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('1. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 usdtPair.address,
                 usdt.address,
@@ -118,8 +118,8 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('2. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('2. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 nestPair.address,
                 nest.address,
@@ -138,7 +138,7 @@ describe('CoFiXRouter', function() {
 
         if (true) {
 
-            console.log('3. 使用路由 usdt->eth->nest兑换1000usdt');
+            console.log('3. Swap path: usdt->eth->nest with 1000usdt');
             await usdt.connect(addr1).approve(cofixRouter.address, toBigInt(1000, 6));
             //let path = await cofixRouter.getRouterPath(usdt.address, nest.address);
             let path = [usdt.address, '0x0000000000000000000000000000000000000000', nest.address];

@@ -21,7 +21,7 @@ interface INestMining {
         // We can stop post and taking orders by set postEthUnit to 0 (closing and withdraw are not affected)
         uint32 postEthUnit;
 
-        // Post fee(0.0001eth，DIMI_ETHER). 1000
+        // Post fee(0.0001eth, DIMI_ETHER). 1000
         uint16 postFeeUnit;
 
         // Proportion of miners digging(10000 based). 8000
@@ -44,7 +44,7 @@ interface INestMining {
         // Price effective block interval. 20
         uint16 priceEffectSpan;
 
-        // The amount of nest to pledge for each post（Unit: 1000). 100
+        // The amount of nest to pledge for each post(Unit: 1000). 100
         uint16 pledgeNest;
     }
 
