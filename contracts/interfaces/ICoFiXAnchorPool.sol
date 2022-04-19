@@ -7,6 +7,18 @@ import "./ICoFiXPool.sol";
 /// @dev Anchor pool (please refer to the product documentation for the logic of anchoring the fund pool)
 interface ICoFiXAnchorPool is ICoFiXPool {
 
+    /// @dev Set configuration
+    /// @param theta Trade fee rate, ten thousand points system. 20
+    /// @param impactCostVOL Impact cost threshold
+    /// @param nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function setConfig(uint16 theta, uint96 impactCostVOL, uint96 nt) external;
+
+    /// @dev Get configuration
+    /// @return theta Trade fee rate, ten thousand points system. 20
+    /// @return impactCostVOL Impact cost threshold
+    /// @return nt Each unit token (in the case of binary pools, eth) is used for the standard ore output, 1e18 based
+    function getConfig() external view returns (uint16 theta, uint96 impactCostVOL, uint96 nt);
+
     /// @dev Transfer the excess funds that exceed the total share in the fund pool
     function skim() external;
 

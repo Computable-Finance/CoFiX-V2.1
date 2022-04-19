@@ -13,7 +13,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -153,7 +153,7 @@ describe('CoFiXRouter', function() {
         await usdt.transfer(owner.address, toBigInt(10000000, 6));
         await hbtc.transfer(owner.address, toBigInt(10000000));
         if(true) {
-            console.log('1. 创建uniswap交易对，并做市');
+            console.log('1. Create uniswap pool, and add liquidity');
 
             console.log(await getStatus());
             await usdt.approve(testRouter.address, toBigInt(10000000, 6));
@@ -164,7 +164,7 @@ describe('CoFiXRouter', function() {
         }
 
         if(true) {
-            console.log('2. 交易');
+            console.log('2. Swap');
 
             // await usdt.approve(uniswapV3PoolAdapter.address, toBigInt(10000000, 6));
             // await hbtc.approve(uniswapV3PoolAdapter.address, toBigInt(10000000));

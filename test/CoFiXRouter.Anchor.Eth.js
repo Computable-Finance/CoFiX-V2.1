@@ -8,7 +8,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -108,7 +108,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('0. 设置价格');
+            console.log('0. Set price');
             await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
             await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
@@ -131,8 +131,8 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('1. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('1. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 usdtPair.address,
                 usdt.address,
@@ -150,8 +150,8 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('2. 添加2eth的流动性，预期获得1.999999999000000000份额');
-            // 1. 添加2eth的流动性，预期获得1.999999999000000000份额
+            console.log('2. Add 2eth liquidity, will get 1.999999999000000000 xt');
+            // 1. Add 2eth liquidity, will get 1.999999999000000000 xt
             let receipt = await cofixRouter.addLiquidity(
                 nestPair.address,
                 nest.address,
@@ -169,7 +169,7 @@ describe('CoFiXRouter', function() {
         }
         
         if (true) {
-            console.log('3. ethAnchor做市1000eth');
+            console.log('3. ethAnchor add liquidity 1000eth');
             let receipt = await cofixRouter.addLiquidity(
                 ethAnchor.address,
                 '0x0000000000000000000000000000000000000000',

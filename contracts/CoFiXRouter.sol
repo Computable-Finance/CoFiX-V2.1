@@ -7,10 +7,8 @@ import "./libs/TransferHelper.sol";
 
 import "./interfaces/ICoFiXRouter.sol";
 import "./interfaces/ICoFiXPool.sol";
-import "./interfaces/ICoFiXVaultForStaking.sol";
 
 import "./CoFiXBase.sol";
-import "./CoFiToken.sol";
 
 /// @dev Router contract to interact with each CoFiXPair
 contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
@@ -21,17 +19,11 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
      * needs to be taken into account when calculating the pool balance before and after rollover
      * ******************************************************************************************/
 
-    // Address of CoFiXVaultForStaking
-    address _cofixVaultForStaking;
-
     // Mapping for trade pairs. keccak256(token0, token1)=>pool
     mapping(bytes32=>address) _pairs;
 
     // Mapping for trade paths. keccak256(token0, token1) = > path
     mapping(bytes32=>address[]) _paths;
-
-    // Record the total CoFi share of CNode
-    uint _cnodeReward;
 
     /// @dev Create CoFiXRouter
     constructor () {
@@ -41,14 +33,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
     modifier ensure(uint deadline) {
         require(block.timestamp <= deadline, "CoFiXRouter: EXPIRED");
         _;
-    }
-
-    /// @dev Rewritten in the implementation contract, for load other contract addresses. Call 
-    ///      super.update(newGovernance) when overriding, and override method without onlyGovernance
-    /// @param newGovernance ICoFiXGovernance implementation contract address
-    function update(address newGovernance) public override {
-        super.update(newGovernance);
-        _cofixVaultForStaking = ICoFiXGovernance(newGovernance).getCoFiXVaultForStakingAddress();
     }
 
     /// @dev Register trade pair
@@ -161,45 +145,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
     }
 
-    /// @dev Maker add liquidity to pool, get pool token (mint XToken) and stake automatically 
-    /// (notice: msg.value = amountETH + oracle fee)
-    /// @param  pool The address of pool
-    /// @param  token The address of ERC20 Token
-    /// @param  amountETH The amount of ETH added to pool. (When pool is AnchorPool, amountETH is 0)
-    /// @param  amountToken The amount of Token added to pool
-    /// @param  liquidityMin The minimum liquidity maker wanted
-    /// @param  to The target address receiving the liquidity pool (XToken)
-    /// @param  deadline The deadline of this request
-    /// @return xtoken The liquidity share token address obtained
-    /// @return liquidity The real liquidity or XToken minted from pool
-    function addLiquidityAndStake(
-        address pool,
-        address token,
-        uint amountETH,
-        uint amountToken,
-        uint liquidityMin,
-        address to,
-        uint deadline
-    ) external payable override ensure(deadline) returns (address xtoken, uint liquidity) {
-        // 1. Transfer token to pool
-        if (token != address(0)) {
-            TransferHelper.safeTransferFrom(token, msg.sender, pool, amountToken);
-        }
-
-        // 2. Add liquidity, and increase xtoken
-        address cofixVaultForStaking = _cofixVaultForStaking;
-        (xtoken, liquidity) = ICoFiXPool(pool).mint { 
-            value: msg.value 
-        } (token, address(this), amountETH, amountToken, to);
-
-        // The number of shares should not be lower than the expected minimum value
-        require(liquidity >= liquidityMin, "CoFiXRouter: less liquidity than expected");
-
-        // 3. Stake xtoken to CoFiXVaultForStaking
-        ICoFiXVaultForStaking(cofixVaultForStaking).routerStake(xtoken, to, liquidity);
-        TransferHelper.safeTransfer(xtoken, cofixVaultForStaking, liquidity);
-    }
-
     /// @dev Maker remove liquidity from pool to get ERC20 Token and ETH back (maker burn XToken) 
     /// (notice: msg.value = oracle fee)
     /// @param  pool The address of pool
@@ -281,9 +226,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
 
         // 3. amountOut must not less than expected
         require(amountOut >= amountOutMin, "CoFiXRouter: got less than expected");
-        
-        // 4. Mining cofi for trade
-        _mint(mined, rewardTo);
     }
 
     // Trade
@@ -350,28 +292,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         }
 
         amountOut = amountIn;
-    }
-
-    // Mint CoFi to target address, and increase for CNode
-    function _mint(uint mined, address rewardTo) private {
-        if (mined > 0) {
-            uint cnodeReward = mined / 10;
-            // The amount available to the trader
-            CoFiToken(COFI_TOKEN_ADDRESS).mint(rewardTo, mined - cnodeReward);
-            // Increase for CNode
-            _cnodeReward += cnodeReward;
-        }
-    }
-
-    /// @dev Acquire the transaction mining share of the target XToken
-    /// @param xtoken The destination XToken address
-    /// @return Target XToken's transaction mining share
-    function getTradeReward(address xtoken) external view override returns (uint) {
-        // Only CNode has a share of trading out, not market making        
-        if (xtoken == CNODE_TOKEN_ADDRESS) {
-            return _cnodeReward;
-        }
-        return 0;
     }
 
     receive() external payable {

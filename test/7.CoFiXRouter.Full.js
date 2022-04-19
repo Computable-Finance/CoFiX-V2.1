@@ -8,7 +8,7 @@ describe('CoFiXRouter', function() {
         //console.log('owner: ' + owner.address);
         //addr1 = owner;
 
-        // 部署合约
+        // Deploy contract
         const {
             cofi,
             cnode,
@@ -125,7 +125,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('0. 设置价格');
+            console.log('0. Set price');
             await nestPriceFacade.setPrice(usdt.address, toBigInt(2051, 6), 1);
             await nestPriceFacade.setPrice(nest.address, toBigInt(192307), 1);
         }
@@ -134,7 +134,7 @@ describe('CoFiXRouter', function() {
         let p;
 
         if (true) {
-            console.log('1. 初始化资金');
+            console.log('1. Init assets');
             await cofi.addMinter(owner.address);
             await usdt.transfer(addr1.address, toBigInt(10000000, 6));
             await hbtc.transfer(addr1.address, toBigInt(10000000));
@@ -159,7 +159,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('2. 做市1eth|usdt');
+            console.log('2. Add liquidity 1eth|usdt');
             await usdt.approve(cofixRouter.address, toBigInt(2000, 6));
             let receipt = await cofixRouter.addLiquidity(
                 usdtPair.address,
@@ -178,7 +178,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('3. 做市1eth|hbtc');
+            console.log('3. Add liquidity 1eth|hbtc');
             await hbtc.approve(cofixRouter.address, toBigInt(0.05));
             let receipt = await cofixRouter.addLiquidity(
                 hbtcPair.address,
@@ -197,7 +197,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('4. 做市1eth|nest');
+            console.log('4. Add liquidity 1eth|nest');
             await nest.approve(cofixRouter.address, toBigInt(100000));
             let receipt = await cofixRouter.addLiquidity(
                 nestPair.address,
@@ -216,7 +216,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('5. 做市1eth|cofi');
+            console.log('5. Add liquidity 1eth|cofi');
             await cofi.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 cofiPair.address,
@@ -235,7 +235,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('6. 做市1eth');
+            console.log('6. Add liquidity 1eth');
             let receipt = await cofixRouter.addLiquidity(
                 ethAnchor.address,
                 '0x0000000000000000000000000000000000000000',
@@ -253,7 +253,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('7. 做市1peth');
+            console.log('7. Add liquidity 1peth');
             await peth.approve(cofixRouter.address, toBigInt(1));
             let receipt = await cofixRouter.addLiquidity(
                 ethAnchor.address,
@@ -272,7 +272,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('8. 做市2000usdt');
+            console.log('8. Add liquidity 2000usdt');
             await usdt.approve(cofixRouter.address, toBigInt(2000, 6));
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
@@ -291,7 +291,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('9. 做市2000pusd');
+            console.log('9. Add liquidity 2000pusd');
             await pusd.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
@@ -310,7 +310,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('10. 做市2000usdc');
+            console.log('10. Add liquidity 2000usdc');
             await usdc.approve(cofixRouter.address, toBigInt(2000));
             let receipt = await cofixRouter.addLiquidity(
                 usdAnchor.address,
@@ -329,7 +329,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('11. 路由兑换1000usdt');
+            console.log('11. Swap with router 1000usdt');
             let path = [
                 usdt.address,
                 '0x0000000000000000000000000000000000000000',
@@ -363,7 +363,7 @@ describe('CoFiXRouter', function() {
         }
 
         if (true) {
-            console.log('12. 交易0pusd');
+            console.log('12. Swap 0pusd');
             await pusd.connect(addr1).transfer(usdAnchor.address, toBigInt(2));
             await pusd.connect(addr1).approve(cofixRouter.address, toBigInt(0));
             let receipt = await cofixRouter.connect(addr1).swapExactTokensForTokens(

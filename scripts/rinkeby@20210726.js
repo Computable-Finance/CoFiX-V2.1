@@ -178,7 +178,7 @@ exports.deploy = async function () {
     // xpusd: 0x02aF9497266be1f4e8aFEDe296345cEaA4Ae7bf3
     // xusdc: 0x481a520a562005C586E97753b6D0d260196e3d9A
 
-    // 1. 部署依赖合约
+    // 1. Deploy dependent contract
     //const usdt = await TestERC20.deploy('USDT', 'USDT', 6);
     const usdt = await TestERC20.attach('0x2d750210c0b5343a0b79beff8F054C9add7d2411');
     console.log('usdt: ' + usdt.address);
@@ -215,7 +215,7 @@ exports.deploy = async function () {
     const cofi = await CoFiToken.attach('0x4202B30210e89d73f9b0ffFd3A43D1009635833f');
     console.log('cofi: ' + cofi.address);
 
-    // 2. 部署结构合约
+    // 2. Deploy structure contract
     //const cofixGovernance = await upgrades.deployProxy(CoFiXGovernance, ['0x0000000000000000000000000000000000000000'], { initializer: 'initialize' });
     const cofixGovernance = await CoFiXGovernance.attach('0xCeDa210865Eda9b6646a463D316A899053f71670');
     console.log('cofixGovernance: ' + cofixGovernance.address);
@@ -236,7 +236,7 @@ exports.deploy = async function () {
     const cofixController = await CoFiXController.attach('0x781fAa0c8348aA1d634424C045dc4bEaCF9318f4');
     console.log('cofixController: ' + cofixController.address);
 
-    // 3. 部署资金池合约
+    // 3. Deploy pool contract
     //const usdtPair = await upgrades.deployProxy(CoFiXPair, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, BigInt(1000000000), BigInt(2)], { initializer: 'init' });
     const usdtPair = await CoFiXPair.attach('0x2c500842e33E1A0a134851a38bAC0b0c21D001D5');
     console.log('usdtPair: ' + usdtPair.address);
@@ -253,7 +253,7 @@ exports.deploy = async function () {
     const cofiPair = await CoFiXPair.attach('0x51Bb2D3aDCDd6758f06e9A72145ad0cB0363c195');
     console.log('cofiPair: ' + cofiPair.address);
 
-    // 部署ETH锚定池
+    // Deploy eth anchor pool
     // let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
     //     1, 
@@ -263,7 +263,7 @@ exports.deploy = async function () {
     const ethAnchor = await CoFiXAnchorPool.attach('0xedD77D8672CD1773D395A56994a0C12543f7e6De');
     console.log('ethAnchor: ' + ethAnchor.address);
 
-    // 部署USD锚定池
+    // Deploy usd anchor pool
     // let usdAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
     //     cofixGovernance.address, 
     //     2,
@@ -284,7 +284,7 @@ exports.deploy = async function () {
     let xusdc = await CoFiXAnchorToken.attach(await usdAnchor.getXToken(usdc.address));
     console.log('xusdc: ' + xusdc.address);
 
-    // // 4. 更新合约
+    // // 4. Update
     // console.log('1. cofixGovernance.setBuiltinAddress');
     // await cofixGovernance.setBuiltinAddress(
     //     cofi.address,
@@ -313,11 +313,11 @@ exports.deploy = async function () {
     // console.log('10. usdAnchor.update(cofixGovernance.address)');
     // await usdAnchor.update(cofixGovernance.address);
 
-    // // 5. 设置配置
+    // // 5. Set config
     // console.log('11. setConfig');
     // await cofixDAO.setConfig({
     //     // Redeem activate threshold, when the circulation of token exceeds this threshold, 
-    //     // 回购状态, 1表示启动
+    //     // Redeem status, 1 means active
     //     status: 1,
 
     //     // The number of CoFi redeem per block. 100
@@ -333,7 +333,7 @@ exports.deploy = async function () {
     // console.log('12. cofixVaultForStaking.setConfig');
     // await cofixVaultForStaking.setConfig('10000000000000000');
 
-    // // 6. 初始化资金池参数
+    // // 6. Set pool config
     // console.log('13. usdtPair.setConfig()');
     // await usdtPair.setConfig(20, 1000, 1e8);
     // console.log('14. hbtcPair.setConfig()');
@@ -347,7 +347,7 @@ exports.deploy = async function () {
     // console.log('18. usdAnchor.setConfig()');
     // await usdAnchor.setConfig(20, 0, 50000);
 
-    // // 7. 初始化锁仓挖矿参数
+    // // 7. Set staking parameters
     // console.log('19. cofixVaultForStaking.batchSetPoolWeight()');
     // await cofixVaultForStaking.batchSetPoolWeight([
     //     cnode.address,
@@ -362,7 +362,7 @@ exports.deploy = async function () {
     //     xusdc.address
     // ], [20, 20, 20, 40, 40, 15, 15, 10, 10, 10]);
 
-    // // 8. 设置资金兑换比例
+    // // 8. Set exchange parameters
     // console.log('20. cofixDAO.setTokenExchange(usdt.address, usdt.address)');
     // await cofixDAO.setTokenExchange(usdt.address, usdt.address, BigInt('1000000000000000000'));
     // console.log('21. cofixDAO.setTokenExchange(pusd.address, usdt.address)');
@@ -374,14 +374,13 @@ exports.deploy = async function () {
     // console.log('24. cofixDAO.setTokenExchange(peth.address, eth.address)');
     // await cofixDAO.setTokenExchange(peth.address, eth.address, BigInt('1000000000000000000'));
 
-    // // // 9. 开通挖矿权限
+    // // // 9. Set minters
     // // console.log('25. cofi.addMinter(cofixRouter.address)');
     // // await cofi.addMinter(cofixRouter.address);
     // // console.log('26. cofi.addMinter(cofixVaultForStaking.address)');
     // // await cofi.addMinter(cofixVaultForStaking.address);
 
-    // // 10. 注册交易对
-    // // 注册usdt和nest交易对
+    // // 10. Register pairs
     // console.log('27. registerPair(eth.address, usdt.address, usdtPair.address)');
     // await cofixRouter.registerPair(eth.address, usdt.address, usdtPair.address);
     // console.log('28. registerPair(eth.address, hbtc.address, hbtcPair.address)');
@@ -391,10 +390,10 @@ exports.deploy = async function () {
     // console.log('30. registerPair(eth.address, cofi.address, cofiPair.address)');
     // await cofixRouter.registerPair(eth.address, cofi.address, cofiPair.address);
 
-    // // 注册ETH锚定池
+    // // Register eth anchor pool
     // console.log('31. registerPair(eth.address, peth.address, ethAnchor.address)');
     // await cofixRouter.registerPair(eth.address, peth.address, ethAnchor.address);
-    // // 注册USD锚定池
+    // // Register usd anchor pool
     // console.log('32. registerPair(usdt.address, pusd.address, usdAnchor.address)');
     // await cofixRouter.registerPair(usdt.address, pusd.address, usdAnchor.address);
     // console.log('33. registerPair(usdt.address, usdc.address, usdAnchor.address)');
@@ -403,7 +402,7 @@ exports.deploy = async function () {
     // await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
 
     if (false) {
-        // 11. 注册路由路径
+        // 11. Register router path
         console.log('35. registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address])');
         await cofixRouter.registerRouterPath(usdt.address, nest.address, [usdt.address, eth.address, nest.address]);
         console.log('36. registerRouterPath(usdt.address, peth.address, [usdt.address, eth.address, peth.address])');
@@ -484,6 +483,6 @@ exports.deploy = async function () {
     };
     
     //console.log(contracts);
-    console.log('** 合约部署完成 **');
+    console.log('** Deployed **');
     return contracts;
 }

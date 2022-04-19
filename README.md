@@ -47,6 +47,19 @@ npx hardhat test ./test/deploy.js --network rinkeby
 
 ## Contract Addresses
 
+### 2021-11-27@bsc_main
+| Name | Interfaces | bsc_main |
+| ---- | ---- | ---- |
+| usdt | IERC20 | 0x55d398326f99059ff775485246999027b3197955 |
+| peth | IERC20 | 0x556d8bF8bF7EaAF2626da679Aa684Bac347d30bB |
+| pusd | IERC20 | 0x9b2689525e07406D8A6fB1C40a1b86D2cd34Cbb2 |
+| nest | IERC20 | 0x98f8669F6481EbB341B522fCD3663f79A3d1A6A7 |
+| nestOpenPrice | INestOpenPrice | 0x09CE0e021195BA2c1CDE62A8B187abf810951540 |
+| cofixGovernance | ICoFiXGovernance | 0xF12F003ee11461dA376C70c03b2E8f1498C3AeA3 |
+| cofixDAO | ICoFiXDAOSimple | 0x72A63055b9AA997A4311D0D068170e38F5455b82 |
+| cofixRouter | ICoFiXRouter | 0xb29A8d980E1408E487B9968f5E4f7fD7a9B0CaC5 |
+| nest_usdt_pool | ICoFiXOpenPool | 0x278f5d08bEa1989BEfcC09A20ad60fB39702D556 |
+
 ### 2021-07-29@mainnet
 | Name | Interfaces | mainnet |
 | ---- | ---- | ---- |
@@ -76,6 +89,9 @@ npx hardhat test ./test/deploy.js --network rinkeby
 | xpusd | ICoFiXERC20 | 0x2b06Af945F1c18A6bf02ac6E401Fd251d9FfdBCf |
 | xusdc | ICoFiXERC20 | 0xF5beBE517eb95557CBcFd19a2BAfa8e9fC50C5EE |
 | uniswapV3UsdtPool | ICoFiXPool | 0xCE85c8478346c47c1b5Ac928Ba9eF18863f8854a |
+| cofixSinglePool-nest | ICoFiXSinglePool | 0xA1e3D346297DAa93235f2e39372d4FCDb2230475 |
+| cofixSinglePool-cofi | ICoFiXSinglePool | 0x8F6b4C4E48fe9B4b24A30037f07099778bAba0a9 |
+| cofixSinglePool-nhbtc | ICoFiXSinglePool | 0x400a0aA54074C924166e7864A588b1CA0baacaD2 |
 
 ### 2021-07-20@rinkeby
 | Name | Interfaces | rinkeby |

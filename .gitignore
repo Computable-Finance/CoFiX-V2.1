@@ -1,5 +1,8 @@
 node_modules
 opensrc
+.openzeppelin
+.openzeppelin-
+.vscode
 #Hardhat files
 cache
 artifacts

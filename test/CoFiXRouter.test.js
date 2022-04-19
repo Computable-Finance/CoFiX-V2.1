@@ -48,30 +48,20 @@ describe('CoFiXRouter', function() {
 
         await cofixRouter.removeLiquidityGetTokenAndETH(
             usdtPair.address,
-            // 要移除的token对
             usdt.address,
-            // 移除的额度
             1,
-            // 预期最少可以获得的eth数量
             0,
-            // 接收地址
             owner.address,
-            // 截止时间
             BigInt('1800000000000'), {
                 value: BigInt('10000000000000000')
             }
         );
 
         receipt = await cofixRouter.swapExactTokensForTokens(
-            // 目标token地址
             ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
-            // eth数量
             BigInt('100000000000000000'),
-            // 预期获得的token的最小数量
             BigInt(10),
-            // 接收地址
             owner.address,
-            // 出矿接收地址
             owner.address,
             BigInt('1800000000000'), {
                 value: BigInt('110000000000000000')
@@ -80,15 +70,10 @@ describe('CoFiXRouter', function() {
         console.log((await receipt.wait()).gasUsed.toString());
 
         receipt = await cofixRouter.swapExactTokensForTokens(
-            // 目标token地址
             ['0x0000000000000000000000000000000000000000', usdt.address.toString()],
-            // eth数量
             BigInt('100000000000000000'),
-            // 预期获得的token的最小数量
             BigInt(10),
-            // 接收地址
             owner.address,
-            // 出矿接收地址
             owner.address,
             BigInt('1800000000000'), {
                 value: BigInt('110000000000000000')
