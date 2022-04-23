@@ -6,5 +6,5 @@ pragma solidity ^0.8.6;
 contract ChainParameter {
 
     // Block average time
-    uint constant BLOCK_TIME = 2;
+    uint constant BLOCK_TIME = 3;
 }
