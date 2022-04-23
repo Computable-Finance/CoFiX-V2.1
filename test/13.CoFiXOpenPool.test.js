@@ -90,9 +90,11 @@ describe('CoFiXRouter', function() {
         }
         const getStatus = async function() {
             //let pairStatus = await getAccountInfo(usdtPair);
+            let x = (await nestPriceFacade.latestPriceView(nest.address)).price;
+            x = 2000n * 1000000000000000000n * 1000000000000000000n / BigInt(x);
             return {
                 height: await ethers.provider.getBlockNumber(),
-                navps: toDecimal(await nest_usdt_pool.getNAVPerShare(1000000000000000000n, (await nestPriceFacade.latestPriceView(nest.address)).price)),
+                navps: toDecimal(await nest_usdt_pool.getNAVPerShare(2000000000000000000000n, x)),
                 //ethBalance: toDecimal(await nest_usdt_pool.ethBalance()),
                 //totalFee: toDecimal(await nest_usdt_pool.totalFee()),
                 //usdtPair: pairStatus,
