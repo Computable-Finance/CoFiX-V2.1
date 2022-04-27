@@ -82,9 +82,9 @@ exports.deploy = async function () {
     // console.log('12. nestOpenPool.setConfig()');
     // await nestOpenPool.setConfig(0, 1, 2000000000000000000000n, 30, 10, 2000, 102739726027n);
 
-    // 9. Register pairs
-    console.log('24. registerPair(nest.address, usdt.address, nestOpenPool.address)');
-    await cofixRouter.registerPair(nest.address, usdt.address, nestOpenPool.address);
+    // // 9. Register pairs
+    // console.log('24. registerPair(nest.address, usdt.address, nestOpenPool.address)');
+    // await cofixRouter.registerPair(nest.address, usdt.address, nestOpenPool.address);
 
     const contracts = {
         //cofi: cofi,
