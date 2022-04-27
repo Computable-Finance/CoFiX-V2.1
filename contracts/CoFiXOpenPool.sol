@@ -465,7 +465,7 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         //     uint triggeredAvgPrice,
         //     //uint triggeredSigmaSQ
         // ) 
-        uint[] memory prices = INestBatchPrice2(NEST_BATCH_PRICE).lastPriceListAndTriggeredPriceInfo {
+        uint[] memory prices = INestBatchPrice2(NEST_BATCH_PRICE).lastPriceList {
             value: fee  
         } (channelId, pairIndices, 2, payback);
 
@@ -473,7 +473,6 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         //prices[3] = (prices[3]);
         //triggeredAvgPrice = (triggeredAvgPrice);
         tokenAmount = prices[1];
-        _checkPrice(tokenAmount, prices[6]);
         blockNumber = prices[0];
         ethAmount = uint(_postUnit);
 
@@ -534,14 +533,5 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
                 return (r < r1 ? r : r1);
             }
         }
-    }
-
-    // Check price
-    function _checkPrice(uint price, uint avgPrice) private pure {
-        require(
-            price <= avgPrice * 11 / 10 &&
-            price >= avgPrice * 9 / 10, 
-            "COP:price deviation"
-        );
     }
 }
