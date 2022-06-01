@@ -195,6 +195,8 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address rewardTo,
         uint deadline
     ) external payable override ensure(deadline) returns (uint amountOut) {
+
+        require(msg.sender == to, "CoFiXRouter: to must be msg.sender");
         uint mined;
         if (path.length == 2) {
             address src = path[0];
