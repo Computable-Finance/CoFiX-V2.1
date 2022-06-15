@@ -3,16 +3,25 @@ pragma solidity ^0.8.6;
 
 import "../interfaces/external/IWETH9.sol";
 
-import "../libs/ERC20_LIB.sol";
+import "../libs/SimpleERC20.sol";
 
-import "hardhat/console.sol";
+contract WETH is SimpleERC20, IWETH9 {
 
-contract WETH is ERC20_LIB {
-
-    constructor() ERC20_LIB("WETH", "WETH") {
-        _setupDecimals(18);
+    constructor() {
     }
 
+    function name() public pure override returns (string memory) {
+        return "WETH";
+    }
+
+    function symbol() external pure override returns (string memory) {
+        return "WETH";
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 18;
+    }
+    
     /// @notice Deposit ether to get wrapped ether
     function deposit() external payable {
         _mint(msg.sender, msg.value);
