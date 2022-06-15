@@ -196,7 +196,6 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         uint deadline
     ) external payable override ensure(deadline) returns (uint amountOut) {
 
-        require(msg.sender == to, "CoFiXRouter: to must be msg.sender");
         uint mined;
         if (path.length == 2) {
             address src = path[0];
@@ -248,7 +247,7 @@ contract CoFiXRouter is CoFiXBase, ICoFiXRouter {
         address pool = _pairFor(token0, token1);
         // Transfer token to first pool
         if (token0 != address(0)) {
-            TransferHelper.safeTransferFrom(token0, to, pool, amountIn);
+            TransferHelper.safeTransferFrom(token0, msg.sender, pool, amountIn);
         }
 
         uint mined;

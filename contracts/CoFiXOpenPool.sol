@@ -479,7 +479,7 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
         k = calcRevisedK(prices[3], prices[2], tokenAmount, blockNumber);
     }
 
-     /// @dev K value is calculated by revised volatility
+    /// @dev K value is calculated by revised volatility
     /// @param p0 Last price (number of tokens equivalent to 1 ETH)
     /// @param bn0 Block number of the last price
     /// @param p Latest price (number of tokens equivalent to 1 ETH)
@@ -500,10 +500,10 @@ contract CoFiXOpenPool is ChainParameter, CoFiXFrequentlyUsed, CoFiXERC20, ICoFi
             k = 0.002 ether;
         }
 
-        sigmaISQ = sigmaISQ * sigmaISQ / (bn - bn0) / BLOCK_TIME / 1 ether;
+        sigmaISQ = sigmaISQ * sigmaISQ / (bn - bn0);
 
-        if (sigmaISQ > sigmaSQ) {
-            k += _sqrt(1 ether * BLOCK_TIME * (block.number - bn) * sigmaISQ);
+        if (sigmaISQ > sigmaSQ * BLOCK_TIME * 1 ether) {
+            k += _sqrt(sigmaISQ * (block.number - bn));
         } else {
             k += _sqrt(1 ether * BLOCK_TIME * sigmaSQ * (block.number - bn));
         }
