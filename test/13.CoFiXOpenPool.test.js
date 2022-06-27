@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const deployer = require('../scripts/deploy.js');
 const { ethers, upgrades } = require('hardhat');
 
-describe('CoFiXRouter', function() {
+describe('13.CoFiXOpenPool.test', function() {
     it('test1', async function() {
 
         const CoFiXSinglePool = await ethers.getContractFactory('CoFiXSinglePool');
@@ -142,7 +142,7 @@ describe('CoFiXRouter', function() {
 
             await showReceipt(receipt);
             status = await showStatus();
-            expect(status.owner.xtoken).to.eq(toDecimal(9999999999999000000000n));
+            expect(status.owner.xtoken).to.eq(toDecimal(9999999999999999999999999000000000n));
             expect(status.owner.usdt).to.eq(toDecimal(toBigInt(100000000 - 10000)));
             expect(status.owner.nest).to.eq(toDecimal(toBigInt(100000000)));
             expect(status.nest_usdt_pool.usdt).to.eq(toDecimal(toBigInt(10000)));
@@ -164,7 +164,7 @@ describe('CoFiXRouter', function() {
 
             await showReceipt(receipt);
             status = await showStatus();
-            expect(status.owner.xtoken).to.eq(toDecimal(19999999999999000000000n));
+            expect(status.owner.xtoken).to.eq(toDecimal(19999999999999999999999999000000000n));
             expect(status.owner.usdt).to.eq(toDecimal(toBigInt(100000000 - 20000)));
             expect(status.owner.nest).to.eq(toDecimal(toBigInt(100000000)));
             expect(status.nest_usdt_pool.usdt).to.eq(toDecimal(toBigInt(20000)));

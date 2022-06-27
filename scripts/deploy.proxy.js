@@ -18,6 +18,7 @@ exports.deploy = async function () {
     const CoFiXPair = await ethers.getContractFactory('CoFiXPair');
     const CoFiXAnchorPool = await ethers.getContractFactory('CoFiXAnchorPool');
     const CoFiXAnchorToken = await ethers.getContractFactory('CoFiXAnchorToken');
+    const CoFiXOpenPool = await ethers.getContractFactory('CoFiXOpenPool');
 
     console.log('** Deploy: deploy.proxy.js **');
     
@@ -99,6 +100,10 @@ exports.deploy = async function () {
     //const cofiPair = await CoFiXPair.attach('0x0000000000000000000000000000000000000000');
     console.log('cofiPair: ' + cofiPair.address);
 
+    const nest_usdt_pool = await upgrades.deployProxy(CoFiXOpenPool, [cofixGovernance.address, 'XT-1', 'XToken-1', usdt.address, nest.address], { initializer: 'init' });
+    //const nest_usdt_pool = await CoFiXOpenPool.attach('0x0000000000000000000000000000000000000000');
+    console.log('nest_usdt_pool: ' + nest_usdt_pool.address);
+
     // Deploy eth anchor pool
     let ethAnchor = await upgrades.deployProxy(CoFiXAnchorPool, [
         cofixGovernance.address, 
@@ -156,6 +161,8 @@ exports.deploy = async function () {
     await ethAnchor.update(cofixGovernance.address);
     console.log('10. usdAnchor.update(cofixGovernance.address)');
     await usdAnchor.update(cofixGovernance.address);
+    console.log('10. nest_usdt_pool.update(cofixGovernance.address)');
+    await nest_usdt_pool.update(cofixGovernance.address);
 
     // 6. Set pool config
     console.log('12. usdtPair.setConfig()');
@@ -170,6 +177,8 @@ exports.deploy = async function () {
     await ethAnchor.setConfig(20, 0, '100000000000000000');
     console.log('17. usdAnchor.setConfig()');
     await usdAnchor.setConfig(20, 0, '50000000000000');
+    console.log('12. nest_usdt_pool.setConfig()');
+    await nest_usdt_pool.setConfig(0, 0, 2000000000000000000000n, 30, 10, 2000, 102739726027n);
 
     // 9. Register pairs
     console.log('24. registerPair(eth.address, usdt.address, usdtPair.address)');
@@ -192,9 +201,15 @@ exports.deploy = async function () {
     console.log('31. registerPair(pusd.address, usdc.address, usdAnchor.address)');
     await cofixRouter.registerPair(pusd.address, usdc.address, usdAnchor.address);
 
+    // 9. Register pairs
+    console.log('24. registerPair(nest.address, usdt.address, nest_usdt_pool.address)');
+    await cofixRouter.registerPair(nest.address, usdt.address, nest_usdt_pool.address);
+
     // 10. Set minters
     console.log('33. cofi.addMinter(cofixRouter.address)');
     await cofi.addMinter(cofixRouter.address);
+    
+    await nest_usdt_pool.setNestOpenPrice(nestPriceFacade.address);
     
     const contracts = {
         cofi: cofi,
@@ -223,7 +238,8 @@ exports.deploy = async function () {
         nestPair: nestPair,
         cofiPair: cofiPair,
         ethAnchor: ethAnchor,
-        usdAnchor: usdAnchor
+        usdAnchor: usdAnchor,
+        nest_usdt_pool: nest_usdt_pool
     };
     
     //console.log(contracts);

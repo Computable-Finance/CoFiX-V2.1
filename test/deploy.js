@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const deployer = require('../scripts/deploy.js');
 const { ethers, upgrades } = require('hardhat');
 
-describe('CoFiXRouter', function() {
+describe('deploy', function() {
     it('test1', async function() {
 
         const [owner, addr1, addr2] = await ethers.getSigners();

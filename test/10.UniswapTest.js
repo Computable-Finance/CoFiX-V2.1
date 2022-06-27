@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const deployer = require('../scripts/deploy.js');
 
-describe('CoFiXRouter', function() {
+describe('10.UniswapTest', function() {
     it('test1', async function() {
 
         const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');

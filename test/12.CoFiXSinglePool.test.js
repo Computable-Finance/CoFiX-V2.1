@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const deployer = require('../scripts/deploy.js');
 const { ethers, upgrades } = require('hardhat');
 
-describe('CoFiXRouter', function() {
+describe('12.CoFiXSinglePool.test', function() {
     it('test1', async function() {
 
         const CoFiXSinglePool = await ethers.getContractFactory('CoFiXSinglePool');
@@ -206,7 +206,7 @@ describe('CoFiXRouter', function() {
         if(true) {
             console.log('4. Swap');
 
-            const v = toBigInt(0.1);
+            const v = toBigInt(0.1, 6);
             await cofixRouter.registerPair('0x0000000000000000000000000000000000000000', usdt.address, cofixSinglePool.address);
             let receipt = await cofixRouter.swapExactTokensForTokens(
                 [
